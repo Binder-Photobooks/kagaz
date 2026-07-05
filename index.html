@@ -490,14 +490,14 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
 <!-- ============ PRICING ============ -->
 <section class="view" id="view-pricing"><div class="page-wrap">
   <span class="tag">Pricing</span>
-  <h1>Simple, transparent pricing</h1>
+  <h1>Simple Pricing</h1>
   <p class="lead">Every price below already includes delivery anywhere in India. No hidden charges at checkout.</p>
 
   <div class="pricing-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px;margin-top:40px">
-    <div style="border-radius:18px;padding:32px;background:var(--cream)">
+    <div style="border-radius:18px;padding:32px;background:var(--cream);display:flex;flex-direction:column">
       <span class="tag">Photobook</span>
       <h3 style="font-size:24px;margin:10px 0 18px">8.5″ × 8.5″ hardcover</h3>
-      <table style="width:100%">
+      <table style="width:100%;margin-bottom:22px">
         <tbody>
           <tr><td style="color:var(--slate)">Default pages</td><td style="text-align:right;font-weight:600">20</td></tr>
           <tr><td style="color:var(--slate)">1–9 copies</td><td style="text-align:right;font-weight:600">₹2,200 / copy</td></tr>
@@ -506,13 +506,13 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
           <tr><td style="color:var(--slate)">Delivery (India)</td><td style="text-align:right;font-weight:600">Included</td></tr>
         </tbody>
       </table>
-      <button class="btn btn-accent sm" style="width:100%;justify-content:center;margin-top:22px" onclick="openEditor('photobook')">Start a photobook →</button>
+      <button class="btn btn-accent sm" style="width:100%;justify-content:center;margin-top:auto" onclick="openEditor('photobook')">Start a photobook →</button>
     </div>
 
-    <div style="border-radius:18px;padding:32px;background:var(--cream)">
+    <div style="border-radius:18px;padding:32px;background:var(--cream);display:flex;flex-direction:column">
       <span class="tag">Trade Book</span>
       <h3 style="font-size:24px;margin:10px 0 18px">5.5″ × 8″ paperback</h3>
-      <table style="width:100%">
+      <table style="width:100%;margin-bottom:22px">
         <tbody>
           <tr><td style="color:var(--slate)">Default pages</td><td style="text-align:right;font-weight:600">100</td></tr>
           <tr><td style="color:var(--slate)">1–9 copies</td><td style="text-align:right;font-weight:600">₹1,000 / copy</td></tr>
@@ -521,13 +521,13 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
           <tr><td style="color:var(--slate)">Delivery (India)</td><td style="text-align:right;font-weight:600">Included</td></tr>
         </tbody>
       </table>
-      <button class="btn btn-accent sm" style="width:100%;justify-content:center;margin-top:22px" onclick="openEditor('tradebook')">Start a trade book →</button>
+      <button class="btn btn-accent sm" style="width:100%;justify-content:center;margin-top:auto" onclick="openEditor('tradebook')">Start a trade book →</button>
     </div>
 
-    <div style="border-radius:18px;padding:32px;background:var(--cream)">
+    <div style="border-radius:18px;padding:32px;background:var(--cream);display:flex;flex-direction:column">
       <span class="tag">Art Prints</span>
       <h3 style="font-size:24px;margin:10px 0 18px">6″ × 4″ landscape</h3>
-      <table style="width:100%">
+      <table style="width:100%;margin-bottom:22px">
         <tbody>
           <tr><td style="color:var(--slate)">Set size</td><td style="text-align:right;font-weight:600">4 prints</td></tr>
           <tr><td style="color:var(--slate)">Price per print</td><td style="text-align:right;font-weight:600">₹200</td></tr>
@@ -536,7 +536,7 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
           <tr><td style="color:var(--slate)">Delivery (India)</td><td style="text-align:right;font-weight:600">Included</td></tr>
         </tbody>
       </table>
-      <button class="btn btn-accent sm" style="width:100%;justify-content:center;margin-top:22px" onclick="openEditor('artprints')">Start art prints →</button>
+      <button class="btn btn-accent sm" style="width:100%;justify-content:center;margin-top:auto" onclick="openEditor('artprints')">Start art prints →</button>
     </div>
   </div>
 
@@ -839,12 +839,12 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
 </div></div>
 
 <div class="modal-bg" id="previewModal" onclick="if(event.target===this)hide('previewModal')"><div class="modal" style="max-width:760px;background:var(--ink);color:#fff">
-  <div style="display:flex;justify-content:space-between;margin-bottom:18px"><h3 style="color:#fff">Preview</h3><button class="btn btn-ghost xs" onclick="hide('previewModal')" style="border-color:#3A3A3C;color:#C8D4E2">Close ✕</button></div>
+  <div style="display:flex;justify-content:space-between;margin-bottom:18px"><h3 style="color:#fff">Preview</h3><button class="btn btn-accent xs" onclick="hide('previewModal')">Close ✕</button></div>
   <div id="pvStage" style="display:flex;justify-content:center"></div>
   <div style="display:flex;justify-content:center;gap:12px;margin-top:18px">
-    <button class="btn btn-ghost sm" style="border-color:#3A3A3C;color:#C8D4E2" onclick="pvNav(-1)">← Prev</button>
+    <button class="btn btn-accent sm pv-navbtn" onclick="pvNav(-1)">← Prev</button>
     <span id="pvLabel" style="color:#9AA0A6;font-size:13px;align-self:center"></span>
-    <button class="btn btn-ghost sm" style="border-color:#3A3A3C;color:#C8D4E2" onclick="pvNav(1)">Next →</button>
+    <button class="btn btn-accent sm pv-navbtn" onclick="pvNav(1)">Next →</button>
   </div>
 </div></div>
 <script>
@@ -2039,10 +2039,10 @@ function pvRender(){
     });
     st.appendChild(grid);
     $('pvLabel').textContent='4 artboards · 6″×4″';
-    document.querySelectorAll('#previewModal .btn-ghost').forEach(b=>b.style.display='none');
+    document.querySelectorAll('#previewModal .pv-navbtn').forEach(b=>b.style.display='none');
     return;
   }
-  document.querySelectorAll('#previewModal .btn-ghost').forEach(b=>b.style.display='');
+  document.querySelectorAll('#previewModal .pv-navbtn').forEach(b=>b.style.display='');
   const ed=EDS[PV.key];
   if(PV.idx==='coverspread'){
     const wrap=document.createElement('div');wrap.className='spread wrap-cover';
