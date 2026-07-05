@@ -380,7 +380,7 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
 <section class="view active" id="view-home">
   <div class="hero">
     <span class="tag">Photobooks · Trade Books · Art Prints</span>
-    <h1 data-c="heroHeading">Its your moment, take it.</h1>
+    <h1 data-c="heroHeading">Its your moment, live it.</h1>
     <p data-c="heroBody">A publishing platform for everyone. Publish photobooks, novel-grade trade books, and gallery art prints, all professional grade.</p>
     <div class="hero-cta">
       <button class="btn btn-accent" onclick="openEditor('photobook')">Start a photobook →</button>
@@ -1036,10 +1036,10 @@ const SHAPES=[
   {key:'trapezoid',label:'Trapezoid',clip:'polygon(22% 0%,78% 0%,100% 100%,0% 100%)'},
 ];
 function shapeClip(key){const s=SHAPES.find(x=>x.key===key);return s?s.clip:'none'}
+function mkShape(shapeKey,isPlaceholder,x,y,w,h){return {id:uid(),shapeKey,isPlaceholder,photo:null,x,y,w,h,rot:0,
+  fill:isPlaceholder?'hsla(0,0%,85%,0.6)':'hsla(0,0%,0%,0.5)',b:100,c:100,sat:100};}
 function createEditor(key,cfg){
   const mkImg=(photo,x,y,w,h)=>({id:uid(),photo,x,y,w,h,rot:0,b:100,c:100,sat:100});
-  const mkShape=(shapeKey,isPlaceholder,x,y,w,h)=>({id:uid(),shapeKey,isPlaceholder,photo:null,x,y,w,h,rot:0,
-    fill:isPlaceholder?'hsla(0,0%,85%,0.6)':'hsla(0,0%,0%,0.5)',b:100,c:100,sat:100});
   const mkPage=()=>({bg:'#FFFFFF',images:[],texts:[],shapes:[]});
 
   const ed={
@@ -1290,7 +1290,16 @@ function createEditor(key,cfg){
             ed.armed=null;ed.sel={page:pageRef,kind:'image',id:ed.pageRefObj(pageRef).images.slice(-1)[0].id};ed.renderAll();return;}}
           ed.sel=null;ed.renderAll();};
         el.ondragover=e=>e.preventDefault();
-        el.ondrop=e=>{if(e.target!==el)return;e.preventDefault();const id=e.dataTransfer.getData('photo');if(!id)return;
+        el.ondrop=e=>{if(e.target!==el)return;e.preventDefault();
+          const shapeData=e.dataTransfer.getData('shape');
+          if(shapeData){const {shapeKey,isPlaceholder}=JSON.parse(shapeData);
+            const rect=el.getBoundingClientRect();const cx=(e.clientX-rect.left)/rect.width*100,cy=(e.clientY-rect.top)/rect.height*100;
+            const w=34,h=34;
+            ed.mutate(()=>{const p=ed.pageRefObj(pageRef);if(!p.shapes)p.shapes=[];
+              const sh=mkShape(shapeKey,isPlaceholder,Math.max(0,Math.min(100-w,cx-w/2)),Math.max(0,Math.min(100-h,cy-h/2)),w,h);
+              p.shapes.push(sh);ed.sel={page:pageRef,kind:'shape',id:sh.id};});
+            ed.tool='shapes';ed.renderAll();return;}
+          const id=e.dataTransfer.getData('photo');if(!id)return;
           const ph=ed.photos.find(p=>p.id===id);if(!ph)return;
           const rect=el.getBoundingClientRect();const cx=(e.clientX-rect.left)/rect.width*100,cy=(e.clientY-rect.top)/rect.height*100;
           const ratio=ph.h/ph.w,w=36,h=w*ratio;
@@ -1400,9 +1409,10 @@ function createEditor(key,cfg){
   return ed;
 }
 /* ---------- Generic panel renderer, shared by Photobook + Trade Book ---------- */
+function shapeDragStart(e,shapeKey,isPlaceholder){e.dataTransfer.setData('shape',JSON.stringify({shapeKey,isPlaceholder}));e.dataTransfer.effectAllowed='copy';}
 function shapeGridHTML(edKey,isPlaceholder){
   return `<div class="shape-grid">`+SHAPES.map(s=>
-    `<button class="shape-btn" title="${esc(s.label)}" onclick="EDS.${edKey}.addShape('${s.key}',${isPlaceholder})"><span style="clip-path:${s.clip};-webkit-clip-path:${s.clip}"></span></button>`
+    `<button class="shape-btn" title="${esc(s.label)}" draggable="true" ondragstart="shapeDragStart(event,'${s.key}',${isPlaceholder})" onclick="EDS.${edKey}.addShape('${s.key}',${isPlaceholder})"><span style="clip-path:${s.clip};-webkit-clip-path:${s.clip}"></span></button>`
   ).join('')+`</div>`;
 }
 function genericRenderPanel(ed){
@@ -2311,7 +2321,7 @@ function renderApPhotoGrid(){
 }
 /* ================= CONTENT (editable homepage/publish copy) ================= */
 const CONTENT_DEFAULTS={
-  heroHeading:'Its your moment, take it.',
+  heroHeading:'Its your moment, live it.',
   heroBody:'A publishing platform for everyone. Publish photobooks, novel-grade trade books, and gallery art prints, all professional grade.',
   publishHeading:'The basics of Binder photobooks',
   publishBody:'<p>Every Binder book is printed on 250gsm matte art paper, bound layflat, and colour-checked before it ships. This page is editable from the admin Content Manager.</p>',
