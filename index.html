@@ -77,7 +77,7 @@ h1,h2,h3{font-family:var(--disp);letter-spacing:-.03em;color:var(--ink)}
 .btn.sm{padding:9px 16px;font-size:14px;border-radius:900px}
 .btn.xs{padding:6px 12px;font-size:12.5px;border-radius:900px}
 
-.site-nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:26px;padding:0 24px;height:56px;background:rgba(255,255,255,.86);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line)}
+.site-nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:26px;padding:0 24px;height:56px;background:rgba(255,255,255,.86);backdrop-filter:saturate(180%) blur(20px)}
 .logo{display:flex;align-items:center;gap:8px;cursor:pointer;flex:0 0 auto;min-width:0}
 .logo img{max-height:26px;max-width:38vw;width:auto;height:auto}
 .logo b{font-family:var(--disp);font-size:19px;font-weight:700;color:var(--ink)}
@@ -343,17 +343,16 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
   <button class="nav-toggle" onclick="toggleNavMenu()" aria-label="Menu" id="navToggleBtn">☰</button>
   <div class="nav-menu" id="navMenu">
     <div class="nav-links">
-      <a onclick="openEditor('tradebook')">Design a Novel type Book</a>
-      <a onclick="openEditor('photobook')">Photobook</a>
+      <a onclick="openEditor('tradebook')">Books</a>
+      <a onclick="openEditor('photobook')">Photobooks</a>
       <a onclick="openEditor('artprints')">Art Prints</a>
-      <a onclick="go('publish')">Publish</a>
       <a onclick="go('clients')">Clients</a>
-      <a onclick="go('gallery')">Gallery</a>
       <a onclick="go('store')">Store</a>
+      <a onclick="go('pricing')">Pricing</a>
+      <a onclick="go('gallery')">Gallery</a>
       <a onclick="go('journal')">Journal</a>
       <a onclick="go('contact')">Contact Us</a>
-      <a onclick="go('isbn')">Free ISBN</a>
-      <a onclick="go('pricing')">Pricing</a>
+      <a onclick="go('isbn')">Publish | Free ISBN</a>
     </div>
     <div class="nav-spacer"></div>
     <a onclick="openAuth()" id="authLink" style="font-size:14px;font-weight:600;cursor:pointer;color:var(--text);white-space:nowrap;display:inline-flex;align-items:center;flex:0 0 auto">Sign in</a>
@@ -365,7 +364,7 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
 <section class="view active" id="view-home">
   <div class="hero">
     <span class="tag">Photobooks · Trade Books · Art Prints</span>
-    <h1 data-c="heroHeading">Your moment, take it.</h1>
+    <h1 data-c="heroHeading">Its your moment, take it.</h1>
     <p data-c="heroBody">A publishing platform for everyone. Publish photobooks, novel-grade trade books, and gallery art prints, all professional grade.</p>
     <div class="hero-cta">
       <button class="btn btn-accent" onclick="openEditor('photobook')">Start a photobook →</button>
@@ -2154,7 +2153,7 @@ function renderApPhotoGrid(){
 }
 /* ================= CONTENT (editable homepage/publish copy) ================= */
 const CONTENT_DEFAULTS={
-  heroHeading:'Your moment, take it.',
+  heroHeading:'Its your moment, take it.',
   heroBody:'A publishing platform for everyone. Publish photobooks, novel-grade trade books, and gallery art prints, all professional grade.',
   publishHeading:'The basics of Binder photobooks',
   publishBody:'<p>Every Binder book is printed on 250gsm matte art paper, bound layflat, and colour-checked before it ships. This page is editable from the admin Content Manager.</p>',
@@ -2298,7 +2297,7 @@ async function doChangePassword(){
   if(np.length<6)return toast('New password needs 6+ characters');
   const {error}=await sb.auth.updateUser({password:np});
   if(error){toast('Could not change password: '+error.message);return}
-  $('cpCurrent').value='';$('cpNew').value='';toast('Password changed.');
+  $('cpNew').value='';toast('Password changed.');
 }
 async function doLogout(){await sb.auth.signOut();S.user=null;syncAuthLink();toast('Signed out');go('home');}
 async function renderCustomerDashboard(){
@@ -2608,13 +2607,13 @@ function renderGalAdmin(){const wrap=$('galAdminRows');wrap.innerHTML=GALLERY.ma
 const CLIENTS_DEFAULT=[
   {label:'Individuals',count:'2750+',names:[
     'Dileep Prakash','Gauri Gill','Valmik Thapar','Kairav Engineer (Astral LTD, Safari Crafters)',
-    'Vikas Khanna (chef)','Saumya Sakar Bose','All that Paper','Cofee Stains India'
+    'Vikas Khanna (chef)','Saumya Sakar Bose'
   ]},
   {label:'Corporate',count:null,names:[
     'Photoink','Raw Mango','Lalit Hotels','Taj (Indian Hotels Company LTD)','Oberoi Hotels','Cove & Lane',
     'HCL','House on the Clouds','Nature Morte Art Gallery','MOMA (Museum of Modern Art)','Intel','Diageo',
     'Nicobar','Good Earth','Tata Trust','Airbnb','Zoom','Maruti Udyog','Promanade Books',
-    'Charleville Book & Cafe','Landour Book House'
+    'Charleville Book & Cafe','Landour Book House','All that Paper','Cofee Stains India'
   ]},
   {label:'Government, education, training',count:null,names:[
     'National Rail Museum','Indian Railways',"United Services Institution of India (USI)",
