@@ -1963,10 +1963,15 @@ async function generatePdfForOrder(orderId,fileKey,btn){
     await ensurePdfLibs();
     const {jsPDF}=window.jspdf; const BLEED=0.1, DPI=300;
     if(o.product==='artprints'){
-      const dims={w:6,h:4,ref:6*DPI}; const tw=dims.w+2*BLEED, th=dims.h+2*BLEED;
-      const doc=new jsPDF({orientation:'landscape',unit:'in',format:[tw,th]});
+      const boardOrient=o.snapshot.orient||['landscape','landscape','landscape','landscape'];
+      let doc=null;
       for(let i=0;i<o.snapshot.boards.length;i++){
-        if(i>0)doc.addPage([tw,th],'landscape');
+        const orient=boardOrient[i]||'landscape';
+        const dims=orient==='portrait'?{w:4,h:6,ref:4*DPI}:{w:6,h:4,ref:6*DPI};
+        const tw=dims.w+2*BLEED, th=dims.h+2*BLEED;
+        const pageOrientation=tw>th?'landscape':'portrait';
+        if(!doc)doc=new jsPDF({orientation:pageOrientation,unit:'in',format:[tw,th]});
+        else doc.addPage([tw,th],pageOrientation);
         const b=o.snapshot.boards[i];
         const page={bg:'#FFFFFF',images:b?[{photo:b.photoId,x:b.x,y:b.y,w:b.w,h:b.h,b:100,c:100,sat:100,rot:0}]:[],texts:[]};
         const canvas=await pdfPageCanvas(page,dims,o.snapshot.photoMap,DPI,false,BLEED);
@@ -2029,16 +2034,17 @@ function pvRender(){
   const st=$('pvStage');st.innerHTML='';
   if(PV.key==='artprints'){
     const grid=document.createElement('div');grid.className='artboard-grid';grid.style.cssText+='background:transparent;box-shadow:none;width:min(640px,80vw)';
-    AP.boards.forEach(b=>{
-      const board=document.createElement('div');board.className='artboard';board.style.cssText='width:100%;aspect-ratio:6/4';
+    AP.boards.forEach((b,i)=>{
+      const orient=(AP.orient&&AP.orient[i])||'landscape';
+      const board=document.createElement('div');board.className='artboard';board.style.cssText=`width:100%;aspect-ratio:${orient==='portrait'?'4/6':'6/4'}`;
       if(b){const ph=AP.photos.find(p=>p.id===b.photoId);
-        if(ph){const im=document.createElement('div');im.style.cssText='position:absolute;left:16.6%;top:16.6%;width:66.8%;height:66.8%;overflow:hidden';
+        if(ph){const im=document.createElement('div');im.style.cssText=`position:absolute;left:${b.x??16.6}%;top:${b.y??16.6}%;width:${b.w??66.8}%;height:${b.h??66.8}%;overflow:hidden`;
           const img=document.createElement('img');img.src=ph.url;img.style.cssText='width:100%;height:100%;object-fit:cover';im.appendChild(img);board.appendChild(im);}
       }
       grid.appendChild(board);
     });
     st.appendChild(grid);
-    $('pvLabel').textContent='4 artboards · 6″×4″';
+    $('pvLabel').textContent='4 artboards · 6″×4″ (or 4″×6″ portrait)';
     document.querySelectorAll('#previewModal .pv-navbtn').forEach(b=>b.style.display='none');
     return;
   }
@@ -2085,7 +2091,8 @@ function pvNav(d){if(PV.key==='artprints')return;const ed=EDS[PV.key];const max=
   pvRender();}
 
 /* ================= ART PRINTS EDITOR ================= */
-const AP={title:'Untitled Art Print Set',photos:[],boards:[null,null,null,null]}; // each board: {photoId,x,y,w,h} or null
+const AP={title:'Untitled Art Print Set',photos:[],boards:[null,null,null,null],orient:['landscape','landscape','landscape','landscape']}; // each board: {photoId,x,y,w,h} or null
+function toggleBoardOrient(i){AP.orient[i]=(AP.orient[i]==='portrait')?'landscape':'portrait';renderArtPrints();}
 function renderArtPrints(){
   renderApPhotoGrid();
   const dz=$('ap-dropUp');
@@ -2097,10 +2104,17 @@ function renderArtPrints(){
   }
   const wrap=$('ap-boards'); wrap.innerHTML='';
   const MARGIN=16.6, INSET=66.8; // 1in margin on a 6x4in board ≈ 16.6% each side
+  if(!AP.orient)AP.orient=['landscape','landscape','landscape','landscape'];
   AP.boards.forEach((b,i)=>{
-    const board=document.createElement('div'); board.className='artboard'; board.style.cssText='width:100%;aspect-ratio:6/4;';
+    const orient=AP.orient[i]||'landscape';
+    const board=document.createElement('div'); board.className='artboard'; board.style.cssText=`width:100%;aspect-ratio:${orient==='portrait'?'4/6':'6/4'};`;
     board.dataset.i=i;
     board.innerHTML=`<div style="position:absolute;inset:${MARGIN}%;border:1px dashed #D2D2D7;pointer-events:none"></div>`;
+    const rot=document.createElement('div');rot.className='obj-del';rot.title='Rotate orientation';rot.textContent='⟲';
+    rot.style.cssText+='top:6px;left:6px;right:auto;';
+    rot.onmousedown=e=>{e.preventDefault();e.stopPropagation()};
+    rot.onclick=e=>{e.stopPropagation();toggleBoardOrient(i)};
+    board.appendChild(rot);
     if(b){
       if(b.x===undefined)Object.assign(b,{x:MARGIN,y:MARGIN,w:INSET,h:INSET});
       const im=document.createElement('div');im.className='img-obj';im.style.cssText=`left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%`;
@@ -2135,7 +2149,7 @@ function renderArtPrints(){
         window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);};
     }else{
       const ph=document.createElement('div');ph.style.cssText='position:absolute;inset:16.6%;display:flex;align-items:center;justify-content:center;color:var(--slate-l);font-size:12px;text-align:center;pointer-events:none';
-      ph.textContent='Drop a photo here — 6″×4″ board, 1″ margin';board.appendChild(ph);
+      ph.textContent=`Drop a photo here — ${orient==='portrait'?'4″×6″':'6″×4″'} board, 1″ margin`;board.appendChild(ph);
     }
     board.ondragover=e=>e.preventDefault();
     board.ondrop=e=>{e.preventDefault();const id=e.dataTransfer.getData('photo');if(!id)return;AP.boards[i]={photoId:id,x:MARGIN,y:MARGIN,w:INSET,h:INSET};renderArtPrints()};
@@ -2242,7 +2256,7 @@ async function saveCurrentProject(){
   if(type==='artprints'){
     title=AP.title||'Untitled Art Print Set';
     photoIds=new Set(AP.boards.filter(Boolean).map(b=>b.photoId));
-    doc={boards:AP.boards};
+    doc={boards:AP.boards,orient:AP.orient};
   }else{
     const ed=EDS[type]; title=ed.doc.title; doc=ed.doc; photoIds=collectUsedPhotoIds(doc);
   }
@@ -2279,7 +2293,7 @@ async function openSavedProject(id){
   // Rebuild the photo library for this session from the saved permanent URLs.
   const rebuilt=Object.entries(p.photo_map||{}).map(([pid,info])=>({id:pid,name:info.name,url:info.url,w:info.w,h:info.h,lowRes:false}));
   if(p.type==='artprints'){
-    AP.title=p.title; AP.boards=p.doc.boards; AP.photos=rebuilt; AP._savedId=p.id; openEditor('artprints');
+    AP.title=p.title; AP.boards=p.doc.boards; AP.orient=p.doc.orient||['landscape','landscape','landscape','landscape']; AP.photos=rebuilt; AP._savedId=p.id; openEditor('artprints');
   }else{
     const ed=EDS[p.type]; ed.doc=p.doc; ed.photos=rebuilt; ed._savedId=p.id;
     ed.cur=ed.cfg.hasSpine?'coverspread':'cover'; ed.sel=null; openEditor(p.type);
@@ -2432,7 +2446,7 @@ function doPay(){const btn=$('payBtn');btn.disabled=true;btn.textContent='Proces
       const ed=EDS[product];
       snapshot={doc:JSON.parse(JSON.stringify(ed.doc)),photoMap:snapshotPhotoMap(ed.doc,ed.photos)};
     }else if(product==='artprints'){
-      snapshot={boards:JSON.parse(JSON.stringify(AP.boards)),photoMap:snapshotApPhotoMap()};
+      snapshot={boards:JSON.parse(JSON.stringify(AP.boards)),orient:[...AP.orient],photoMap:snapshotApPhotoMap()};
     }
     const order={id:'BDR-'+String(3001+S.orders.length),customer:S.user.email,
       title:(CHECKOUT_CTX.type==='store'?S.cart.map(it=>CATALOG.find(c=>c.id===it.id)?.name).join(', '):(EDS[CHECKOUT_CTX.key]?EDS[CHECKOUT_CTX.key].doc.title:AP.title))+(qty>1?' × '+qty+' copies':''),
