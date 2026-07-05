@@ -494,8 +494,8 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
   <h1>Simple, transparent pricing</h1>
   <p class="lead">Every price below already includes delivery anywhere in India. No hidden charges at checkout.</p>
 
-  <div class="pricing-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:40px">
-    <div style="border:1px solid var(--line);border-radius:18px;padding:32px">
+  <div class="pricing-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px;margin-top:40px">
+    <div style="border-radius:18px;padding:32px;background:var(--cream)">
       <span class="tag">Photobook</span>
       <h3 style="font-size:24px;margin:10px 0 18px">8.5″ × 8.5″ hardcover</h3>
       <table style="width:100%">
@@ -510,7 +510,7 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
       <button class="btn btn-accent sm" style="width:100%;justify-content:center;margin-top:22px" onclick="openEditor('photobook')">Start a photobook →</button>
     </div>
 
-    <div style="border:1px solid var(--line);border-radius:18px;padding:32px">
+    <div style="border-radius:18px;padding:32px;background:var(--cream)">
       <span class="tag">Trade Book</span>
       <h3 style="font-size:24px;margin:10px 0 18px">5.5″ × 8″ paperback</h3>
       <table style="width:100%">
@@ -523,6 +523,21 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
         </tbody>
       </table>
       <button class="btn btn-accent sm" style="width:100%;justify-content:center;margin-top:22px" onclick="openEditor('tradebook')">Start a trade book →</button>
+    </div>
+
+    <div style="border-radius:18px;padding:32px;background:var(--cream)">
+      <span class="tag">Art Prints</span>
+      <h3 style="font-size:24px;margin:10px 0 18px">6″ × 4″ landscape</h3>
+      <table style="width:100%">
+        <tbody>
+          <tr><td style="color:var(--slate)">Set size</td><td style="text-align:right;font-weight:600">4 prints</td></tr>
+          <tr><td style="color:var(--slate)">Price per print</td><td style="text-align:right;font-weight:600">₹200</td></tr>
+          <tr><td style="color:var(--slate)">Set of 4</td><td style="text-align:right;font-weight:600">₹800 / set</td></tr>
+          <tr><td style="color:var(--slate)">Orientation</td><td style="text-align:right;font-weight:600">Landscape</td></tr>
+          <tr><td style="color:var(--slate)">Delivery (India)</td><td style="text-align:right;font-weight:600">Included</td></tr>
+        </tbody>
+      </table>
+      <button class="btn btn-accent sm" style="width:100%;justify-content:center;margin-top:22px" onclick="openEditor('artprints')">Start art prints →</button>
     </div>
   </div>
 
@@ -2377,9 +2392,11 @@ function recalcCheckout(){
   const rule=PRICING_RULES[editorKey];
   const qtyInput=$('coQty'); let qty=qtyInput?Math.max(1,Math.min(50,parseInt(qtyInput.value)||1)):1;
   if(qtyInput)qtyInput.value=qty;
-  if(!rule){ // Art Prints — no tiered pricing, flat single price
-    const price=99900; CHECKOUT_CTX.price=price;
-    $('coRows').innerHTML=`<div class="sum-row total"><span>Total</span><span>${inr(price)}</span></div>`;
+  if(!rule){ // Art Prints — flat set pricing: ₹200 per print × 4 prints
+    const perPrint=20000, setSize=4, price=perPrint*setSize; CHECKOUT_CTX.price=price;
+    $('coRows').innerHTML=`<div class="sum-row"><span>${setSize} art prints × ${inr(perPrint)}</span><span>${inr(price)}</span></div>`+
+      `<div class="sum-row"><span>Delivery (India)</span><span>Included</span></div>`+
+      `<div class="sum-row total"><span>Total</span><span>${inr(price)}</span></div>`;
     $('payAmt').textContent=inr(price); return;
   }
   const q=quoteEditorOrder(editorKey,qty);
