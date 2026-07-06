@@ -195,7 +195,62 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
 .rte-tools{display:flex;gap:4px;flex-wrap:wrap;border:1px solid var(--line);border-bottom:none;border-radius:10px 10px 0 0;padding:8px;background:var(--cream)}
 .rte-tools button{padding:7px 11px;border-radius:7px;font-size:13px;font-weight:600}
 .rte-tools button:hover{background:#fff}
-.rte{border:1px solid var(--line);border-radius:0 0 10px 10px;min-height:220px;padding:16px;font-size:15px;line-height:1.7;outline:none}
+.rte{border:1px solid var(--line);border-radius:0 0 10px 10px;min-height:220px;padding:16px;font-size:15px;line-height:1.7;outline:none;background:#fff}
+.rte:focus{border-color:var(--accent)}
+.rte h2{font-size:22px;margin:20px 0 10px;line-height:1.3}
+.rte h3{font-size:18px;margin:16px 0 8px;line-height:1.35}
+.rte p{margin:0 0 12px}
+.rte ul,.rte ol{margin:0 0 12px;padding-left:24px}
+.rte li{margin-bottom:4px}
+.rte blockquote{border-left:3px solid var(--accent);margin:14px 0;padding:6px 0 6px 16px;color:var(--slate);font-style:italic}
+.rte img{max-width:100%;border-radius:10px;margin:8px 0}
+.rte a{color:var(--accent);text-decoration:underline}
+.rte-tools button.on{background:var(--ink);color:#fff}
+.rte-tools .rte-sep{width:1px;background:var(--line);margin:2px 4px}
+.post-body ul,.post-body ol{margin:0 0 16px;padding-left:26px}
+.post-body blockquote{border-left:3px solid var(--accent);margin:18px 0;padding:8px 0 8px 18px;color:var(--slate);font-style:italic}
+.post-body h3{font-size:20px;margin:22px 0 10px}
+.post-body a{color:var(--accent)}
+.cust-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.cust-toolbar .field{margin:0}
+.cust-card{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.cust-head{display:flex;gap:14px;align-items:center;padding:14px 16px;cursor:pointer;flex-wrap:wrap}
+.cust-head:hover{background:var(--cream)}
+.cust-avatar{width:38px;height:38px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:0 0 auto}
+.cust-detail{border-top:1px solid var(--line);padding:16px;background:var(--cream);display:none}
+.cust-detail.open{display:block}
+.cust-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.cust-grid b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--slate-l);margin-bottom:3px;font-weight:700}
+.cust-grid span{font-size:13.5px}
+.jp-row{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
+.cmyk-box{border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px;background:#fff}
+.cmyk-row{display:grid;grid-template-columns:16px 1fr 54px;gap:8px;align-items:center;margin-bottom:8px}
+.cmyk-row label{font-size:12px;font-weight:800}
+.cmyk-row input[type=range]{width:100%;accent-color:var(--accent)}
+.cmyk-row.ch-c input[type=range]{accent-color:#00A6D6}.cmyk-row.ch-c label{color:#0089B0}
+.cmyk-row.ch-m input[type=range]{accent-color:#D6006F}.cmyk-row.ch-m label{color:#B0005B}
+.cmyk-row.ch-y input[type=range]{accent-color:#D6B800}.cmyk-row.ch-y label{color:#8A7600}
+.cmyk-row.ch-k input[type=range]{accent-color:#141414}.cmyk-row.ch-k label{color:#141414}
+.cmyk-row input[type=number]{width:54px;padding:4px 6px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;text-align:right}
+.cmyk-prev{display:flex;align-items:center;gap:10px;margin-top:4px}
+.cmyk-prev .sw{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);flex:0 0 auto}
+.cmyk-prev .vals{font-size:11.5px;color:var(--slate);line-height:1.5}
+.preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.preset-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border:1px solid var(--line);border-radius:900px;font-size:12px;font-weight:600;background:#fff;cursor:pointer}
+.preset-chip:hover{background:var(--cream);border-color:var(--accent)}
+.preset-chip.add{border-style:dashed;color:var(--slate)}
+.preset-chip .chip-x{font-weight:800;color:var(--slate-l);padding:0 2px;cursor:pointer}
+.preset-chip .chip-x:hover{color:#B0432E}
+.layer-row{display:flex;gap:7px;align-items:center;padding:8px 9px;border:1px solid var(--line);border-radius:9px;margin-bottom:6px;cursor:pointer;background:#fff}
+.layer-row:hover{background:var(--cream)}
+.layer-row.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.layer-row.lk{opacity:.65}
+.layer-ic{width:22px;height:22px;border-radius:6px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:0 0 auto}
+.layer-lab{flex:1;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.layer-row button{border:1px solid var(--line);border-radius:6px;background:#fff;font-size:10px;padding:3px 6px;flex:0 0 auto}
+.layer-row button:disabled{opacity:.3}
+.img-obj.locked,.shape-obj.locked{cursor:not-allowed}
+.tbox.locked .tbox-inner{cursor:not-allowed}
 
 /* ===== Editors (shared engine) ===== */
 .ed-root{position:fixed;inset:0;background:#F5F5F7;z-index:100;display:none;flex-direction:column}
@@ -624,20 +679,13 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
       <div id="ap-content" style="display:none"><h2>Content Manager</h2>
         <div id="contentFields"></div>
         <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:26px 0 12px">Publish With Us page</h4>
-        <div class="rte-tools">
-          <button onclick="rte('publish','bold')"><b>B</b></button><button onclick="rte('publish','italic')"><i>I</i></button>
-          <button onclick="rte('publish','formatBlock','h2')">H2</button><button onclick="rteImage('publish')">▣ Image</button>
-        </div>
+        <div class="rte-tools" data-rte-for="publish"></div>
         <div class="rte" id="rte-publish" contenteditable="true"></div>
         <button class="btn btn-dark sm" style="margin-top:12px" onclick="saveRte('publish')">Save Publish With Us</button>
         <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:26px 0 12px">Free ISBN page</h4>
         <label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Page title</label>
         <input class="field" id="isbnTitleField" oninput="CONTENT.isbnTitle=this.value;saveContent();applyContent();">
-        <div class="rte-tools">
-          <button onclick="rte('isbn','bold')"><b>B</b></button><button onclick="rte('isbn','italic')"><i>I</i></button>
-          <button onclick="rte('isbn','formatBlock','h2')">H2</button><button onclick="rte('isbn','insertUnorderedList')">• List</button>
-          <button onclick="rteImage('isbn')">▣ Image</button>
-        </div>
+        <div class="rte-tools" data-rte-for="isbn"></div>
         <div class="rte" id="rte-isbn" contenteditable="true"></div>
         <button class="btn btn-dark sm" style="margin-top:12px" onclick="saveRte('isbn')">Save Free ISBN page</button>
         <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:26px 0 12px">Gallery &amp; Clients</h4>
@@ -648,25 +696,45 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h2 style="margin:0">Store Products</h2><div style="display:flex;gap:8px"><button class="btn btn-ghost sm" onclick="openListArrange('products')">✦ AI Arrange</button><button class="btn btn-accent sm" onclick="openProductForm()">+ Add product</button></div></div>
         <div id="productRows"></div>
       </div>
-      <div id="ap-journal" style="display:none"><h2>Write a Journal post</h2>
+      <div id="ap-journal" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h2 style="margin:0" id="jpEditorHeading">Write a Journal post</h2><button class="btn btn-ghost sm" id="jpCancelEdit" style="display:none" onclick="cancelPostEdit()">Cancel edit</button></div>
         <input class="field" id="bpTitle" placeholder="Post title">
         <input class="field" id="bpHero" placeholder="Hero image URL (or leave blank and upload below)">
         <input type="file" accept="image/*" id="bpHeroUpload" style="display:none" onchange="onPostHeroUpload(this.files[0])">
-        <button class="btn btn-ghost xs" style="margin-bottom:14px" onclick="$('bpHeroUpload').click()">Upload hero image</button>
-        <div class="rte-tools">
-          <button onclick="rte('post','bold')"><b>B</b></button><button onclick="rte('post','italic')"><i>I</i></button>
-          <button onclick="rte('post','formatBlock','h2')">H2</button><button onclick="rte('post','insertUnorderedList')">• List</button>
-          <button onclick="rteImage('post')">▣ Image</button>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
+          <button class="btn btn-ghost xs" onclick="$('bpHeroUpload').click()">Upload hero image</button>
+          <img id="bpHeroPreview" style="height:44px;border-radius:8px;display:none">
         </div>
+        <div class="rte-tools" data-rte-for="post"></div>
         <div class="rte" id="rte-post" contenteditable="true"><p>Start writing…</p></div>
         <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
           <button class="btn btn-ghost sm" onclick="runAiCheck('seo')">✦ AI SEO check</button>
           <button class="btn btn-ghost sm" onclick="runAiCheck('grammar')">✦ AI grammar check</button>
-          <button class="btn btn-accent sm" onclick="publishPost()">Publish to Journal</button>
+          <button class="btn btn-accent sm" id="jpPublishBtn" onclick="publishPost()">Publish to Journal</button>
         </div>
         <div id="aiCheckResult" style="margin-top:14px;font-size:13px;color:var(--slate)"></div>
+        <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:32px 0 12px">Published posts</h4>
+        <div id="jpPostRows"></div>
       </div>
-      <div id="ap-customers" style="display:none"><h2>Customers</h2><table><thead><tr><th>Name</th><th>Email</th><th>Joined</th></tr></thead><tbody id="customerRows"></tbody></table></div>
+      <div id="ap-customers" style="display:none"><h2>Customers</h2>
+        <div class="cust-toolbar">
+          <input class="field" id="custSearch" placeholder="Search name, email, phone, GST…" style="flex:1;min-width:220px" oninput="renderCustomerRows(true)">
+          <select class="field" id="custSort" style="width:190px" onchange="renderCustomerRows(true)">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="nameaz">Name A–Z</option>
+            <option value="nameza">Name Z–A</option>
+            <option value="orders">Most orders</option>
+            <option value="spend">Highest spend</option>
+          </select>
+          <input type="file" accept=".csv,.json" id="custImportFile" style="display:none" onchange="importCustomers(this.files[0]);this.value=''">
+          <button class="btn btn-ghost sm" onclick="$('custImportFile').click()">⬆ Import</button>
+          <button class="btn btn-ghost sm" onclick="exportCustomers('csv')">⬇ Export CSV</button>
+          <button class="btn btn-ghost sm" onclick="exportCustomers('json')">⬇ Export JSON</button>
+        </div>
+        <p id="custCount" style="font-size:12.5px;color:var(--slate-l);margin:0 0 12px"></p>
+        <div id="customerList"></div>
+      </div>
       <div id="ap-payments" style="display:none"><h2>Payments</h2>
         <p style="color:var(--slate);font-size:13.5px;max-width:60ch;margin-bottom:20px">Razorpay <b>Key ID</b> only (publishable, safe in-browser). Never place a Key Secret here — that goes into Supabase as a server-side secret, never into this app.</p>
         <input class="field" id="payKeyId" placeholder="rzp_live_••••••••••••">
@@ -688,7 +756,26 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
   <img id="pfImgPreview" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:none;margin-bottom:8px">
   <input type="file" accept="image/*" id="pfImgUpload" style="display:none" onchange="onProductImageUpload(this.files[0])">
   <button class="btn btn-ghost xs" style="margin-bottom:14px" onclick="$('pfImgUpload').click()">Upload image</button>
-  <div style="display:flex;gap:10px"><button class="btn btn-accent" style="flex:1;justify-content:center" onclick="saveProductForm()">Save</button><button class="btn btn-ghost" onclick="hide('productFormModal')">Cancel</button></div>
+</div></div>
+
+<div class="modal-bg" id="custFormModal" onclick="if(event.target===this)hide('custFormModal')"><div class="modal">
+  <button class="modal-close" onclick="hide('custFormModal')" aria-label="Close">✕</button>
+  <h3 id="cfTitle">Edit customer</h3>
+  <label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Name</label>
+  <input class="field" id="cfName" placeholder="Full name">
+  <label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Email</label>
+  <input class="field" id="cfEmail" type="email" placeholder="email@example.com">
+  <label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Phone</label>
+  <input class="field" id="cfPhone" placeholder="+91 …">
+  <label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Address</label>
+  <textarea class="field" id="cfAddress" rows="2" placeholder="Street, city, state, PIN"></textarea>
+  <label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">GSTIN (optional)</label>
+  <input class="field" id="cfGst" placeholder="e.g. 07ABCDE1234F1Z5" maxlength="15" style="text-transform:uppercase">
+  <label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Joining date</label>
+  <input class="field" id="cfJoined" type="date">
+  <label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Notes</label>
+  <textarea class="field" id="cfNotes" rows="2" placeholder="Internal notes"></textarea>
+  <div style="display:flex;gap:10px"><button class="btn btn-accent" style="flex:1;justify-content:center" onclick="saveCustomerForm()">Save</button><button class="btn btn-ghost" onclick="hide('custFormModal')">Cancel</button></div>
 </div></div>
 
 <!-- ============ AUTH ============ -->
@@ -764,6 +851,7 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
       <button data-tool="shapes" onclick="EDS.photobook.setTool('shapes')"><span>⬠</span>Shapes</button>
       <button data-tool="adjust" onclick="EDS.photobook.setTool('adjust')"><span>◐</span>Adjust</button>
       <button data-tool="text" onclick="EDS.photobook.setTool('text')"><span>T</span>Text</button>
+      <button data-tool="layers" onclick="EDS.photobook.setTool('layers')"><span>≡</span>Layers</button>
       <button data-tool="cover" onclick="EDS.photobook.setTool('cover')"><span>◙</span>Cover</button>
     </div>
     <div class="ed-panel" id="pb-panel"></div>
@@ -791,6 +879,7 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
       <button data-tool="manuscript" onclick="EDS.tradebook.setTool('manuscript')"><span>¶</span>Manuscript</button>
       <button data-tool="adjust" onclick="EDS.tradebook.setTool('adjust')"><span>◐</span>Adjust</button>
       <button data-tool="text" onclick="EDS.tradebook.setTool('text')"><span>T</span>Text</button>
+      <button data-tool="layers" onclick="EDS.tradebook.setTool('layers')"><span>≡</span>Layers</button>
       <button data-tool="cover" onclick="EDS.tradebook.setTool('cover')"><span>◙</span>Cover</button>
     </div>
     <div class="ed-panel" id="tb-panel"></div>
@@ -1146,7 +1235,12 @@ function createEditor(key,cfg){
     setCur(c){ed.cur=c;ed.sel=null;ed.renderAll()},
     toggleGrid(){ed.grid=!ed.grid;const b=$(cfg.prefix+'-gridBtn');if(b)b.classList.toggle('on',ed.grid);ed.renderStage();},
 
-    imgFilter(im){let f=`brightness(${im.b}%) contrast(${im.c}%) saturate(${im.sat}%)`;if(cfg.monochrome)f+=' grayscale(100%)';return f},
+    imgFilter(im,blurScale){let f=`brightness(${im.b??100}%) contrast(${im.c??100}%) saturate(${im.sat??100}%)`;
+      const t=im.temp||0;
+      if(!cfg.monochrome&&t>0)f+=` sepia(${Math.round(t*0.35)}%) saturate(${100+t*0.3}%)`;
+      if(!cfg.monochrome&&t<0)f+=` hue-rotate(${Math.round(t*0.25)}deg) saturate(${100+t*0.15}%)`;
+      if(im.blur)f+=` blur(${(im.blur*(blurScale||1)).toFixed(2)}px)`;
+      if(cfg.monochrome)f+=' grayscale(100%)';return f},
 
     /* ---------- Snapping: page centre/edges + alignment with sibling objects on the same page ---------- */
     snapTargets(page,excludeId){
@@ -1195,14 +1289,16 @@ function createEditor(key,cfg){
         el.appendChild(guide);
       }
       page.images.forEach(im=>{
-        const d=document.createElement('div');d.className='img-obj';
+        const d=document.createElement('div');d.className='img-obj'+(im.locked?' locked':'');
         d.style.cssText=`left:${im.x}%;top:${im.y}%;width:${im.w}%;height:${im.h}%`;
+        if((im.op??100)<100)d.style.opacity=(im.op/100);
+        if(im.shadow)d.style.boxShadow=`0 ${(im.shadow*0.35).toFixed(1)}px ${im.shadow}px rgba(0,0,0,.38)`;
         if(ed.sel&&ed.sel.page===pageRef&&ed.sel.kind==='image'&&ed.sel.id===im.id)d.classList.add('sel');
         const ph=ed.photos.find(p=>p.id===im.photo);
         if(ph){const img=document.createElement('img');img.src=ph.url;img.style.filter=ed.imgFilter(im);img.style.transform=`rotate(${im.rot}deg)`;d.appendChild(img);}
         if(!interactive){el.appendChild(d);return}
-        const rh=document.createElement('div');rh.className='rh';d.appendChild(rh);
-        const addDel=()=>{if(d.querySelector('.obj-del'))return;const del=document.createElement('div');del.className='obj-del';del.textContent='×';
+        const rh=document.createElement('div');rh.className='rh';if(!im.locked)d.appendChild(rh);
+        const addDel=()=>{if(im.locked||d.querySelector('.obj-del'))return;const del=document.createElement('div');del.className='obj-del';del.textContent='×';
           del.onmousedown=e=>{e.preventDefault();e.stopPropagation()};
           del.onclick=e=>{e.preventDefault();e.stopPropagation();ed.mutate(()=>{const arr=ed.pageRefObj(pageRef).images;const i=arr.findIndex(o=>o.id===im.id);if(i>-1)arr.splice(i,1)});ed.sel=null;ed.renderAll()};
           d.appendChild(del)};
@@ -1213,6 +1309,7 @@ function createEditor(key,cfg){
           ed.tool=cfg.hasAdjust?'adjust':'photos';document.querySelectorAll('#'+cfg.prefix+'-rail button').forEach(b=>b.classList.toggle('on',b.dataset.tool===ed.tool));
           ed.renderPanel();};
         d.onmousedown=e=>{if(e.target===rh)return;e.preventDefault();e.stopPropagation();select();
+          if(im.locked)return;
           const rect=el.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ox=im.x,oy=im.y;let moved=false;
           const targets=ed.snapTargets(page,im.id);
           const mv=ev=>{const dx=(ev.clientX-sx)/rect.width*100,dy=(ev.clientY-sy)/rect.height*100;if(Math.abs(dx)+Math.abs(dy)>0.4)moved=true;
@@ -1238,9 +1335,10 @@ function createEditor(key,cfg){
         el.appendChild(d);
       });
       (page.shapes||[]).forEach(sh=>{
-        const d=document.createElement('div');d.className='shape-obj';
+        const d=document.createElement('div');d.className='shape-obj'+(sh.locked?' locked':'');
         const clip=shapeClip(sh.shapeKey);
         d.style.cssText=`left:${sh.x}%;top:${sh.y}%;width:${sh.w}%;height:${sh.h}%;transform:rotate(${sh.rot||0}deg)`;
+        if(sh.shadow)d.style.filter=`drop-shadow(0 ${(sh.shadow*0.35).toFixed(1)}px ${sh.shadow}px rgba(0,0,0,.35))`;
         if(ed.sel&&ed.sel.page===pageRef&&ed.sel.kind==='shape'&&ed.sel.id===sh.id)d.classList.add('sel');
         const mask=document.createElement('div');mask.className='shape-mask';mask.style.cssText=`clip-path:${clip};-webkit-clip-path:${clip}`;
         const ph=sh.photo?ed.photos.find(p=>p.id===sh.photo):null;
@@ -1260,6 +1358,7 @@ function createEditor(key,cfg){
           ed.tool='shapes';document.querySelectorAll('#'+cfg.prefix+'-rail button').forEach(b=>b.classList.toggle('on',b.dataset.tool==='shapes'));
           ed.renderPanel();};
         d.onmousedown=e=>{if(e.target===rh)return;e.preventDefault();e.stopPropagation();select();
+          if(sh.locked)return;
           const rect=el.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ox=sh.x,oy=sh.y;let moved=false;
           const targets=ed.snapTargets(page,sh.id);
           const mv=ev=>{const dx=(ev.clientX-sx)/rect.width*100,dy=(ev.clientY-sy)/rect.height*100;if(Math.abs(dx)+Math.abs(dy)>0.4)moved=true;
@@ -1270,6 +1369,7 @@ function createEditor(key,cfg){
           const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);ed.clearGuides(el);if(moved){ed.snap();ed.autosave();ed.renderStrip();}};
           window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);};
         rh.onmousedown=e=>{e.preventDefault();e.stopPropagation();select();
+          if(sh.locked)return;
           const rect=el.getBoundingClientRect(),sx=e.clientX,ow=sh.w,oh=sh.h,ratio=oh/ow;
           const wTargets=[...new Set((page.shapes||[]).filter(o=>o.id!==sh.id).map(o=>o.w))];
           const mv=ev=>{const dw=(ev.clientX-sx)/rect.width*100;let nw=Math.max(8,Math.min(100-sh.x,ow+dw));
@@ -1286,16 +1386,17 @@ function createEditor(key,cfg){
         el.appendChild(d);
       });
       page.texts.forEach(t=>{
-        const d=document.createElement('div');d.className='tbox'+(ed.sel&&ed.sel.page===pageRef&&ed.sel.kind==='text'&&ed.sel.id===t.id?' sel':'');
+        const d=document.createElement('div');d.className='tbox'+(t.locked?' locked':'')+(ed.sel&&ed.sel.page===pageRef&&ed.sel.kind==='text'&&ed.sel.id===t.id?' sel':'');
         d.style.cssText=`left:${t.x}%;top:${t.y}%${t.w?`;width:${t.w}%`:''}`;
-        const inner=document.createElement('div');inner.className='tbox-inner';inner.contentEditable=interactive;inner.innerHTML=t.html;
+        const inner=document.createElement('div');inner.className='tbox-inner';inner.contentEditable=interactive&&!t.locked;inner.innerHTML=t.html;
         const col=cfg.monochrome?`rgba(0,0,0,${(t.blackPct??100)/100})`:t.color;
         inner.style.cssText=`font-size:${t.size}${t.unit||'px'};color:${col};font-family:'${t.font}',serif;text-align:${t.align};
           font-weight:${t.bold?700:(t.weight||400)};font-style:${t.italic?'italic':'normal'};text-decoration:${t.underline?'underline':'none'};
-          line-height:${t.lineHeight??1.3};--para-gap:${t.paraSpacing??8}px;letter-spacing:${t.ls??0}px;text-indent:${t.indent??0}em`;
+          line-height:${t.lineHeight??1.3};--para-gap:${t.paraSpacing??8}px;letter-spacing:${t.ls??0}px;text-indent:${t.indent??0}em`+
+          (t.shadow?`;text-shadow:0 ${(t.shadow*0.006).toFixed(3)}em ${(t.shadow*0.014).toFixed(3)}em rgba(0,0,0,.42)`:'');
         d.appendChild(inner);
         if(!interactive){el.appendChild(d);return}
-        const addDel=()=>{if(d.querySelector('.obj-del'))return;const del=document.createElement('div');del.className='obj-del';del.textContent='×';
+        const addDel=()=>{if(t.locked||d.querySelector('.obj-del'))return;const del=document.createElement('div');del.className='obj-del';del.textContent='×';
           del.onmousedown=e=>{e.preventDefault();e.stopPropagation()};
           del.onclick=e=>{e.preventDefault();e.stopPropagation();ed.mutate(()=>{const arr=ed.pageRefObj(pageRef).texts;const i=arr.findIndex(o=>o.id===t.id);if(i>-1)arr.splice(i,1)});ed.sel=null;ed.renderAll()};
           d.appendChild(del)};
@@ -1308,6 +1409,7 @@ function createEditor(key,cfg){
         d.onmousedown=e=>{if(e.target.classList&&e.target.classList.contains('obj-del'))return;
           if(document.activeElement===inner)return;
           selectLite();
+          if(t.locked)return;
           const rect=el.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ox=t.x,oy=t.y;let dragging=false;
           const dRect=d.getBoundingClientRect();const tw=dRect.width/rect.width*100,th=dRect.height/rect.height*100;
           const targets=ed.snapTargets(page,t.id);
@@ -1459,6 +1561,91 @@ function shapeGridHTML(edKey,isPlaceholder){
     `<button class="shape-btn" title="${esc(s.label)}" draggable="true" ondragstart="shapeDragStart(event,'${s.key}',${isPlaceholder})" onclick="EDS.${edKey}.addShape('${s.key}',${isPlaceholder})"><span style="clip-path:${s.clip};-webkit-clip-path:${s.clip}"></span></button>`
   ).join('')+`</div>`;
 }
+/* ---------- CMYK colour selector (print-native colour picking) ----------
+   A reusable C/M/Y/K slider picker for any editor element: text, shapes,
+   interior page backgrounds and covers. Values are stored on the element as
+   both hex (for on-screen preview and the browser proof render) and the raw
+   CMYK percentages, so a prepress worker can honour the exact ink values.
+   Screen preview uses the standard naive conversion (no ICC profile), so
+   on-press colour may differ slightly — the numbers you set are what count. */
+function hex2cmyk(hex){
+  const h=(hex||'#FFFFFF').replace('#','');const v=h.length===3?h.split('').map(x=>x+x).join(''):h;
+  const r=parseInt(v.slice(0,2),16)/255,g=parseInt(v.slice(2,4),16)/255,b=parseInt(v.slice(4,6),16)/255;
+  const k=1-Math.max(r,g,b);
+  if(k>=0.999)return{c:0,m:0,y:0,k:100};
+  return{c:Math.round((1-r-k)/(1-k)*100),m:Math.round((1-g-k)/(1-k)*100),y:Math.round((1-b-k)/(1-k)*100),k:Math.round(k*100)};
+}
+function cmyk2hex(c,m,y,k){
+  c/=100;m/=100;y/=100;k/=100;
+  const f=x=>Math.round(255*(1-x)*(1-k)).toString(16).padStart(2,'0').toUpperCase();
+  return '#'+f(c)+f(m)+f(y);
+}
+function cssToHex(col){ /* normalise any CSS colour (hsla/rgba/hex/name) to #RRGGBB */
+  if(!col)return '#FFFFFF';
+  if(/^#[0-9a-f]{6}$/i.test(col))return col.toUpperCase();
+  const ctx=cssToHex._ctx||(cssToHex._ctx=document.createElement('canvas').getContext('2d'));
+  ctx.fillStyle='#000';ctx.fillStyle=col;const v=ctx.fillStyle;
+  if(v.startsWith('#'))return v.toUpperCase();
+  const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(v);
+  return m?('#'+[m[1],m[2],m[3]].map(x=>(+x).toString(16).padStart(2,'0')).join('').toUpperCase()):'#FFFFFF';
+}
+function hexToRgba(hex,a){const h=hex.replace('#','');
+  return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`;}
+function defVal(o,k){const d={b:100,c:100,sat:100,op:100,temp:0,blur:0,shadow:0};return o[k]??(d[k]??0);}
+function cmykSectionHTML(ed,kind,curColor,label){
+  const hex=cssToHex(curColor);const {c,m,y,k}=hex2cmyk(hex);const px=ed.cfg.prefix;
+  const chans=[['C','c',c],['M','m',m],['Y','y',y],['K','k',k]];
+  return `<div class="rte-label">${label}</div><div class="cmyk-box">
+    ${chans.map(([lab,ch,val])=>`<div class="cmyk-row ch-${ch}"><label>${lab}</label>
+      <input type="range" min="0" max="100" value="${val}" id="${px}-cmyk-${kind}-${ch}"
+        oninput="cmykLive('${ed.key}','${kind}')" onchange="cmykCommit('${ed.key}','${kind}')">
+      <input type="number" min="0" max="100" value="${val}" id="${px}-cmyk-${kind}-${ch}-n"
+        onchange="cmykNum('${ed.key}','${kind}','${ch}',this.value)"></div>`).join('')}
+    <div class="cmyk-prev">
+      <div class="sw" id="${px}-cmyk-${kind}-sw" style="background:${hex}"></div>
+      <div class="vals"><b id="${px}-cmyk-${kind}-hex">${hex}</b><br><span id="${px}-cmyk-${kind}-txt">C${c} M${m} Y${y} K${k}</span></div>
+      <button class="btn btn-ghost xs" style="margin-left:auto" title="Sample a colour from anywhere on screen — your photos included" onclick="cmykEyedrop('${ed.key}','${kind}')">⌖ Sample</button>
+    </div>
+  </div>`;
+}
+async function cmykEyedrop(edKey,kind){
+  if(!window.EyeDropper)return toast('The eyedropper needs Chrome or Edge');
+  try{
+    const {sRGBHex}=await new EyeDropper().open();
+    const ed=EDS[edKey];const {c,m,y,k}=hex2cmyk(cssToHex(sRGBHex));const px=ed.cfg.prefix;
+    [['c',c],['m',m],['y',y],['k',k]].forEach(([ch,v])=>{const el=$(px+'-cmyk-'+kind+'-'+ch);if(el)el.value=v});
+    cmykCommit(edKey,kind);toast('Sampled '+cssToHex(sRGBHex));
+  }catch(e){/* user pressed Esc — nothing to do */}
+}
+function cmykRead(ed,kind){
+  const px=ed.cfg.prefix,g=ch=>{const el=$(px+'-cmyk-'+kind+'-'+ch);return el?Math.max(0,Math.min(100,+el.value||0)):0};
+  const c=g('c'),m=g('m'),y=g('y'),k=g('k');const hex=cmyk2hex(c,m,y,k);
+  ['c','m','y','k'].forEach(ch=>{const n=$(px+'-cmyk-'+kind+'-'+ch+'-n');if(n)n.value=g(ch)});
+  const sw=$(px+'-cmyk-'+kind+'-sw');if(sw)sw.style.background=hex;
+  const hx=$(px+'-cmyk-'+kind+'-hex');if(hx)hx.textContent=hex;
+  const tx=$(px+'-cmyk-'+kind+'-txt');if(tx)tx.textContent=`C${c} M${m} Y${y} K${k}`;
+  return {c,m,y,k,hex};
+}
+function cmykNum(edKey,kind,ch,val){const ed=EDS[edKey];const el=$(ed.cfg.prefix+'-cmyk-'+kind+'-'+ch);
+  if(el)el.value=Math.max(0,Math.min(100,+val||0));cmykCommit(edKey,kind);}
+function cmykLive(edKey,kind){ /* live on-stage preview while dragging — no history spam */
+  const ed=EDS[edKey];const {hex}=cmykRead(ed,kind);const px=ed.cfg.prefix;
+  if(kind==='text'){const el=document.querySelector('#'+px+'-stage .tbox.sel .tbox-inner');if(el)el.style.color=hex;}
+  else if(kind==='shape'){const sh=ed.curShape();
+    const el=document.querySelector('#'+px+'-stage .shape-obj.sel .shape-mask');
+    if(el&&sh&&!sh.photo)el.style.background=hexToRgba(hex,ed.alphaOf(sh.fill)/100);}
+}
+function cmykCommit(edKey,kind){
+  const ed=EDS[edKey];const {c,m,y,k,hex}=cmykRead(ed,kind);const cmyk={c,m,y,k};
+  if(kind==='text'){if(!ed.sel||ed.sel.kind!=='text')return;
+    ed.mutate(()=>{const t=ed.pageRefObj(ed.sel.page).texts.find(o=>o.id===ed.sel.id);if(t){t.color=hex;t.cmyk=cmyk;}});ed.renderAll();}
+  else if(kind==='shape'){const sh=ed.curShape();if(!sh)return;const a=ed.alphaOf(sh.fill)/100;
+    ed.mutate(()=>{sh.fill=hexToRgba(hex,a);sh.cmyk=cmyk;});ed.renderAll();}
+  else if(kind==='cover'){ed.setCoverBg(hex,cmyk);}
+  else if(kind==='page'){const ref=ed.curPageRef();
+    ed.mutate(()=>{const p=ed.pageRefObj(ref);p.bg=hex;p.bgCmyk=cmyk;});ed.renderAll();}
+}
+
 function genericRenderPanel(ed){
   const P=$(ed.cfg.prefix+'-panel'); const page=ed.curPage(); const pageRef=ed.curPageRef();
   if(ed.tool==='photos'){
@@ -1479,7 +1666,8 @@ function genericRenderPanel(ed){
           <button onclick="EDS.${ed.key}.layerImg('back')">To back</button>
         </div>
         <button class="btn btn-ghost xs" style="width:100%;justify-content:center;margin-bottom:12px" onclick="EDS.${ed.key}.removeImg()">Remove photo</button>`:''}
-      <div class="photo-grid" id="${ed.cfg.prefix}-pGrid"></div>`;
+      <div class="photo-grid" id="${ed.cfg.prefix}-pGrid"></div>
+      ${ed.cfg.monochrome?'':cmykSectionHTML(ed,'page',(page&&page.bg)||'#FFFFFF','This page\u2019s background — CMYK')}`;
     const dz=$(ed.cfg.prefix+'-dropUp');dz.onclick=()=>{window._uploadTarget=ed.key;$('fileInput').click()};
     dz.ondragover=e=>{e.preventDefault();dz.classList.add('over')};dz.ondragleave=()=>dz.classList.remove('over');
     dz.ondrop=e=>{e.preventDefault();dz.classList.remove('over');ed.addFiles([...e.dataTransfer.files])};
@@ -1519,20 +1707,30 @@ function genericRenderPanel(ed){
         <input type="range" class="hue-slider" min="0" max="360" value="${hue}" oninput="EDS.${ed.key}.setShapeHue(this.value)">
       </div>
       <div class="slider-row"><label>Opacity<span id="${ed.cfg.prefix}-shapeOpacityVal">${alpha}%</span></label><input type="range" min="10" max="100" value="${alpha}" oninput="EDS.${ed.key}.setShapeOpacity(this.value)"></div>
+      <div class="slider-row"><label>Drop shadow<span id="${ed.cfg.prefix}-shapeShadowVal">${sh.shadow??0}</span></label><input type="range" min="0" max="30" value="${sh.shadow??0}" oninput="EDS.${ed.key}.setShapeShadow(this.value)" onchange="EDS.${ed.key}.autosave()"></div>
+      ${ed.cfg.monochrome?'':cmykSectionHTML(ed,'shape',sh.fill,'Exact ink colour — CMYK')}
       <button class="btn btn-ghost xs" style="width:100%;justify-content:center;margin-bottom:8px" onclick="EDS.${ed.key}.resetShapeColor()">Reset to default colour</button>
       <button class="btn btn-ghost xs" style="width:100%;justify-content:center" onclick="EDS.${ed.key}.removeShape()">Remove ${sh.isPlaceholder?'placeholder':'shape'}</button>
       `:''}`;
   }
   else if(ed.tool==='adjust'){
     const im=(ed.sel&&ed.sel.kind==='image')?ed.pageRefObj(ed.sel.page).images.find(o=>o.id===ed.sel.id):null;
-    if(!im){P.innerHTML=`<h4>Adjust photo</h4><div class="hint">Select a photo to correct brightness, contrast${ed.cfg.monochrome?'':', saturation,'} and rotation.</div>`;return}
+    if(!im){P.innerHTML=`<h4>Adjust photo</h4><div class="hint">Select a photo to correct brightness, contrast${ed.cfg.monochrome?'':', saturation, temperature,'} blur, opacity and shadow — or apply a one-click look.</div>`;return}
     const ph=ed.photos.find(p=>p.id===im.photo);
-    const sliders=ed.cfg.monochrome?[['Brightness','b',50,150],['Contrast','c',50,150]]:[['Brightness','b',50,150],['Contrast','c',50,150],['Saturation','sat',0,200]];
+    const sliders=ed.cfg.monochrome
+      ?[['Brightness','b',50,150,'%'],['Contrast','c',50,150,'%'],['Blur','blur',0,8,'px'],['Opacity','op',10,100,'%'],['Drop shadow','shadow',0,30,'']]
+      :[['Brightness','b',50,150,'%'],['Contrast','c',50,150,'%'],['Saturation','sat',0,200,'%'],['Temperature','temp',-100,100,''],['Blur','blur',0,8,'px'],['Opacity','op',10,100,'%'],['Drop shadow','shadow',0,30,'']];
+    const presets=ed.cfg.monochrome
+      ?[['Original','orig'],['Soft','matte'],['Punch','noir']]
+      :[['Original','orig'],['Vivid','vivid'],['Warm','warm'],['Cool','cool'],['Matte','matte'],['Noir','noir'],['Fade','fade']];
     P.innerHTML=`<h4>Adjust photo</h4>
       ${ph&&ph.lowRes?'<div class="quality-warn">⚠ This photo is below 300 DPI for full-size print — consider a higher-resolution version.</div>':''}
-      ${sliders.map(([lab,k,mn,mx])=>`
-      <div class="slider-row"><label>${lab}<span id="v_${k}">${im[k]}%</span></label>
-      <input type="range" min="${mn}" max="${mx}" value="${im[k]}" oninput="EDS.${ed.key}.adjImg('${k}',this.value)"></div>`).join('')}
+      <div class="rte-label">Looks — one-click presets</div>
+      <div class="preset-row">${presets.map(([lab,key])=>`<button class="preset-chip" onclick="EDS.${ed.key}.applyPreset('${key}')">${lab}</button>`).join('')}</div>
+      <div class="rte-label">Fine adjustments</div>
+      ${sliders.map(([lab,kk,mn,mx,unit])=>`
+      <div class="slider-row"><label>${lab}<span id="v_${kk}">${defVal(im,kk)}${unit}</span></label>
+      <input type="range" min="${mn}" max="${mx}" value="${defVal(im,kk)}" oninput="EDS.${ed.key}.adjImg('${kk}',this.value,'${unit}')" onchange="EDS.${ed.key}.autosave()"></div>`).join('')}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
         <button class="btn btn-ghost xs" onclick="EDS.${ed.key}.rotImg()">⟳ Rotate 90°</button>
         <button class="btn btn-ghost xs" onclick="EDS.${ed.key}.resetImg()">Reset</button>
@@ -1589,8 +1787,15 @@ function genericRenderPanel(ed){
       <div class="slider-row"><label>First-line indent<span>${(tt.indent??0)}em</span></label><input type="range" min="0" max="3" step="0.2" value="${tt.indent??0}" oninput="EDS.${ed.key}.tAdj('indent',+this.value)"></div>
       <div class="slider-row"><label>Letter spacing<span>${(tt.ls??0)}px</span></label><input type="range" min="-1" max="4" step="0.1" value="${tt.ls??0}" oninput="EDS.${ed.key}.tAdj('ls',+this.value)"></div>
       <div class="slider-row"><label>Size<span>${tt.size}${tt.unit||'px'}</span></label><input type="range" min="${tt.unit==='pt'?4:10}" max="${tt.unit==='pt'?48:96}" step="${tt.unit==='pt'?0.5:1}" value="${tt.size}" oninput="EDS.${ed.key}.tAdj('size',+this.value)"></div>
+      <div class="slider-row"><label>Drop shadow<span>${tt.shadow??0}</span></label><input type="range" min="0" max="30" value="${tt.shadow??0}" oninput="EDS.${ed.key}.tAdj('shadow',+this.value)"></div>
+      <div class="rte-label">Text styles — save once, apply anywhere</div>
+      <div class="preset-row">
+        ${(ed.doc.textStyles||[]).map(st=>`<span class="preset-chip" onclick="EDS.${ed.key}.applyTextStyle('${st.id}')">${esc(st.name)}<b class="chip-x" onclick="event.stopPropagation();EDS.${ed.key}.deleteTextStyle('${st.id}')">×</b></span>`).join('')}
+        <button class="preset-chip add" onclick="EDS.${ed.key}.saveTextStyle()">＋ Save current</button>
+      </div>
       ${ed.cfg.monochrome?`<div class="slider-row"><label>Black %<span>${tt.blackPct??100}%</span></label><input type="range" min="1" max="100" step="5" value="${tt.blackPct??100}" oninput="EDS.${ed.key}.tAdj('blackPct',+this.value)"></div>`
-        :`<div class="slider-row"><label>Colour</label><div class="swatches">${['#141414','#FFFFFF','#0000FF','#5C5C5A','#B0432E'].map(c=>`<div class="swatch ${tt.color===c?'on':''}" style="background:${c}" onclick="EDS.${ed.key}.tAdj('color','${c}')"></div>`).join('')}</div></div>`}
+        :`<div class="slider-row"><label>Colour</label><div class="swatches">${['#141414','#FFFFFF','#0000FF','#5C5C5A','#B0432E'].map(c=>`<div class="swatch ${tt.color===c?'on':''}" style="background:${c}" onclick="EDS.${ed.key}.tAdj('color','${c}')"></div>`).join('')}</div></div>
+      ${cmykSectionHTML(ed,'text',tt.color||'#141414','Exact ink colour — CMYK')}`}
       <div class="slider-row"><label>${ed.cfg.monochrome?'Typeface':'Google Font'}</label></div>
       ${ed.cfg.monochrome?'':`<div class="align-row" style="margin-bottom:8px">
         <button class="${ed._fontCat==='sans'?'on':''}" onclick="EDS.${ed.key}.setFontCat('sans')">Sans</button>
@@ -1607,6 +1812,32 @@ function genericRenderPanel(ed){
       <button class="btn btn-ghost xs" onclick="EDS.${ed.key}.delText()">Delete text</button>`:
       '<div class="hint">Add text, then select it to format paragraphs, alignment, lists and fonts — Word-style.</div>'}`;
     if(tt)ed.renderFontList('');
+  }
+  else if(ed.tool==='layers'){
+    const p=ed.pageRefObj(pageRef)||{};
+    /* Render order on the page: images (bottom) → shapes → texts (top).
+       The panel lists top-most first, like InDesign/Photoshop. */
+    const entries=[];
+    (p.texts||[]).slice().reverse().forEach(o=>entries.push({kind:'text',arr:'texts',o,icon:'T',label:(o.html||'').replace(/<[^>]+>/g,' ').trim().slice(0,26)||'(empty text)'}));
+    (p.shapes||[]).slice().reverse().forEach(o=>{const ph=o.photo?ed.photos.find(x=>x.id===o.photo):null;
+      entries.push({kind:'shape',arr:'shapes',o,icon:'⬠',label:(o.isPlaceholder?'Placeholder':'Shape')+(ph?' · '+ph.name.slice(0,16):'')});});
+    (p.images||[]).slice().reverse().forEach(o=>{const ph=ed.photos.find(x=>x.id===o.photo);
+      entries.push({kind:'image',arr:'images',o,icon:'▣',label:ph?ph.name.slice(0,24):'(photo)'});});
+    const groups={texts:(p.texts||[]),shapes:(p.shapes||[]),images:(p.images||[])};
+    const rowsHtml=entries.map(en=>{
+      const idx=groups[en.arr].indexOf(en.o);
+      const sel=ed.sel&&ed.sel.page===pageRef&&ed.sel.kind===en.kind&&ed.sel.id===en.o.id;
+      const atTop=idx===groups[en.arr].length-1, atBot=idx===0;
+      return `<div class="layer-row ${sel?'on':''} ${en.o.locked?'lk':''}" onclick="EDS.${ed.key}.selectLayer('${en.kind}','${en.o.id}')">
+        <span class="layer-ic">${en.icon}</span>
+        <span class="layer-lab">${esc(en.label)}</span>
+        <button title="Move up" ${atTop?'disabled':''} onclick="event.stopPropagation();EDS.${ed.key}.moveLayer('${en.arr}','${en.o.id}',1)">▲</button>
+        <button title="Move down" ${atBot?'disabled':''} onclick="event.stopPropagation();EDS.${ed.key}.moveLayer('${en.arr}','${en.o.id}',-1)">▼</button>
+        <button title="${en.o.locked?'Unlock':'Lock'}" onclick="event.stopPropagation();EDS.${ed.key}.toggleLock('${en.arr}','${en.o.id}')">${en.o.locked?'🔒':'🔓'}</button>
+      </div>`;}).join('');
+    P.innerHTML=`<h4>Layers</h4>
+      <div class="hint">Everything on this page, top-most first — like InDesign's Layers panel. Click to select, ▲▼ to restack (within photos, shapes or text — text always sits above shapes, shapes above photos), 🔒 to lock an object so it can't be moved, edited or deleted by accident.</div>
+      ${entries.length?rowsHtml:'<div class="hint">Nothing on this page yet.</div>'}`;
   }
   else if(ed.tool==='manuscript'){
     const m=ed.doc.msMeta;
@@ -1630,12 +1861,14 @@ function genericRenderPanel(ed){
         </div>
         <div class="slider-row"><label>Spine width (from ${ed.pageCount()} pages)<span>${ed.spineWidthIn()}″</span></label></div>
         <div class="hint">Background colour for the <b>${ed._coverZone==='back'?'back cover':ed._coverZone==='spine'?'spine':'front cover'}</b>:</div>
-        <div class="swatches">${['#FFFFFF','#141414','#0000FF','#F1F1F0','#B0432E','#1B4332','#2A5C8A','#8A5A00','#5B2A86','#333333'].map(c=>`<div class="swatch ${ed.pageRefObj(ed._coverZone).bg===c?'on':''}" style="background:${c}" onclick="EDS.${ed.key}.setCoverBg('${c}')"></div>`).join('')}</div>`;
+        <div class="swatches">${['#FFFFFF','#141414','#0000FF','#F1F1F0','#B0432E','#1B4332','#2A5C8A','#8A5A00','#5B2A86','#333333'].map(c=>`<div class="swatch ${ed.pageRefObj(ed._coverZone).bg===c?'on':''}" style="background:${c}" onclick="EDS.${ed.key}.setCoverBg('${c}')"></div>`).join('')}</div>
+        ${cmykSectionHTML(ed,'cover',ed.pageRefObj(ed._coverZone).bg,'Exact ink colour — CMYK')}`;
     }else{
       P.innerHTML=`<h4>Cover &amp; back cover</h4>
         <div class="hint">Pick a background colour for the cover and back cover.</div>
         <div class="align-row" style="margin-bottom:14px"><button class="${ed.cur==='cover'?'on':''}" onclick="EDS.${ed.key}.setCur('cover')">Cover</button><button class="${ed.cur==='back'?'on':''}" onclick="EDS.${ed.key}.setCur('back')">Back cover</button></div>
-        <div class="swatches">${['#FFFFFF','#141414','#0000FF','#F1F1F0','#B0432E','#1B4332','#2A5C8A','#8A5A00','#5B2A86','#333333'].map(c=>`<div class="swatch ${page.bg===c?'on':''}" style="background:${c}" onclick="EDS.${ed.key}.setCoverBg('${c}')"></div>`).join('')}</div>`;
+        <div class="swatches">${['#FFFFFF','#141414','#0000FF','#F1F1F0','#B0432E','#1B4332','#2A5C8A','#8A5A00','#5B2A86','#333333'].map(c=>`<div class="swatch ${page.bg===c?'on':''}" style="background:${c}" onclick="EDS.${ed.key}.setCoverBg('${c}')"></div>`).join('')}</div>
+        ${cmykSectionHTML(ed,'cover',page.bg,'Exact ink colour — CMYK')}`;
     }
   }
 }
@@ -1643,11 +1876,26 @@ function genericRenderPanel(ed){
 /* ---------- wire generic methods onto each editor instance ---------- */
 function wireEditorMethods(ed){
   ed.renderPanel=()=>genericRenderPanel(ed);
-  ed.adjImg=(k,v)=>{const im=ed.pageRefObj(ed.sel.page).images.find(o=>o.id===ed.sel.id);im[k]=+v;$('v_'+k).textContent=v+'%';
-    const el=document.querySelector('#'+ed.cfg.prefix+'-stage .img-obj.sel img');if(el)el.style.filter=ed.imgFilter(im);};
+  ed.adjImg=(k,v,unit)=>{const im=ed.pageRefObj(ed.sel.page).images.find(o=>o.id===ed.sel.id);if(!im)return;im[k]=+v;
+    const lbl=$('v_'+k);if(lbl)lbl.textContent=v+(unit!==undefined?unit:'%');
+    const d=document.querySelector('#'+ed.cfg.prefix+'-stage .img-obj.sel');if(!d)return;
+    if(k==='op')d.style.opacity=(im.op??100)/100;
+    else if(k==='shadow')d.style.boxShadow=im.shadow?`0 ${(im.shadow*0.35).toFixed(1)}px ${im.shadow}px rgba(0,0,0,.38)`:'none';
+    else{const el=d.querySelector('img');if(el)el.style.filter=ed.imgFilter(im);}};
+  ed.applyPreset=(key)=>{const P={
+      orig:{b:100,c:100,sat:100,temp:0,blur:0},
+      vivid:{b:104,c:118,sat:145,temp:0,blur:0},
+      warm:{b:103,c:104,sat:110,temp:45,blur:0},
+      cool:{b:102,c:106,sat:105,temp:-45,blur:0},
+      matte:{b:108,c:82,sat:88,temp:8,blur:0},
+      noir:{b:98,c:132,sat:0,temp:0,blur:0},
+      fade:{b:112,c:88,sat:70,temp:12,blur:0}}[key];if(!P)return;
+    ed.mutate(()=>{const im=ed.pageRefObj(ed.sel.page).images.find(o=>o.id===ed.sel.id);if(im)Object.assign(im,P);});
+    ed.renderAll();};
   ed.rotImg=()=>{ed.mutate(()=>{const im=ed.pageRefObj(ed.sel.page).images.find(o=>o.id===ed.sel.id);im.rot=(im.rot+90)%360});ed.renderAll();};
-  ed.resetImg=()=>{ed.mutate(()=>{Object.assign(ed.pageRefObj(ed.sel.page).images.find(o=>o.id===ed.sel.id),{b:100,c:100,sat:100,rot:0})});ed.renderAll();};
-  ed.removeImg=()=>{ed.mutate(()=>{const arr=ed.pageRefObj(ed.sel.page).images;const i=arr.findIndex(o=>o.id===ed.sel.id);if(i>-1)arr.splice(i,1)});ed.sel=null;ed.renderAll();};
+  ed.resetImg=()=>{ed.mutate(()=>{Object.assign(ed.pageRefObj(ed.sel.page).images.find(o=>o.id===ed.sel.id),{b:100,c:100,sat:100,rot:0,temp:0,blur:0,op:100,shadow:0})});ed.renderAll();};
+  ed.removeImg=()=>{const o=ed._findSel();if(o&&o.locked)return toast('Locked — unlock it in the Layers panel first');
+    ed.mutate(()=>{const arr=ed.pageRefObj(ed.sel.page).images;const i=arr.findIndex(o=>o.id===ed.sel.id);if(i>-1)arr.splice(i,1)});ed.sel=null;ed.renderAll();};
   ed.dupImg=()=>{let newId;ed.mutate(()=>{const arr=ed.pageRefObj(ed.sel.page).images;const src=arr.find(o=>o.id===ed.sel.id);if(!src)return;
     const copy={...src,id:uid(),x:Math.min(100-src.w,src.x+4),y:Math.min(100-src.h,src.y+4)};arr.push(copy);newId=copy.id;});
     if(newId)ed.sel={page:ed.sel.page,kind:'image',id:newId};ed.renderAll();};
@@ -1656,7 +1904,8 @@ function wireEditorMethods(ed){
   ed.curShape=()=>{if(!ed.sel||ed.sel.kind!=='shape')return null;const p=ed.pageRefObj(ed.sel.page);return (p.shapes||[]).find(o=>o.id===ed.sel.id)||null;};
   ed.addShape=(shapeKey,isPlaceholder)=>{const pageRef=ed.curPageRef();ed.mutate(()=>{const p=ed.pageRefObj(pageRef);if(!p.shapes)p.shapes=[];
     const sh=mkShape(shapeKey,isPlaceholder,32,32,36,36);p.shapes.push(sh);ed.sel={page:pageRef,kind:'shape',id:sh.id};});ed.renderAll();};
-  ed.removeShape=()=>{ed.mutate(()=>{const arr=ed.pageRefObj(ed.sel.page).shapes||[];const i=arr.findIndex(o=>o.id===ed.sel.id);if(i>-1)arr.splice(i,1)});ed.sel=null;ed.renderAll();};
+  ed.removeShape=()=>{const o=ed._findSel();if(o&&o.locked)return toast('Locked — unlock it in the Layers panel first');
+    ed.mutate(()=>{const arr=ed.pageRefObj(ed.sel.page).shapes||[];const i=arr.findIndex(o=>o.id===ed.sel.id);if(i>-1)arr.splice(i,1)});ed.sel=null;ed.renderAll();};
   ed.dupShape=()=>{let newId;ed.mutate(()=>{const arr=ed.pageRefObj(ed.sel.page).shapes||[];const src=arr.find(o=>o.id===ed.sel.id);if(!src)return;
     const copy={...src,id:uid(),x:Math.min(100-src.w,src.x+4),y:Math.min(100-src.h,src.y+4)};arr.push(copy);newId=copy.id;});
     if(newId)ed.sel={page:ed.sel.page,kind:'shape',id:newId};ed.renderAll();};
@@ -1671,6 +1920,10 @@ function wireEditorMethods(ed){
     sh.fill=isGrey?`hsla(0,0%,${sh.isPlaceholder?85:0}%,${pct/100})`:`hsla(${h},72%,50%,${pct/100})`;
     ed.autosave();const el=document.querySelector('#'+ed.cfg.prefix+'-stage .shape-obj.sel .shape-mask');if(el&&!sh.photo)el.style.background=sh.fill;
     const lbl=$(ed.cfg.prefix+'-shapeOpacityVal');if(lbl)lbl.textContent=pct+'%';};
+  ed.setShapeShadow=(v)=>{const sh=ed.curShape();if(!sh)return;sh.shadow=+v;
+    const d=document.querySelector('#'+ed.cfg.prefix+'-stage .shape-obj.sel');
+    if(d)d.style.filter=sh.shadow?`drop-shadow(0 ${(sh.shadow*0.35).toFixed(1)}px ${sh.shadow}px rgba(0,0,0,.35))`:'none';
+    const lbl=$(ed.cfg.prefix+'-shapeShadowVal');if(lbl)lbl.textContent=v;};
   ed.resetShapeColor=()=>{const sh=ed.curShape();if(!sh)return;ed.mutate(()=>{sh.fill=sh.isPlaceholder?'hsla(0,0%,85%,0.6)':'hsla(0,0%,0%,0.5)'});ed.renderAll();};
   ed.rotShape=()=>{ed.mutate(()=>{const sh=ed.curShape();if(sh)sh.rot=(sh.rot+90)%360});ed.renderAll();};
   ed.removeShapePhoto=()=>{ed.mutate(()=>{const sh=ed.curShape();if(sh)sh.photo=null});ed.renderAll();};
@@ -1698,22 +1951,52 @@ function wireEditorMethods(ed){
         return;
       }
     }
-    ed.mutate(()=>{const t=ed.pageRefObj(ed.sel.page).texts.find(o=>o.id===ed.sel.id);t[k]=v;if(k==='font')loadGoogleFont(v);});
+    ed.mutate(()=>{const t=ed.pageRefObj(ed.sel.page).texts.find(o=>o.id===ed.sel.id);t[k]=v;if(k==='color')t.cmyk=hex2cmyk(cssToHex(v));if(k==='font')loadGoogleFont(v);});
     ed.renderAll();
   };
-  ed.delText=()=>{ed.mutate(()=>{const arr=ed.pageRefObj(ed.sel.page).texts;const i=arr.findIndex(o=>o.id===ed.sel.id);if(i>-1)arr.splice(i,1)});ed.sel=null;ed.renderAll();};
+  ed.delText=()=>{const o=ed._findSel();if(o&&o.locked)return toast('Locked — unlock it in the Layers panel first');
+    ed.mutate(()=>{const arr=ed.pageRefObj(ed.sel.page).texts;const i=arr.findIndex(o=>o.id===ed.sel.id);if(i>-1)arr.splice(i,1)});ed.sel=null;ed.renderAll();};
   ed.dupText=()=>{let newId;ed.mutate(()=>{const arr=ed.pageRefObj(ed.sel.page).texts;const src=arr.find(o=>o.id===ed.sel.id);if(!src)return;
     const copy={...src,id:uid(),x:Math.min(92,src.x+4),y:Math.min(94,src.y+4)};arr.push(copy);newId=copy.id;});
     if(newId)ed.sel={page:ed.sel.page,kind:'text',id:newId};ed.renderAll();};
   ed.layerText=(dir)=>{ed.mutate(()=>{const arr=ed.pageRefObj(ed.sel.page).texts;const i=arr.findIndex(o=>o.id===ed.sel.id);if(i<0)return;
     const [o]=arr.splice(i,1); dir==='front'?arr.push(o):arr.unshift(o);});ed.renderAll();};
-  ed.deleteSelected=()=>{if(!ed.sel)return;if(ed.sel.kind==='image')ed.removeImg();else if(ed.sel.kind==='shape')ed.removeShape();else ed.delText();};
-  ed.nudgeSelected=(dx,dy)=>{if(!ed.sel)return;ed.mutate(()=>{
+  ed.selectLayer=(kind,id)=>{ed.sel={page:ed.curPageRef(),kind,id};ed.renderAll();};
+  ed.moveLayer=(arrKey,id,dir)=>{ed.mutate(()=>{const arr=ed.pageRefObj(ed.curPageRef())[arrKey]||[];
+    const i=arr.findIndex(o=>o.id===id);const j=i+dir;
+    if(i<0||j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];});ed.renderAll();};
+  ed.toggleLock=(arrKey,id)=>{ed.mutate(()=>{const o=(ed.pageRefObj(ed.curPageRef())[arrKey]||[]).find(x=>x.id===id);
+    if(o)o.locked=!o.locked;});ed.renderAll();};
+  ed._findSel=()=>{if(!ed.sel)return null;const p=ed.pageRefObj(ed.sel.page);
+    const arr=ed.sel.kind==='image'?p.images:ed.sel.kind==='shape'?(p.shapes||[]):p.texts;
+    return arr.find(x=>x.id===ed.sel.id)||null;};
+  ed.deleteSelected=()=>{if(!ed.sel)return;const o=ed._findSel();if(o&&o.locked)return toast('Locked — unlock it in the Layers panel first');
+    if(ed.sel.kind==='image')ed.removeImg();else if(ed.sel.kind==='shape')ed.removeShape();else ed.delText();};
+  ed.nudgeSelected=(dx,dy)=>{if(!ed.sel)return;const sel=ed._findSel();if(sel&&sel.locked)return;
+    ed.mutate(()=>{
     const arr=ed.sel.kind==='image'?ed.pageRefObj(ed.sel.page).images:ed.sel.kind==='shape'?(ed.pageRefObj(ed.sel.page).shapes||[]):ed.pageRefObj(ed.sel.page).texts;
     const o=arr.find(x=>x.id===ed.sel.id);if(!o)return; o.x=Math.max(0,o.x+dx); o.y=Math.max(0,o.y+dy);});ed.renderAll();};
-  ed.setCoverBg=(c)=>{const zone=ed.cfg.hasSpine?ed._coverZone:(ed.cur==='back'?'back':'cover');ed.mutate(()=>{ed.pageRefObj(zone).bg=c});ed.renderAll();};
+  ed.setCoverBg=(c,cmyk)=>{const zone=ed.cfg.hasSpine?ed._coverZone:(ed.cur==='back'?'back':'cover');ed.mutate(()=>{const p=ed.pageRefObj(zone);p.bg=c;p.bgCmyk=cmyk||hex2cmyk(cssToHex(c));});ed.renderAll();};
   ed.setCoverZone=(z)=>{ed._coverZone=z;ed.renderPanel();};
   ed._fontCat='sans';
+  /* InDesign-style saved text styles — stored on the document, so they travel
+     with autosave and the order snapshot. */
+  const STYLE_KEYS=['font','size','unit','color','cmyk','bold','italic','underline','align','lineHeight','paraSpacing','ls','indent','shadow','blackPct','weight'];
+  ed.saveTextStyle=()=>{const t=(ed.sel&&ed.sel.kind==='text')?ed.pageRefObj(ed.sel.page).texts.find(o=>o.id===ed.sel.id):null;
+    if(!t)return toast('Select a text box first');
+    const name=(prompt('Style name (e.g. Chapter Head, Caption):')||'').trim();if(!name)return;
+    const props={};STYLE_KEYS.forEach(k=>{if(t[k]!==undefined)props[k]=JSON.parse(JSON.stringify(t[k]))});
+    ed.mutate(()=>{if(!ed.doc.textStyles)ed.doc.textStyles=[];
+      const existing=ed.doc.textStyles.find(s=>s.name.toLowerCase()===name.toLowerCase());
+      if(existing)existing.props=props; else ed.doc.textStyles.push({id:uid(),name,props});});
+    ed.renderPanel();toast('Style "'+name+'" saved');};
+  ed.applyTextStyle=(id)=>{const st=(ed.doc.textStyles||[]).find(s=>s.id===id);if(!st)return;
+    if(!ed.sel||ed.sel.kind!=='text')return toast('Select a text box first');
+    ed.mutate(()=>{const t=ed.pageRefObj(ed.sel.page).texts.find(o=>o.id===ed.sel.id);
+      if(t)Object.keys(st.props).forEach(k=>{t[k]=JSON.parse(JSON.stringify(st.props[k]))});
+      if(st.props.font)loadGoogleFont(st.props.font);});
+    ed.renderAll();toast('Applied "'+st.name+'"');};
+  ed.deleteTextStyle=(id)=>{ed.mutate(()=>{ed.doc.textStyles=(ed.doc.textStyles||[]).filter(s=>s.id!==id)});ed.renderPanel();};
   ed.setFontCat=(cat)=>{ed._fontCat=cat;ed.renderPanel();};
   ed.renderFontList=(q)=>{
     const wrap=$(ed.cfg.prefix+'-fontList');if(!wrap)return;
@@ -2093,22 +2376,31 @@ function pdfBuildPage(page,dims,photoMap,dpi,monochrome){
   const el=document.createElement('div');
   el.style.cssText=`position:relative;width:${wpx}px;height:${hpx}px;background:${(page&&page.bg)||'#FFFFFF'};overflow:hidden`;
   if(!page)return el;
+  const printFilter=(o,blurScale)=>{let f=`brightness(${o.b??100}%) contrast(${o.c??100}%) saturate(${o.sat??100}%)`;
+    const t=o.temp||0;
+    if(!monochrome&&t>0)f+=` sepia(${Math.round(t*0.35)}%) saturate(${100+t*0.3}%)`;
+    if(!monochrome&&t<0)f+=` hue-rotate(${Math.round(t*0.25)}deg) saturate(${100+t*0.15}%)`;
+    if(o.blur)f+=` blur(${(o.blur*blurScale).toFixed(2)}px)`;
+    if(monochrome)f+=' grayscale(100%)';return f;};
   (page.images||[]).forEach(im=>{
     const ph=photoMap[im.photo]; if(!ph)return;
     const d=document.createElement('div');
     d.style.cssText=`position:absolute;left:${im.x}%;top:${im.y}%;width:${im.w}%;height:${im.h}%;overflow:hidden`;
+    if((im.op??100)<100)d.style.opacity=(im.op/100);
+    if(im.shadow)d.style.boxShadow=`0 ${(im.shadow*0.35*k).toFixed(1)}px ${(im.shadow*k).toFixed(1)}px rgba(0,0,0,.38)`;
     const img=document.createElement('img'); img.crossOrigin='anonymous'; img.src=ph.url;
     img.style.cssText=`width:100%;height:100%;object-fit:contain;transform:rotate(${im.rot||0}deg);`+
-      `filter:brightness(${im.b??100}%) contrast(${im.c??100}%) saturate(${im.sat??100}%)${monochrome?' grayscale(100%)':''}`;
+      `filter:${printFilter(im,k)}`;
     d.appendChild(img); el.appendChild(d);
   });
   (page.shapes||[]).forEach(sh=>{
     const clip=shapeClip(sh.shapeKey);
     const d=document.createElement('div');
     d.style.cssText=`position:absolute;left:${sh.x}%;top:${sh.y}%;width:${sh.w}%;height:${sh.h}%;overflow:hidden;transform:rotate(${sh.rot||0}deg);clip-path:${clip};-webkit-clip-path:${clip}`;
+    if(sh.shadow)d.style.filter=`drop-shadow(0 ${(sh.shadow*0.35*k).toFixed(1)}px ${(sh.shadow*k).toFixed(1)}px rgba(0,0,0,.35))`;
     const ph=sh.photo?photoMap[sh.photo]:null;
     if(ph){const img=document.createElement('img');img.crossOrigin='anonymous';img.src=ph.url;
-      img.style.cssText=`width:100%;height:100%;object-fit:cover;filter:brightness(${sh.b??100}%) contrast(${sh.c??100}%) saturate(${sh.sat??100}%)${monochrome?' grayscale(100%)':''}`;
+      img.style.cssText=`width:100%;height:100%;object-fit:cover;filter:${printFilter(sh,k)}`;
       d.appendChild(img);
     }else{d.style.background=sh.fill;}
     el.appendChild(d);
@@ -2124,7 +2416,8 @@ function pdfBuildPage(page,dims,photoMap,dpi,monochrome){
     const spacePx=(v)=>(t.unit==='pt')?(v||0)*(dpi/96):(v||0)*k; // paragraph-gap/letter-spacing were tuned at 96dpi CSS scale
     inner.style.cssText=`font-size:${fontPx}px;color:${col};font-family:'${t.font||'Inter'}',serif;text-align:${t.align||'left'};`+
       `font-weight:${t.bold?700:(t.weight||400)};font-style:${t.italic?'italic':'normal'};text-decoration:${t.underline?'underline':'none'};`+
-      `line-height:${t.lineHeight??1.3};--para-gap:${spacePx(t.paraSpacing??8)}px;letter-spacing:${spacePx(t.ls??0)}px;text-indent:${t.indent??0}em`;
+      `line-height:${t.lineHeight??1.3};--para-gap:${spacePx(t.paraSpacing??8)}px;letter-spacing:${spacePx(t.ls??0)}px;text-indent:${t.indent??0}em`+
+      (t.shadow?`;text-shadow:0 ${(t.shadow*0.006).toFixed(3)}em ${(t.shadow*0.014).toFixed(3)}em rgba(0,0,0,.42)`:'');
     d.appendChild(inner); el.appendChild(d);
   });
   return el;
@@ -2726,6 +3019,7 @@ function adminTab(t){document.querySelectorAll('.admin-side button[data-ap]').fo
   if(t==='dashboard')renderDashboard(); if(t==='orders')renderOrderRows(); if(t==='pdf')renderPdfRows();
   if(t==='fonts')renderFontRows(); if(t==='content')renderContentFields();
   if(t==='gallery-edit')renderGalAdmin(); if(t==='products')renderProductRows();
+  if(t==='journal')renderJournalAdmin();
   if(t==='customers')renderCustomerRows(); if(t==='payments')renderPaymentsForm();
 }
 async function renderDashboard(){$('dashOrders').textContent=S.orders.length;$('dashRevenue').textContent='₹'+S.orders.reduce((a,o)=>a+o.amount,0).toLocaleString('en-IN');
@@ -2769,9 +3063,107 @@ function renderContentFields(){const wrap=$('contentFields');wrap.innerHTML='';
   $('rte-isbn').innerHTML=CONTENT.isbnBody; $('isbnTitleField').value=CONTENT.isbnTitle;
   const hp=$('heroPreviewAdmin'); if(hp)hp.src=$('heroImage').src;
 }
-function rte(target,cmd,val){document.execCommand(cmd,false,val);$('rte-'+target).focus()}
+/* ---------- Rich text editors (fixed) ----------
+   Fixes for wonky formatting:
+   1. Toolbar buttons use mousedown+preventDefault so the text selection in the
+      editor is never lost when clicking a button (the old onclick blurred the
+      editor first, so bold/H2/list often did nothing or hit the wrong text).
+   2. formatBlock values are passed as '<h2>' (Firefox requires the brackets)
+      and toggle back to a paragraph when the block is already that heading.
+   3. Inserted images are stored as data URLs (the old blob: URLs died on
+      refresh, leaving broken images in published posts).
+   4. Pasted content is sanitised — only basic tags survive, so Word/Docs
+      paste no longer injects broken spans, fonts and inline colors.
+   5. New editors get p-tags as the default paragraph separator so headings
+      and lists don't glue themselves to surrounding text. */
+const RTE_TOOLS=[
+  {cmd:'bold',label:'<b>B</b>',title:'Bold'},
+  {cmd:'italic',label:'<i>I</i>',title:'Italic'},
+  {cmd:'underline',label:'<u>U</u>',title:'Underline'},
+  {sep:1},
+  {cmd:'formatBlock',val:'h2',label:'H2',title:'Heading 2'},
+  {cmd:'formatBlock',val:'h3',label:'H3',title:'Heading 3'},
+  {cmd:'formatBlock',val:'blockquote',label:'❝',title:'Quote'},
+  {sep:1},
+  {cmd:'insertUnorderedList',label:'• List',title:'Bullet list'},
+  {cmd:'insertOrderedList',label:'1. List',title:'Numbered list'},
+  {sep:1},
+  {cmd:'link',label:'🔗',title:'Insert link'},
+  {cmd:'image',label:'▣ Image',title:'Insert image'},
+  {cmd:'removeFormat',label:'⌫ Clear',title:'Clear formatting'}
+];
+function buildRteToolbars(){
+  document.querySelectorAll('.rte-tools[data-rte-for]').forEach(bar=>{
+    const target=bar.dataset.rteFor; bar.innerHTML='';
+    RTE_TOOLS.forEach(t=>{
+      if(t.sep){const s=document.createElement('span');s.className='rte-sep';bar.appendChild(s);return}
+      const b=document.createElement('button');b.type='button';b.innerHTML=t.label;b.title=t.title;
+      /* mousedown+preventDefault keeps the editor's selection alive */
+      b.addEventListener('mousedown',e=>e.preventDefault());
+      b.addEventListener('click',()=>rte(target,t.cmd,t.val));
+      bar.appendChild(b);
+    });
+    const ed=$('rte-'+target); if(ed&&!ed._rteWired)wireRteEditor(ed);
+  });
+}
+function wireRteEditor(ed){
+  ed._rteWired=true;
+  try{document.execCommand('defaultParagraphSeparator',false,'p')}catch(e){}
+  /* placeholder handling — never publish "Start writing…" */
+  ed.addEventListener('focus',()=>{if(ed.innerText.trim()==='Start writing…')ed.innerHTML='<p><br></p>'});
+  /* sanitise pastes */
+  ed.addEventListener('paste',e=>{
+    e.preventDefault();
+    const html=e.clipboardData.getData('text/html');
+    if(html)document.execCommand('insertHTML',false,sanitizeRteHtml(html));
+    else document.execCommand('insertText',false,e.clipboardData.getData('text/plain'));
+  });
+}
+const RTE_ALLOWED={P:1,BR:1,B:1,STRONG:1,I:1,EM:1,U:1,H2:1,H3:1,UL:1,OL:1,LI:1,BLOCKQUOTE:1,A:1,IMG:1};
+function sanitizeRteHtml(html){
+  const tpl=document.createElement('template'); tpl.innerHTML=html;
+  (function walk(node){
+    [...node.children].forEach(el=>{
+      walk(el);
+      const tag=el.tagName;
+      if(tag==='SCRIPT'||tag==='STYLE'){el.remove();return}
+      if(!RTE_ALLOWED[tag]){ // unwrap unknown tags, keep their children
+        while(el.firstChild)node.insertBefore(el.firstChild,el);
+        el.remove();return}
+      // strip all attributes except the safe essentials
+      [...el.attributes].forEach(a=>{
+        const keep=(tag==='A'&&a.name==='href'&&/^https?:|^mailto:/i.test(el.getAttribute('href')||''))||
+                   (tag==='IMG'&&a.name==='src'&&/^https?:|^data:image\//i.test(el.getAttribute('src')||''))||
+                   (tag==='IMG'&&a.name==='alt');
+        if(!keep)el.removeAttribute(a.name);
+      });
+      if(tag==='A')el.setAttribute('target','_blank');
+    });
+  })(tpl.content);
+  return tpl.innerHTML;
+}
+function rte(target,cmd,val){
+  const ed=$('rte-'+target); ed.focus();
+  if(cmd==='image')return rteImage(target);
+  if(cmd==='link'){
+    const url=prompt('Link URL (https://…)'); if(!url)return;
+    if(!/^https?:\/\//i.test(url))return toast('Link must start with http(s)://');
+    document.execCommand('createLink',false,url); return;
+  }
+  if(cmd==='formatBlock'){
+    /* toggle: if the caret is already in that block, revert to a paragraph */
+    let cur=''; try{cur=(document.queryCommandValue('formatBlock')||'').toLowerCase()}catch(e){}
+    document.execCommand('formatBlock',false,cur===val?'<p>':'<'+val+'>');
+    return;
+  }
+  document.execCommand(cmd,false,val||null);
+}
 function rteImage(target){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
-  inp.onchange=()=>{const f=inp.files[0];if(!f)return;const url=URL.createObjectURL(f);$('rte-'+target).focus();document.execCommand('insertImage',false,url)};inp.click();}
+  inp.onchange=()=>{const f=inp.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=()=>{$('rte-'+target).focus();document.execCommand('insertImage',false,r.result)};
+    r.readAsDataURL(f);};
+  inp.click();}
 function saveRte(target){if(target==='publish')CONTENT.publishBody=$('rte-publish').innerHTML;
   if(target==='isbn')CONTENT.isbnBody=$('rte-isbn').innerHTML;
   saveContent();applyContent();toast('Saved');}
@@ -2820,17 +3212,193 @@ function saveProductForm(){const name=$('pfName').value.trim(),blurb=$('pfBlurb'
   else CATALOG.push({id:uid(),name,blurb,price,badge:$('pfBadge').value.trim()||null,grad:['#141414','#0000FF'],img:_pendingProductImg});
   saveCatalog();hide('productFormModal');renderProductRows();renderStore();toast('Saved');}
 function deleteProduct(id){if(!confirm('Remove this product?'))return;CATALOG=CATALOG.filter(p=>p.id!==id);saveCatalog();renderProductRows();renderStore();}
-async function renderCustomerRows(){const tb=$('customerRows');tb.innerHTML='<tr><td colspan="3" style="color:var(--slate-l);padding:24px">Loading…</td></tr>';
-  const {data:users,error}=await sb.from('profiles').select('*').order('created_at',{ascending:false});
-  if(error){tb.innerHTML='<tr><td colspan="3" style="color:#B0432E;padding:24px">Could not load customers: '+esc(error.message)+'</td></tr>';return}
-  tb.innerHTML=users&&users.length?users.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${new Date(u.created_at).toLocaleDateString('en-IN')}</td></tr>`).join(''):'<tr><td colspan="3" style="color:#86868B;padding:24px">No customers yet.</td></tr>';}
+/* ================= Customers (detailed) =================
+   Customer records merge three sources by email:
+   1. Supabase `profiles` (name, email, created_at) — signup accounts
+   2. Local order history (S.orders) — order count, totals, line details
+   3. Local admin metadata (`binder_customer_meta`) — phone, address, GSTIN,
+      notes, edits, and imported customers. Kept locally so no schema change
+      to Supabase is required. */
+let CUSTMETA=loadJSON('binder_customer_meta',{});   // keyed by lowercase email
+let _custCache=null,_editingCustEmail=null;
+function saveCustMeta(){saveJSON('binder_customer_meta',CUSTMETA)}
+function custOrders(email){const e=(email||'').toLowerCase();return S.orders.filter(o=>(o.customer||'').toLowerCase()===e)}
+async function buildCustomers(){
+  const map={};
+  const add=(email,src)=>{const k=(email||'').toLowerCase();if(!k)return null;
+    if(!map[k])map[k]={email:email,name:'',joined:null,fromSupabase:false};
+    return map[k];};
+  try{
+    const {data:users}=await sb.from('profiles').select('*').order('created_at',{ascending:false});
+    (users||[]).forEach(u=>{const c=add(u.email);if(!c)return;c.name=u.name||c.name;c.joined=u.created_at||c.joined;c.fromSupabase=true;c.supabaseId=u.id;});
+  }catch(e){/* offline — local data still renders */}
+  S.orders.forEach(o=>{const c=add(o.customer);if(c&&!c.name)c.name=o.customer.split('@')[0];});
+  Object.keys(CUSTMETA).forEach(k=>{const m=CUSTMETA[k];const c=add(m.email||k);if(!c)return;
+    if(m.name)c.name=m.name; if(m.joined)c.joined=m.joined;
+    c.phone=m.phone||'';c.address=m.address||'';c.gst=m.gst||'';c.notes=m.notes||'';});
+  Object.values(map).forEach(c=>{
+    const os=custOrders(c.email);
+    c.orderCount=os.length; c.spend=os.reduce((a,o)=>a+(o.amount||0),0); c.orders=os;
+    if(!c.joined&&os.length)c.joined=null;
+    c.phone=c.phone||'';c.address=c.address||'';c.gst=c.gst||'';c.notes=c.notes||'';
+  });
+  return Object.values(map);
+}
+async function renderCustomerRows(fromCache){
+  const wrap=$('customerList');
+  if(!fromCache||!_custCache){wrap.innerHTML='<p style="color:var(--slate-l);padding:20px">Loading…</p>';_custCache=await buildCustomers();}
+  let list=[..._custCache];
+  const q=($('custSearch').value||'').trim().toLowerCase();
+  if(q)list=list.filter(c=>[c.name,c.email,c.phone,c.gst,c.address].some(v=>(v||'').toLowerCase().includes(q)));
+  const sort=$('custSort').value;
+  const jt=c=>c.joined?new Date(c.joined).getTime():0;
+  if(sort==='newest')list.sort((a,b)=>jt(b)-jt(a));
+  if(sort==='oldest')list.sort((a,b)=>jt(a)-jt(b));
+  if(sort==='nameaz')list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  if(sort==='nameza')list.sort((a,b)=>(b.name||'').localeCompare(a.name||''));
+  if(sort==='orders')list.sort((a,b)=>b.orderCount-a.orderCount);
+  if(sort==='spend')list.sort((a,b)=>b.spend-a.spend);
+  $('custCount').textContent=list.length+' customer'+(list.length===1?'':'s')+(q?' matching "'+q+'"':'');
+  if(!list.length){wrap.innerHTML='<p style="color:#86868B;padding:20px">No customers'+(q?' match your search.':' yet.')+'</p>';return}
+  wrap.innerHTML='';
+  list.forEach(c=>{
+    const card=document.createElement('div');card.className='cust-card';
+    const initials=(c.name||c.email||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const joined=c.joined?new Date(c.joined).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'—';
+    card.innerHTML=`<div class="cust-head">
+        <div class="cust-avatar">${esc(initials)}</div>
+        <div style="flex:1;min-width:160px"><b style="font-size:14px">${esc(c.name||'(no name)')}</b><div style="font-size:12.5px;color:#6E6E73">${esc(c.email)}</div></div>
+        <div style="font-size:12.5px;color:var(--slate)">${c.orderCount} order${c.orderCount===1?'':'s'} · ₹${c.spend.toLocaleString('en-IN')}</div>
+        <div style="font-size:12.5px;color:var(--slate-l)">Joined ${joined}</div>
+        ${c.gst?'<span style="font-size:11px;background:var(--cream);border:1px solid var(--line);border-radius:6px;padding:3px 8px">GST</span>':''}
+        <button class="btn btn-ghost xs" data-edit>Edit</button>
+      </div>
+      <div class="cust-detail">
+        <div class="cust-grid">
+          <div><b>Phone</b><span>${esc(c.phone||'—')}</span></div>
+          <div><b>Address</b><span>${esc(c.address||'—')}</span></div>
+          <div><b>GSTIN</b><span>${esc(c.gst||'—')}</span></div>
+          <div><b>Joined</b><span>${joined}</span></div>
+          <div><b>Account</b><span>${c.fromSupabase?'Registered (Supabase)':'Local / imported'}</span></div>
+          ${c.notes?`<div style="grid-column:1/-1"><b>Notes</b><span>${esc(c.notes)}</span></div>`:''}
+        </div>
+        <b style="display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--slate-l);margin-bottom:6px;font-weight:700">Orders</b>
+        ${c.orders.length?`<table><thead><tr><th>Order</th><th>Product</th><th>Amount</th><th>Placed</th><th>Status</th><th>Payment</th></tr></thead><tbody>${
+          c.orders.map(o=>`<tr><td>${o.id}</td><td>${esc(o.title)}</td><td>₹${(o.amount||0).toLocaleString('en-IN')}</td><td>${esc(o.date||'')}</td><td>${esc(o.status||'')}</td><td>${o.paymentId?(o.verified?'✓ Verified':'Unverified'):'—'}</td></tr>`).join('')
+        }</tbody></table>`:'<p style="font-size:13px;color:#86868B;margin:0">No orders yet.</p>'}
+      </div>`;
+    card.querySelector('.cust-head').onclick=e=>{if(e.target.closest('[data-edit]'))return;card.querySelector('.cust-detail').classList.toggle('open');};
+    card.querySelector('[data-edit]').onclick=()=>openCustomerForm(c.email);
+    wrap.appendChild(card);
+  });
+}
+function openCustomerForm(email){
+  const c=(_custCache||[]).find(x=>x.email.toLowerCase()===(email||'').toLowerCase());
+  _editingCustEmail=c?c.email:null;
+  $('cfTitle').textContent=c?'Edit customer':'Add customer';
+  $('cfName').value=c?c.name:'';$('cfEmail').value=c?c.email:'';
+  $('cfPhone').value=c?c.phone:'';$('cfAddress').value=c?c.address:'';
+  $('cfGst').value=c?c.gst:'';$('cfNotes').value=c?c.notes:'';
+  $('cfJoined').value=c&&c.joined?new Date(c.joined).toISOString().slice(0,10):'';
+  show('custFormModal');
+}
+function saveCustomerForm(){
+  const email=$('cfEmail').value.trim();
+  if(!email||!/^\S+@\S+\.\S+$/.test(email))return toast('Enter a valid email');
+  const gst=$('cfGst').value.trim().toUpperCase();
+  if(gst&&!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9A-Z]Z[0-9A-Z]$/.test(gst))return toast('GSTIN format looks wrong (15 chars, e.g. 07ABCDE1234F1Z5)');
+  const key=email.toLowerCase();
+  /* if email changed, move the meta record */
+  if(_editingCustEmail&&_editingCustEmail.toLowerCase()!==key)delete CUSTMETA[_editingCustEmail.toLowerCase()];
+  CUSTMETA[key]={email,name:$('cfName').value.trim(),phone:$('cfPhone').value.trim(),
+    address:$('cfAddress').value.trim(),gst,notes:$('cfNotes').value.trim(),
+    joined:$('cfJoined').value?new Date($('cfJoined').value).toISOString():null};
+  saveCustMeta();
+  /* best-effort name sync back to Supabase for registered customers */
+  const c=(_custCache||[]).find(x=>x.email.toLowerCase()===key);
+  if(c&&c.fromSupabase&&c.supabaseId)sb.from('profiles').update({name:CUSTMETA[key].name}).eq('id',c.supabaseId).then(()=>{},()=>{});
+  hide('custFormModal');toast('Customer saved');renderCustomerRows();
+}
+/* ---- Export ---- */
+function csvCell(v){v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function downloadBlob(name,type,content){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
+async function exportCustomers(fmt){
+  const list=_custCache||await buildCustomers();
+  const stamp=new Date().toISOString().slice(0,10);
+  if(fmt==='json'){downloadBlob('binder-customers-'+stamp+'.json','application/json',
+    JSON.stringify(list.map(c=>({name:c.name,email:c.email,phone:c.phone,address:c.address,gst:c.gst,notes:c.notes,
+      joined:c.joined,orderCount:c.orderCount,totalSpendINR:c.spend,
+      orders:c.orders.map(o=>({id:o.id,product:o.title,amountINR:o.amount,date:o.date,status:o.status,paymentId:o.paymentId||null,verified:!!o.verified}))})),null,2));
+    toast('Exported JSON');return}
+  const head=['Name','Email','Phone','Address','GSTIN','Joined','Orders','Total Spend (INR)','Order Details','Notes'];
+  const rows=list.map(c=>[c.name,c.email,c.phone,c.address,c.gst,
+    c.joined?new Date(c.joined).toISOString().slice(0,10):'',
+    c.orderCount,c.spend,
+    c.orders.map(o=>`${o.id}: ${o.title} — ₹${o.amount} (${o.status}${o.paymentId?(o.verified?', verified':', unverified'):''})`).join(' | '),
+    c.notes].map(csvCell).join(','));
+  downloadBlob('binder-customers-'+stamp+'.csv','text/csv;charset=utf-8','\ufeff'+[head.join(','),...rows].join('\r\n'));
+  toast('Exported CSV');
+}
+/* ---- Import (CSV or JSON, merged by email) ---- */
+function parseCsv(text){
+  const rows=[];let row=[],cell='',inQ=false;
+  for(let i=0;i<text.length;i++){const ch=text[i];
+    if(inQ){if(ch==='"'){if(text[i+1]==='"'){cell+='"';i++}else inQ=false}else cell+=ch;}
+    else if(ch==='"')inQ=true;
+    else if(ch===','){row.push(cell);cell=''}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cell);cell='';if(row.some(c=>c!==''))rows.push(row);row=[];}
+    else cell+=ch;}
+  row.push(cell); if(row.some(c=>c!==''))rows.push(row);
+  return rows;
+}
+function importCustomers(file){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      let recs=[];
+      if(/\.json$/i.test(file.name)||r.result.trim().startsWith('[')){
+        const arr=JSON.parse(r.result); if(!Array.isArray(arr))throw new Error('JSON must be an array');
+        recs=arr;
+      }else{
+        const rows=parseCsv(r.result.replace(/^\ufeff/,'')); if(rows.length<2)throw new Error('CSV needs a header row + data');
+        const hdr=rows[0].map(h=>h.trim().toLowerCase());
+        const col=names=>hdr.findIndex(h=>names.some(n=>h.includes(n)));
+        const ci={name:col(['name']),email:col(['email','mail']),phone:col(['phone','mobile','contact']),
+          address:col(['address']),gst:col(['gst']),joined:col(['join','created','date']),notes:col(['note'])};
+        recs=rows.slice(1).map(row=>({name:ci.name>-1?row[ci.name]:'',email:ci.email>-1?row[ci.email]:'',
+          phone:ci.phone>-1?row[ci.phone]:'',address:ci.address>-1?row[ci.address]:'',
+          gst:ci.gst>-1?row[ci.gst]:'',joined:ci.joined>-1?row[ci.joined]:'',notes:ci.notes>-1?row[ci.notes]:''}));
+      }
+      let added=0,updated=0,skipped=0;
+      recs.forEach(rec=>{
+        const email=(rec.email||'').trim();
+        if(!/^\S+@\S+\.\S+$/.test(email)){skipped++;return}
+        const key=email.toLowerCase(),existing=CUSTMETA[key];
+        let joined=null; if(rec.joined){const d=new Date(rec.joined);if(!isNaN(d))joined=d.toISOString();}
+        CUSTMETA[key]={email,
+          name:(rec.name||'').trim()||(existing?existing.name:''),
+          phone:(rec.phone||'').trim()||(existing?existing.phone:''),
+          address:(rec.address||'').trim()||(existing?existing.address:''),
+          gst:((rec.gst||'').trim().toUpperCase())||(existing?existing.gst:''),
+          notes:(rec.notes||'').trim()||(existing?existing.notes:''),
+          joined:joined||(existing?existing.joined:null)};
+        existing?updated++:added++;
+      });
+      saveCustMeta();
+      toast(`Imported: ${added} new, ${updated} updated${skipped?', '+skipped+' skipped (bad email)':''}`);
+      renderCustomerRows();
+    }catch(e){toast('Import failed: '+e.message)}
+  };
+  r.readAsText(file);
+}
 function renderPaymentsForm(){$('payKeyId').value=PAYCFG.razorpayKeyId||'';$('payStatus').textContent=PAYCFG.razorpayKeyId?'Razorpay Checkout is live.':'No key configured — demo checkout in use.';
   $('payVerifyWarn').style.display=(PAYCFG.razorpayKeyId||'').startsWith('rzp_live_')?'block':'none';}
 function savePaymentsForm(){PAYCFG.razorpayKeyId=$('payKeyId').value.trim();savePayCfg();renderPaymentsForm();toast('Saved');}
 
 /* Journal (with AI SEO/grammar check + hero image + share buttons) */
-let _pendingPostHero=null;
-function onPostHeroUpload(file){if(!file)return;const r=new FileReader();r.onload=()=>{_pendingPostHero=r.result};r.readAsDataURL(file);}
+let _pendingPostHero=null,_editingPostId=null;
+function onPostHeroUpload(file){if(!file)return;const r=new FileReader();r.onload=()=>{_pendingPostHero=r.result;const p=$('bpHeroPreview');p.src=r.result;p.style.display='block'};r.readAsDataURL(file);}
 async function runAiCheck(kind){
   const body=$('rte-post').innerText.trim(); if(!body){$('aiCheckResult').textContent='Write something first.';return}
   $('aiCheckResult').textContent='Checking…';
@@ -2844,10 +3412,48 @@ async function runAiCheck(kind){
   }catch(e){$('aiCheckResult').textContent='AI check needs a live connection.';}
 }
 function publishPost(){const title=$('bpTitle').value.trim();if(!title)return toast('Give your post a title');
-  const hero=_pendingPostHero||$('bpHero').value.trim();const body=$('rte-post').innerHTML;
-  POSTS.unshift({id:uid(),title,hero,html:body,date:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})});
-  saveJSON('binder_posts',POSTS);$('bpTitle').value='';$('bpHero').value='';$('rte-post').innerHTML='<p>Start writing…</p>';_pendingPostHero=null;
-  toast('Published to Journal');go('journal');}
+  const bodyEl=$('rte-post'); let body=sanitizeRteHtml(bodyEl.innerHTML);
+  if(!bodyEl.innerText.trim()||bodyEl.innerText.trim()==='Start writing…')return toast('Write some content first');
+  const hero=_pendingPostHero||$('bpHero').value.trim();
+  if(_editingPostId){
+    const p=POSTS.find(x=>x.id===_editingPostId);
+    if(p){p.title=title;p.html=body;if(hero)p.hero=hero;
+      p.updated=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});}
+    toast('Post updated');
+  }else{
+    POSTS.unshift({id:uid(),title,hero,html:body,date:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})});
+    toast('Published to Journal');
+  }
+  saveJSON('binder_posts',POSTS);resetPostEditor();renderJournalAdmin();go('journal');}
+function resetPostEditor(){_editingPostId=null;_pendingPostHero=null;
+  $('bpTitle').value='';$('bpHero').value='';$('rte-post').innerHTML='<p>Start writing…</p>';
+  $('bpHeroPreview').style.display='none';$('aiCheckResult').textContent='';
+  $('jpEditorHeading').textContent='Write a Journal post';
+  $('jpPublishBtn').textContent='Publish to Journal';$('jpCancelEdit').style.display='none';}
+function cancelPostEdit(){resetPostEditor();toast('Edit cancelled')}
+function editPost(id){const p=POSTS.find(x=>x.id===id);if(!p)return;
+  _editingPostId=id;_pendingPostHero=null;
+  $('bpTitle').value=p.title;
+  $('bpHero').value=(p.hero&&!p.hero.startsWith('data:'))?p.hero:'';
+  const prev=$('bpHeroPreview');if(p.hero){prev.src=p.hero;prev.style.display='block'}else prev.style.display='none';
+  $('rte-post').innerHTML=p.html||'<p><br></p>';
+  $('jpEditorHeading').textContent='Edit post';$('jpPublishBtn').textContent='Update post';
+  $('jpCancelEdit').style.display='inline-flex';
+  $('rte-post').scrollIntoView({behavior:'smooth',block:'center'});}
+function deletePost(id){if(!confirm('Delete this post permanently?'))return;
+  POSTS=POSTS.filter(p=>p.id!==id);saveJSON('binder_posts',POSTS);
+  if(_editingPostId===id)resetPostEditor();
+  renderJournalAdmin();toast('Post deleted');}
+function renderJournalAdmin(){const wrap=$('jpPostRows');if(!wrap)return;wrap.innerHTML='';
+  if(!POSTS.length){wrap.innerHTML='<p style="font-size:13px;color:#86868B">No posts yet.</p>';return}
+  POSTS.forEach(p=>{const row=document.createElement('div');row.className='jp-row';
+    const thumb=p.hero?`<img src="${p.hero}" style="width:52px;height:38px;object-fit:cover;border-radius:6px;flex:0 0 auto">`
+      :'<div style="width:52px;height:38px;border-radius:6px;background:linear-gradient(135deg,#141414,#0000FF);flex:0 0 auto"></div>';
+    row.innerHTML=`${thumb}<div style="flex:1;min-width:0"><b style="font-size:14px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.title)}</b>
+      <span style="font-size:12px;color:#86868B">${esc(p.date)}${p.updated?' · edited '+esc(p.updated):''}</span></div>
+      <button class="btn btn-ghost xs" onclick="editPost('${p.id}')">Edit</button>
+      <button class="btn btn-ghost xs" onclick="deletePost('${p.id}')">Delete</button>`;
+    wrap.appendChild(row);});}
 
 /* ---------- AI Arrange for admin lists (Gallery, Products) ----------
    Same live-API-with-graceful-fallback pattern as the book editor's AI Arrange:
@@ -2938,7 +3544,7 @@ function renderClients(){
 let POSTS=loadJSON('binder_posts',[{id:uid(),title:'Why novels deserve real paper',hero:'',date:'June 2026',html:'<p>A trade book is a different animal from a photobook — it lives or dies on typography. This is where Binder\'s Trade Book editor earns its keep.</p>'}]);
 function renderBlog(){const g=$('blogGrid');g.innerHTML='';POSTS.forEach(p=>{const c=document.createElement('div');c.className='blog-card';
   c.innerHTML=`<div class="cv" ${p.hero?`style="background-image:url(${p.hero})"`:''}></div><div class="bd"><time style="font-size:12px;color:#86868B">${p.date}</time><h3>${esc(p.title)}</h3></div>`;
-  c.onclick=()=>{$('postHero').src=p.hero||'';$('postHero').style.display=p.hero?'block':'none';$('postHero').alt=p.title;$('postTitle').textContent=p.title;$('postDate').textContent=p.date;$('postBody').innerHTML=p.html;
+  c.onclick=()=>{$('postHero').src=p.hero||'';$('postHero').style.display=p.hero?'block':'none';$('postHero').alt=p.title;$('postTitle').textContent=p.title;$('postDate').textContent=p.date+(p.updated?' · Updated '+p.updated:'');$('postBody').innerHTML=p.html;
     const url=encodeURIComponent(location.href),text=encodeURIComponent(p.title);
     $('postShare').innerHTML=`<a href="https://wa.me/?text=${text}%20${url}" target="_blank">W</a><a href="https://www.facebook.com/sharer/sharer.php?u=${url}" target="_blank">f</a><a href="https://www.instagram.com/" target="_blank">I</a>`;
     go('post');
@@ -2947,7 +3553,7 @@ function renderBlog(){const g=$('blogGrid');g.innerHTML='';POSTS.forEach(p=>{con
   };g.appendChild(c);});}
 
 /* ================= INIT ================= */
-loadHeroImage(); applyContent(); syncCartBadge(); restoreSession(); renderClients(); renderGallery();
+loadHeroImage(); applyContent(); syncCartBadge(); restoreSession(); renderClients(); renderGallery(); buildRteToolbars();
 </script>
 </body>
 </html>
