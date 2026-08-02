@@ -49,7 +49,7 @@
 <style>
 :root{
   --ink:#141414; --ink2:#242424;
-  --accent:#0000FF; --accent-d:#0000CC; --accent-soft:#E6E6FF;
+  --accent:#52B57D; --accent-d:#3A9162; --accent-soft:#E6E6FF;
   --paper:#FFFFFF; --cream:#F1F1F0; --line:#D5D5D3;
   --slate:#5C5C5A; --slate-l:#8A8A87; --text:#1A1A1A;
   --shadow:0 20px 50px rgba(0,0,0,.22);
@@ -317,7 +317,7 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
 .hue-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .hue-swatch{width:28px;height:28px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 2px #fff,0 0 0 3px var(--line)}
 .hue-slider{-webkit-appearance:none;appearance:none;flex:1;height:14px;border-radius:900px;outline:none;cursor:pointer;
-  background:linear-gradient(to right,#ff0000,#ffff00,#00ff00,#00ffff,#0000ff,#ff00ff,#ff0000)}
+  background:linear-gradient(to right,#ff0000,#ffff00,#00ff00,#00ffff,#52B57D,#ff00ff,#ff0000)}
 .hue-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.35);cursor:pointer}
 .hue-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--ink);cursor:pointer}
 .obj-del{position:absolute;top:-11px;right:-11px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:11}
@@ -336,8 +336,12 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
 .rte-row button:hover{background:var(--cream)}
 .rte-row button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .rte-label{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--slate-l);margin:12px 0 6px;font-weight:700}
-.safe-area-guide{position:absolute;border:1px dashed #B9C2CC;pointer-events:none;z-index:1}
-.safe-area-guide::after{content:'Safe area';position:absolute;top:-16px;left:0;font-size:9px;color:var(--slate-l);letter-spacing:.04em}
+.safe-area-guide{position:absolute;border:1px dashed #4C9A6B;pointer-events:none;z-index:4}
+.safe-area-guide::after{content:'Safe margin · 0.5″';position:absolute;top:2px;left:3px;font-size:8.5px;color:#4C9A6B;letter-spacing:.04em;background:rgba(255,255,255,.65);padding:0 2px;border-radius:2px}
+/* Bleed guide lives on a non-clipping wrapper so it can extend past the trim edge */
+.page-guide-wrap{position:relative;display:block;line-height:0}
+.bleed-guide{position:absolute;border:1px dashed #E0736A;pointer-events:none;z-index:3}
+.bleed-guide::after{content:'Bleed';position:absolute;bottom:1px;right:3px;font-size:8.5px;color:#E0736A;letter-spacing:.04em;background:rgba(255,255,255,.65);padding:0 2px;border-radius:2px}
 .snap-line{position:absolute;background:var(--accent);z-index:30;pointer-events:none;display:none}
 .snap-line.v{width:1px;top:0;bottom:0}
 .snap-line.h{height:1px;left:0;right:0}
@@ -425,7 +429,7 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
     <button class="nav-toggle" onclick="toggleNavMenu()" aria-label="Menu" id="navToggleBtn">☰</button>
   <div class="nav-menu" id="navMenu">
     <div class="nav-links">
-      <a onclick="openEditor('tradebook')">Books</a>
+      <a onclick="openEditor('tradebook')">Trade Books</a>
       <a onclick="openEditor('photobook')">Photobooks</a>
       <a onclick="openEditor('artprints')">Art Prints</a>
       <a onclick="go('clients')">Clients</a>
@@ -492,7 +496,7 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
 <section class="view" id="view-store"><div class="page-wrap">
   <span class="tag">Shop</span>
   <h1>Binder Store</h1>
-  <p class="lead">Prints, accessories, and gifting editions — checkout runs on Razorpay.</p>
+  <p class="lead">Prints, accessories, and gifting editions.</p>
   <div class="store-grid" id="storeGrid" style="margin-top:30px"></div>
 </div></section>
 
@@ -586,7 +590,7 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
           <tr><td style="color:var(--slate)">Default pages</td><td style="text-align:right;font-weight:600">20</td></tr>
           <tr><td style="color:var(--slate)">1–9 copies</td><td style="text-align:right;font-weight:600">₹2,200 / copy</td></tr>
           <tr><td style="color:var(--slate)">10–50 copies (bulk)</td><td style="text-align:right;font-weight:600">₹1,100 / copy</td></tr>
-          <tr><td style="color:var(--slate)">Additional pages</td><td style="text-align:right;font-weight:600">₹40 / page / copy</td></tr>
+          <tr><td style="color:var(--slate)">Additional pages</td><td style="text-align:right;font-weight:600">₹200 / 4 pages / copy</td></tr>
           <tr><td style="color:var(--slate)">Delivery (India)</td><td style="text-align:right;font-weight:600">Included</td></tr>
         </tbody>
       </table>
@@ -684,17 +688,67 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
         <div id="fontRows"></div>
       </div>
       <div id="ap-content" style="display:none"><h2>Content Manager</h2>
+
+        <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:0 0 12px">Site Text &amp; Copy</h4>
         <div id="contentFields"></div>
+
+        <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:26px 0 12px">Brand &amp; Colours</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div><label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Accent colour</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="color" id="cfgAccentColor" style="width:44px;height:36px;border:1px solid var(--line);border-radius:8px;cursor:pointer;padding:2px" onchange="applySiteColor('accent',this.value)">
+              <input class="field" id="cfgAccentHex" placeholder="#52B57D" style="flex:1" oninput="applySiteColor('accent',this.value)">
+            </div>
+          </div>
+          <div><label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Site font</label>
+            <select class="field" id="cfgSiteFont" onchange="applySiteFont(this.value)">
+              <option value="">Default (system)</option>
+              <option value="Inter">Inter</option>
+              <option value="DM Sans">DM Sans</option>
+              <option value="Playfair Display">Playfair Display</option>
+              <option value="Lora">Lora</option>
+              <option value="Montserrat">Montserrat</option>
+              <option value="Raleway">Raleway</option>
+            </select>
+          </div>
+        </div>
+
+        <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:26px 0 12px">Contact &amp; Social</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div><label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Contact email</label>
+            <input class="field" id="cfgContactEmail" placeholder="hello@binder.co.in" oninput="saveSiteCfg()"></div>
+          <div><label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Contact phone</label>
+            <input class="field" id="cfgContactPhone" placeholder="+91 98765 43210" oninput="saveSiteCfg()"></div>
+          <div><label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Instagram URL</label>
+            <input class="field" id="cfgInstagram" placeholder="https://instagram.com/binderbooks" oninput="saveSiteCfg()"></div>
+          <div><label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Twitter / X URL</label>
+            <input class="field" id="cfgTwitter" placeholder="https://x.com/binderbooks" oninput="saveSiteCfg()"></div>
+          <div><label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Facebook URL</label>
+            <input class="field" id="cfgFacebook" placeholder="https://facebook.com/binderbooks" oninput="saveSiteCfg()"></div>
+          <div><label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">WhatsApp number</label>
+            <input class="field" id="cfgWhatsapp" placeholder="919876543210" oninput="saveSiteCfg()"></div>
+        </div>
+
+        <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:26px 0 12px">Footer</h4>
+        <div style="margin-bottom:16px">
+          <label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Footer tagline</label>
+          <input class="field" id="cfgFooterTagline" placeholder="© 2025 Binder. All rights reserved." oninput="saveSiteCfg()">
+          <label style="font-size:12.5px;color:var(--slate);display:block;margin:10px 0 4px">Address</label>
+          <textarea class="field" id="cfgAddress" rows="2" placeholder="New Delhi, India" oninput="saveSiteCfg()"></textarea>
+        </div>
+
         <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:26px 0 12px">Publish With Us page</h4>
         <div class="rte-tools" data-rte-for="publish"></div>
         <div class="rte" id="rte-publish" contenteditable="true"></div>
         <button class="btn btn-dark sm" style="margin-top:12px" onclick="saveRte('publish')">Save Publish With Us</button>
+
         <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:26px 0 12px">Free ISBN page</h4>
         <label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Page title</label>
         <input class="field" id="isbnTitleField" oninput="CONTENT.isbnTitle=this.value;saveContent();applyContent();">
         <div class="rte-tools" data-rte-for="isbn"></div>
         <div class="rte" id="rte-isbn" contenteditable="true"></div>
         <button class="btn btn-dark sm" style="margin-top:12px" onclick="saveRte('isbn')">Save Free ISBN page</button>
+
         <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:26px 0 12px">Gallery &amp; Clients</h4>
         <button class="btn btn-ghost sm" onclick="adminTab('gallery-edit')">Edit gallery captions →</button>
       </div>
@@ -761,8 +815,16 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
   <input class="field" id="pfPrice" type="number" placeholder="Price (₹)">
   <input class="field" id="pfBadge" placeholder="Badge (optional)">
   <img id="pfImgPreview" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:none;margin-bottom:8px">
+  <input class="field" id="pfImgUrl" placeholder="Image URL (optional — or upload below)">
   <input type="file" accept="image/*" id="pfImgUpload" style="display:none" onchange="onProductImageUpload(this.files[0])">
-  <button class="btn btn-ghost xs" style="margin-bottom:14px" onclick="$('pfImgUpload').click()">Upload image</button>
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+    <button class="btn btn-ghost xs" onclick="$('pfImgUpload').click()">Upload image</button>
+    <span style="font-size:12px;color:var(--slate-l)">or paste a URL above</span>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button class="btn btn-accent" style="flex:1;justify-content:center" onclick="saveProductForm()">Save product</button>
+    <button class="btn btn-ghost" onclick="hide('productFormModal')">Cancel</button>
+  </div>
 </div></div>
 
 <div class="modal-bg" id="custFormModal" onclick="if(event.target===this)hide('custFormModal')"><div class="modal">
@@ -802,9 +864,10 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
     <h3>Create your account</h3>
     <input class="field" id="suName" placeholder="Full name">
     <input class="field" id="suEmail" type="email" placeholder="you@example.com">
-    <input class="field" id="suPass" type="password" placeholder="Choose a password">
-    <button class="btn btn-accent" style="width:100%;justify-content:center" onclick="doSignup()">Sign up</button>
-    <a style="color:var(--accent);cursor:pointer;font-size:12.5px;display:block;margin-top:14px" onclick="authGo('login')">← Back to login</a>
+    <input class="field" id="suPass" type="password" placeholder="Choose a password (6+ characters)">
+    <button class="btn btn-accent" style="width:100%;justify-content:center" onclick="doSignup()">Create account</button>
+    <p style="font-size:11.5px;color:var(--slate-l);margin-top:10px;line-height:1.5">Projects are saved for 45 days. You'll get a reminder on day 35 to order or extend.</p>
+    <a style="color:var(--accent);cursor:pointer;font-size:12.5px;display:block;margin-top:10px" onclick="authGo('login')">← Back to login</a>
   </div>
   <div id="authView-reset" style="display:none">
     <h3>Reset your password</h3>
@@ -849,6 +912,10 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
     <button class="icon-btn" id="pb-undoBtn" onclick="EDS.photobook.undo()">↺</button>
     <button class="icon-btn" id="pb-redoBtn" onclick="EDS.photobook.redo()">↻</button>
     <button class="icon-btn" id="pb-gridBtn" title="Toggle layout grid" onclick="EDS.photobook.toggleGrid()">⊞</button>
+    <div id="pb-priceTag" style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;margin-left:4px;margin-right:2px">
+      <span id="pb-priceMain" style="font-size:13px;font-weight:600;color:var(--text)">₹2,200/copy</span>
+      <span id="pb-priceSub" style="font-size:10.5px;color:var(--slate-l)">20 pages · base price</span>
+    </div>
     <span class="spacer"></span>
     <span style="font-size:12px;color:var(--slate-l)" id="pb-saveState"></span>
     <button class="btn btn-ghost sm" onclick="saveCurrentProject()">Save</button>
@@ -911,7 +978,7 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
     <div class="ed-panel" style="width:220px">
       <h4>Your photos</h4>
       <div class="drop-up" id="ap-dropUp" onclick="window._uploadTarget='artprints';$('fileInput').click()">Drop or click to add photos</div>
-      <div class="hint">Drag a photo onto any of the 4 boards. 6″×4″ artboard, 1″ margin, 0.1″ bleed.</div>
+      <div class="hint">Drag a photo onto any of the 4 boards. 6″×4″ artboard · 0.5″ safe margin · 0.1″ bleed.</div>
       <div class="photo-grid" id="ap-photoGrid"></div>
     </div>
     <div class="ed-stage"><div class="stage-scroll" style="align-items:flex-start"><div class="artboard-grid" id="ap-boards"></div></div></div>
@@ -1212,13 +1279,13 @@ function createEditor(key,cfg){
     pageCount(){return ed.doc.pages.length},
     addPages(){if(cfg.maxPages&&ed.pageCount()>=cfg.maxPages)return toast('Maximum page count reached.');
       ed.mutate(d=>{for(let i=0;i<cfg.pageStep;i++)d.pages.push(mkPage())});
-      toast(cfg.pageStep+' pages added — now '+ed.pageCount()+' pages');ed.renderAll();},
+      toast(cfg.pageStep+' pages added — now '+ed.pageCount()+' pages');ed.renderAll();if(key==='photobook')updatePhotobookPrice();},
     removePages(){if(ed.pageCount()<=cfg.minPages)return toast('Books start at '+cfg.minPages+' pages.');
       const tail=ed.doc.pages.slice(-cfg.pageStep);
       if(tail.some(p=>p.images.length||p.texts.length)&&!confirm('The last pages contain content. Remove anyway?'))return;
       ed.mutate(d=>{d.pages.length-=cfg.pageStep});
       if(typeof ed.cur==='number'){const max=ed.interiorLayout().length-1;if(ed.cur>max)ed.cur=Math.max(0,max);}
-      toast(cfg.pageStep+' pages removed — now '+ed.pageCount()+' pages');ed.renderAll();},
+      toast(cfg.pageStep+' pages removed — now '+ed.pageCount()+' pages');ed.renderAll();if(key==='photobook')updatePhotobookPrice();},
 
     usedIds(){const s=new Set();[ed.doc.cover,ed.doc.backCover,...ed.doc.pages].forEach(p=>p.images.forEach(im=>s.add(im.photo)));return s},
     addFiles(files){ingestFiles(files,cfg.minPrintPx).then(added=>{ed.photos.push(...added);ed.renderPanel();toast(added.length+' photo(s) in your tray')})},
@@ -1291,11 +1358,12 @@ function createEditor(key,cfg){
           const h=document.createElement('div');h.className='grid-line h';h.style.top=pct+'%';el.appendChild(h);
         });
       }
-      if(showSafeArea&&cfg.safeAreaIn){
-        const sa=cfg.safeAreaIn; const pw=cfg.pageInW,ph=cfg.pageInH;
-        const left=((pw-sa.w)/2/pw)*100, top=((ph-sa.h)/2/ph)*100, w=(sa.w/pw)*100, h=(sa.h/ph)*100;
+      // Safe-margin guide (0.5" inset by default) — shown on every editable page except the spine.
+      const showGuides=interactive&&cfg.marginIn&&cfg.pageInW&&cfg.pageInH&&pageRef!=='spine';
+      if(showGuides){
+        const pw=cfg.pageInW,ph=cfg.pageInH,m=cfg.marginIn;
         const guide=document.createElement('div');guide.className='safe-area-guide';
-        guide.style.cssText=`left:${left}%;top:${top}%;width:${w}%;height:${h}%`;
+        guide.style.cssText=`left:${(m/pw)*100}%;top:${(m/ph)*100}%;width:${(1-2*m/pw)*100}%;height:${(1-2*m/ph)*100}%`;
         el.appendChild(guide);
       }
       page.images.forEach(im=>{
@@ -1461,6 +1529,15 @@ function createEditor(key,cfg){
           const fb=ed.fitBox(ph,cx-18,cy-18,36,36);
           ed.mutate(()=>{ed.pageRefObj(pageRef).images.push(mkImg(id,Math.max(0,fb.x),Math.max(0,fb.y),fb.w,fb.h))});
           ed.sel={page:pageRef,kind:'image',id:ed.pageRefObj(pageRef).images.slice(-1)[0].id};ed.renderAll();};
+      }
+      if(showGuides){
+        // Bleed guide sits on a wrapper so it can extend past the trim (page) edge without being clipped.
+        const pw=cfg.pageInW,ph=cfg.pageInH,bl=cfg.bleedIn||0.1;
+        const wrap=document.createElement('div');wrap.className='page-guide-wrap';
+        const bleed=document.createElement('div');bleed.className='bleed-guide';
+        bleed.style.cssText=`left:${-(bl/pw)*100}%;top:${-(bl/ph)*100}%;right:${-(bl/pw)*100}%;bottom:${-(bl/ph)*100}%`;
+        wrap.appendChild(el);wrap.appendChild(bleed);
+        return wrap;
       }
       return el;
     },
@@ -1804,7 +1881,7 @@ function genericRenderPanel(ed){
         <button class="preset-chip add" onclick="EDS.${ed.key}.saveTextStyle()">＋ Save current</button>
       </div>
       ${ed.cfg.monochrome?`<div class="slider-row"><label>Black %<span>${tt.blackPct??100}%</span></label><input type="range" min="1" max="100" step="5" value="${tt.blackPct??100}" oninput="EDS.${ed.key}.tAdj('blackPct',+this.value)"></div>`
-        :`<div class="slider-row"><label>Colour</label><div class="swatches">${['#141414','#FFFFFF','#0000FF','#5C5C5A','#B0432E'].map(c=>`<div class="swatch ${tt.color===c?'on':''}" style="background:${c}" onclick="EDS.${ed.key}.tAdj('color','${c}')"></div>`).join('')}</div></div>
+        :`<div class="slider-row"><label>Colour</label><div class="swatches">${['#141414','#FFFFFF','#52B57D','#5C5C5A','#B0432E'].map(c=>`<div class="swatch ${tt.color===c?'on':''}" style="background:${c}" onclick="EDS.${ed.key}.tAdj('color','${c}')"></div>`).join('')}</div></div>
       ${cmykSectionHTML(ed,'text',tt.color||'#141414','Exact ink colour — CMYK')}`}
       <div class="slider-row"><label>${ed.cfg.monochrome?'Typeface':'Google Font'}</label></div>
       ${ed.cfg.monochrome?'':`<div class="align-row" style="margin-bottom:8px">
@@ -1871,13 +1948,13 @@ function genericRenderPanel(ed){
         </div>
         <div class="slider-row"><label>Spine width (from ${ed.pageCount()} pages)<span>${ed.spineWidthIn()}″</span></label></div>
         <div class="hint">Background colour for the <b>${ed._coverZone==='back'?'back cover':ed._coverZone==='spine'?'spine':'front cover'}</b>:</div>
-        <div class="swatches">${['#FFFFFF','#141414','#0000FF','#F1F1F0','#B0432E','#1B4332','#2A5C8A','#8A5A00','#5B2A86','#333333'].map(c=>`<div class="swatch ${ed.pageRefObj(ed._coverZone).bg===c?'on':''}" style="background:${c}" onclick="EDS.${ed.key}.setCoverBg('${c}')"></div>`).join('')}</div>
+        <div class="swatches">${['#FFFFFF','#141414','#52B57D','#F1F1F0','#B0432E','#1B4332','#2A5C8A','#8A5A00','#5B2A86','#333333'].map(c=>`<div class="swatch ${ed.pageRefObj(ed._coverZone).bg===c?'on':''}" style="background:${c}" onclick="EDS.${ed.key}.setCoverBg('${c}')"></div>`).join('')}</div>
         ${cmykSectionHTML(ed,'cover',ed.pageRefObj(ed._coverZone).bg,'Exact ink colour — CMYK')}`;
     }else{
       P.innerHTML=`<h4>Cover &amp; back cover</h4>
         <div class="hint">Pick a background colour for the cover and back cover.</div>
         <div class="align-row" style="margin-bottom:14px"><button class="${ed.cur==='cover'?'on':''}" onclick="EDS.${ed.key}.setCur('cover')">Cover</button><button class="${ed.cur==='back'?'on':''}" onclick="EDS.${ed.key}.setCur('back')">Back cover</button></div>
-        <div class="swatches">${['#FFFFFF','#141414','#0000FF','#F1F1F0','#B0432E','#1B4332','#2A5C8A','#8A5A00','#5B2A86','#333333'].map(c=>`<div class="swatch ${page.bg===c?'on':''}" style="background:${c}" onclick="EDS.${ed.key}.setCoverBg('${c}')"></div>`).join('')}</div>
+        <div class="swatches">${['#FFFFFF','#141414','#52B57D','#F1F1F0','#B0432E','#1B4332','#2A5C8A','#8A5A00','#5B2A86','#333333'].map(c=>`<div class="swatch ${page.bg===c?'on':''}" style="background:${c}" onclick="EDS.${ed.key}.setCoverBg('${c}')"></div>`).join('')}</div>
         ${cmykSectionHTML(ed,'cover',page.bg,'Exact ink colour — CMYK')}`;
     }
   }
@@ -1939,9 +2016,9 @@ function wireEditorMethods(ed){
   ed.removeShapePhoto=()=>{ed.mutate(()=>{const sh=ed.curShape();if(sh)sh.photo=null});ed.renderAll();};
   ed.addText=()=>{const page=ed.curPage();const pageRef=ed.curPageRef();
     let x=14,y=44,w=undefined;
-    if(ed.cfg.safeAreaIn&&pageRef!=='cover'&&pageRef!=='back'&&pageRef!=='spine'){
-      const sa=ed.cfg.safeAreaIn,pw=ed.cfg.pageInW,ph=ed.cfg.pageInH;
-      x=((pw-sa.w)/2/pw)*100+4; y=((ph-sa.h)/2/ph)*100+4; w=(sa.w/pw)*100-8;
+    if(ed.cfg.marginIn&&ed.cfg.pageInW&&ed.cfg.pageInH&&pageRef!=='cover'&&pageRef!=='back'&&pageRef!=='spine'){
+      const m=ed.cfg.marginIn,pw=ed.cfg.pageInW,ph=ed.cfg.pageInH;
+      x=(m/pw)*100+2; y=(m/ph)*100+2; w=(1-2*m/pw)*100-4;
     }
     ed.mutate(()=>{ed.pageRefObj(pageRef).texts.push({id:uid(),html:'<p>Write something…</p>',x,y,w,size:22,unit:'px',
       font:ed.cfg.monochrome?FONT_CATS.trade[0]:'Inter',weight:400,bold:false,italic:false,underline:false,align:'left',
@@ -2021,15 +2098,15 @@ function wireEditorMethods(ed){
 
 /* ---------- Instantiate Photobook + Trade Book ---------- */
 createEditor('photobook',{prefix:'pb',defaultTitle:'Untitled Photobook',pageCssW:'min(38vw,420px)',aspect:'1/1',
-  minPages:20,maxPages:60,pageStep:4,monochrome:false,hasAdjust:true,minPrintPx:2625,hasShapes:true});
+  minPages:20,maxPages:60,pageStep:4,monochrome:false,hasAdjust:true,minPrintPx:2625,hasShapes:true,
+  pageInW:8.5,pageInH:8.5,marginIn:0.5,bleedIn:0.1});
 createEditor('tradebook',{prefix:'tb',defaultTitle:'Untitled Trade Book',pageCssW:'min(calc(100vw - var(--stage-reserved)),58vh,460px)',aspect:'0.6875/1',
   minPages:100,maxPages:600,pageStep:8,monochrome:true,hasAdjust:true,minPrintPx:1650,hasSpine:true,spineCaliperIn:0.0035,blockStartsRecto:true,hasManuscript:true,coverDefaultText:'write drunk, edit sober',
-  pageInW:5.5,pageInH:8,safeAreaIn:{w:5,h:7}});
+  pageInW:5.5,pageInH:8,marginIn:0.5,bleedIn:0.1});
 wireEditorMethods(EDS.photobook); wireEditorMethods(EDS.tradebook);
 /* ---------- Editor open/close, file routing, AI Arrange ---------- */
 let ACTIVE_EDITOR=null;
 function openEditor(key){
-  if(!S.user){window._pendingEditor=key;authGo('login');show('authModal');toast('Sign in to use the '+({photobook:'Photobook',tradebook:'Trade Book',artprints:'Art Prints'}[key])+' editor');return}
   document.querySelector('.site-nav').style.display='none';
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.ed-root').forEach(x=>x.classList.remove('active'));
@@ -2208,9 +2285,9 @@ function msProbe(ed,opts,safeWpct){
 
 /* ---------- 4. Deterministic paginator ---------- */
 function msPaginate(ed,blocks,opts){
-  const cfg=ed.cfg,sa=cfg.safeAreaIn;
-  const safeL=((cfg.pageInW-sa.w)/2/cfg.pageInW)*100, safeW=(sa.w/cfg.pageInW)*100;
-  const safeT=((cfg.pageInH-sa.h)/2/cfg.pageInH)*100, safeH=(sa.h/cfg.pageInH)*100;
+  const cfg=ed.cfg,m=cfg.marginIn||0.5;
+  const safeL=(m/cfg.pageInW)*100, safeW=(1-2*m/cfg.pageInW)*100;
+  const safeT=(m/cfg.pageInH)*100, safeH=(1-2*m/cfg.pageInH)*100;
   const pr=msProbe(ed,opts,safeW);
   const gapPx=opts.paraGap;
   const DROP=13; // chapter title drop, % of page height
@@ -2523,6 +2600,8 @@ async function generatePdfForOrder(orderId,fileKey,btn){
   if(btn){btn.disabled=false;btn.textContent='Re-render';}
 }
 function downloadPdf(orderId,fileKey){
+  const order=S.orders.find(o=>o.id===orderId);
+  if(!order||!order.paymentId){toast('A print order must be placed before downloading the PDF.');return;}
   const url=PDF_BLOBS[orderId+'|'+fileKey];
   if(!url)return toast('Render it first — the file lives in this browser session only.');
   const a=document.createElement('a'); a.href=url; a.download=orderId+' — '+fileKey+'.pdf'; a.click();
@@ -2615,7 +2694,11 @@ function renderArtPrints(){
     const orient=AP.orient[i]||'landscape';
     const board=document.createElement('div'); board.className='artboard'; board.style.cssText=`width:100%;aspect-ratio:${orient==='portrait'?'4/6':'6/4'};`;
     board.dataset.i=i;
-    board.innerHTML=`<div style="position:absolute;inset:${MARGIN}%;border:1px dashed #D2D2D7;pointer-events:none"></div>`;
+    // Safe margin (0.5") + bleed (0.1") guides, sized to this board's orientation.
+    const wIn=orient==='portrait'?4:6, hIn=orient==='portrait'?6:4, SM=0.5, BL=0.1;
+    const smX=(SM/wIn)*100, smY=(SM/hIn)*100, blX=(BL/wIn)*100, blY=(BL/hIn)*100;
+    board.innerHTML=`<div class="safe-area-guide" style="left:${smX}%;top:${smY}%;width:${100-2*smX}%;height:${100-2*smY}%"></div>`+
+      `<div class="bleed-guide" style="left:${-blX}%;top:${-blY}%;right:${-blX}%;bottom:${-blY}%"></div>`;
     const rot=document.createElement('div');rot.className='obj-del';rot.title='Rotate orientation';rot.textContent='⟲';
     rot.style.cssText+='top:6px;left:6px;right:auto;';
     rot.onmousedown=e=>{e.preventDefault();e.stopPropagation()};
@@ -2655,7 +2738,7 @@ function renderArtPrints(){
         window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);};
     }else{
       const ph=document.createElement('div');ph.style.cssText='position:absolute;inset:16.6%;display:flex;align-items:center;justify-content:center;color:var(--slate-l);font-size:12px;text-align:center;pointer-events:none';
-      ph.textContent=`Drop a photo here — ${orient==='portrait'?'4″×6″':'6″×4″'} board, 1″ margin`;board.appendChild(ph);
+      ph.textContent=`Drop a photo here — ${orient==='portrait'?'4″×6″':'6″×4″'} board, 0.5″ safe margin`;board.appendChild(ph);
     }
     board.ondragover=e=>e.preventDefault();
     board.ondrop=e=>{e.preventDefault();const id=e.dataTransfer.getData('photo');if(!id)return;
@@ -2700,7 +2783,63 @@ function saveContent(){saveJSON('binder_content',CONTENT)}
 function applyContent(){document.querySelectorAll('[data-c]').forEach(el=>{const k=el.dataset.c;if(!(k in CONTENT))return;
   if(el.dataset.cHtml)el.innerHTML=CONTENT[k];else el.textContent=CONTENT[k];})}
 
-/* ================= AUTH ================= */
+/* ---- Site Config (colours, contact, footer, social) ---- */
+const SITE_CFG_KEY='binder_site_cfg';
+let SITE_CFG=loadJSON(SITE_CFG_KEY,{accentColor:'#52B57D',siteFont:'',contactEmail:'',contactPhone:'',instagram:'',twitter:'',facebook:'',whatsapp:'',footerTagline:'',address:''});
+function saveSiteCfg(){
+  SITE_CFG.contactEmail=($('cfgContactEmail')||{value:''}).value.trim();
+  SITE_CFG.contactPhone=($('cfgContactPhone')||{value:''}).value.trim();
+  SITE_CFG.instagram=($('cfgInstagram')||{value:''}).value.trim();
+  SITE_CFG.twitter=($('cfgTwitter')||{value:''}).value.trim();
+  SITE_CFG.facebook=($('cfgFacebook')||{value:''}).value.trim();
+  SITE_CFG.whatsapp=($('cfgWhatsapp')||{value:''}).value.trim();
+  SITE_CFG.footerTagline=($('cfgFooterTagline')||{value:''}).value.trim();
+  SITE_CFG.address=($('cfgAddress')||{value:''}).value.trim();
+  saveJSON(SITE_CFG_KEY,SITE_CFG);toast('Saved');
+}
+function applySiteColor(type,val){
+  if(!val||!/^#[0-9a-fA-F]{3,6}$/.test(val.trim()))return;
+  const hex=val.trim();
+  if(type==='accent'){
+    SITE_CFG.accentColor=hex;
+    document.documentElement.style.setProperty('--accent',hex);
+    // derive hover (darken ~15%)
+    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+    const dk=h=>('#'+[Math.max(0,Math.round(h[0]*0.85)),Math.max(0,Math.round(h[1]*0.85)),Math.max(0,Math.round(h[2]*0.85))].map(x=>x.toString(16).padStart(2,'0')).join(''));
+    document.documentElement.style.setProperty('--accent-d',dk([r,g,b]));
+    saveJSON(SITE_CFG_KEY,SITE_CFG);
+    if($('cfgAccentHex'))$('cfgAccentHex').value=hex;
+    if($('cfgAccentColor'))$('cfgAccentColor').value=hex;
+  }
+}
+function applySiteFont(family){
+  SITE_CFG.siteFont=family;
+  if(family){
+    loadGoogleFont(family);
+    document.body.style.fontFamily=`'${family}', sans-serif`;
+  } else {
+    document.body.style.fontFamily='';
+  }
+  saveJSON(SITE_CFG_KEY,SITE_CFG);
+}
+function loadSiteCfgIntoAdmin(){
+  if($('cfgAccentColor'))$('cfgAccentColor').value=SITE_CFG.accentColor||'#52B57D';
+  if($('cfgAccentHex'))$('cfgAccentHex').value=SITE_CFG.accentColor||'#52B57D';
+  if($('cfgSiteFont'))$('cfgSiteFont').value=SITE_CFG.siteFont||'';
+  if($('cfgContactEmail'))$('cfgContactEmail').value=SITE_CFG.contactEmail||'';
+  if($('cfgContactPhone'))$('cfgContactPhone').value=SITE_CFG.contactPhone||'';
+  if($('cfgInstagram'))$('cfgInstagram').value=SITE_CFG.instagram||'';
+  if($('cfgTwitter'))$('cfgTwitter').value=SITE_CFG.twitter||'';
+  if($('cfgFacebook'))$('cfgFacebook').value=SITE_CFG.facebook||'';
+  if($('cfgWhatsapp'))$('cfgWhatsapp').value=SITE_CFG.whatsapp||'';
+  if($('cfgFooterTagline'))$('cfgFooterTagline').value=SITE_CFG.footerTagline||'';
+  if($('cfgAddress'))$('cfgAddress').value=SITE_CFG.address||'';
+}
+// Apply saved config on load
+(function initSiteCfg(){
+  if(SITE_CFG.accentColor)applySiteColor('accent',SITE_CFG.accentColor);
+  if(SITE_CFG.siteFont)applySiteFont(SITE_CFG.siteFont);
+})();
 let S={user:null,orders:loadJSON('binder_orders',[]),cart:loadJSON('binder_cart',[])};
 async function restoreSession(){
   const {data:{session}}=await sb.auth.getSession();
@@ -2749,7 +2888,10 @@ async function doLogin(){
   syncAuthLink();hide('authModal');toast('Welcome back, '+S.user.name.split(' ')[0]);
   resumePendingEditor();
 }
-function resumePendingEditor(){if(window._pendingEditor){const k=window._pendingEditor;window._pendingEditor=null;openEditor(k);}}
+function resumePendingEditor(){
+  if(window._pendingSave){window._pendingSave=null;saveCurrentProject();return;}
+  if(window._pendingEditor){const k=window._pendingEditor;window._pendingEditor=null;openEditor(k);}
+}
 
 /* ---------- Per-user saved projects (Photobook / Trade Book / Art Prints) — stored in Supabase ---------- */
 function projectLabel(type){return{photobook:'Photobook',tradebook:'Trade Book',artprints:'Art Prints'}[type]||type}
@@ -2802,7 +2944,7 @@ async function makeProjectThumb(type){
   }catch(e){console.warn('Thumbnail generation failed (saving without one):',e);return null}
 }
 async function saveCurrentProject(){
-  if(!S.user){window._pendingEditor=ACTIVE_EDITOR;authGo('login');show('authModal');toast('Sign in to save your project');return}
+  if(!S.user){window._pendingSave=true;window._pendingEditor=ACTIVE_EDITOR;authGo('login');show('authModal');toast('Create a free account to save your project');return}
   const type=ACTIVE_EDITOR; if(!type)return;
   if(PENDING_UPLOADS>0){toast('Still uploading your photos — try Save again in a few seconds.');return}
 
@@ -2830,13 +2972,15 @@ async function saveCurrentProject(){
   const thumb=await makeProjectThumb(type);
   const rowDoc=Object.assign({},doc,thumb?{_thumb:thumb}:{});
   const existingId=(type==='artprints'?AP._savedId:EDS[type]._savedId);
-  const row={user_id:S.user.id,type,title,doc:rowDoc,photo_map:photoMap,updated_at:new Date().toISOString()};
+  const now=new Date();
+  const expiresAt=new Date(now.getTime()+45*24*60*60*1000).toISOString();
+  const row={user_id:S.user.id,type,title,doc:rowDoc,photo_map:photoMap,updated_at:now.toISOString(),expires_at:expiresAt};
   let error;
   if(existingId){({error}=await sb.from('projects').update(row).eq('id',existingId));}
   else{const {data,error:err}=await sb.from('projects').insert(row).select().single();error=err;
     if(data){if(type==='artprints')AP._savedId=data.id; else EDS[type]._savedId=data.id;}}
   if(error){toast('Could not save: '+error.message);return}
-  toast('Saved to your account — find it in My Dashboard.');
+  toast('Saved! Your project is stored for 45 days.');
 }
 async function myProjects(){
   if(!S.user)return[];
@@ -2872,6 +3016,10 @@ async function doChangePassword(){
   $('cpNew').value='';toast('Password changed.');
 }
 async function doLogout(){await sb.auth.signOut();S.user=null;syncAuthLink();toast('Signed out');go('home');}
+async function doGoogleLogin(){
+  const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});
+  if(error)toast(error.message);
+}
 async function renderCustomerDashboard(){
   if(!S.user)return;
   $('dashGreeting').textContent='Hi, '+S.user.name.split(' ')[0];
@@ -2886,14 +3034,20 @@ async function renderCustomerDashboard(){
   const list=await myProjects(); $('dashMyProjects').textContent=list.length;
   pw.innerHTML=list.length?list.map(p=>{
     const thumb=p.doc&&p.doc._thumb;
-    const grad={photobook:'linear-gradient(135deg,#141414,#0000FF)',tradebook:'linear-gradient(135deg,#1B4332,#141414)',artprints:'linear-gradient(135deg,#B0432E,#141414)'}[p.type]||'var(--cream)';
+    const grad={photobook:'linear-gradient(135deg,#141414,#52B57D)',tradebook:'linear-gradient(135deg,#1B4332,#141414)',artprints:'linear-gradient(135deg,#B0432E,#141414)'}[p.type]||'var(--cream)';
     const cover=thumb
       ?`<img src="${thumb}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:9px;border:1px solid var(--line);flex:0 0 auto;background:#fff">`
       :`<div style="width:64px;height:64px;border-radius:9px;background:${grad};flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px">${p.type==='artprints'?'▦':'◙'}</div>`;
-    return `<div style="display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px">
+    const expDate=p.expires_at?new Date(p.expires_at):null;
+    const daysLeft=expDate?Math.ceil((expDate-Date.now())/(1000*60*60*24)):null;
+    const expWarning=daysLeft!==null&&daysLeft<=10?`<span style="color:#B0432E;font-size:11.5px;font-weight:600">⚠ Deletes in ${daysLeft} day${daysLeft===1?'':'s'}</span>`:
+      daysLeft!==null&&daysLeft<=35?`<span style="color:#E08600;font-size:11.5px">Expires in ${daysLeft} days</span>`:
+      daysLeft!==null?`<span style="font-size:11.5px;color:var(--slate-l)">${daysLeft} days left</span>`:'';
+    return `<div style="display:flex;align-items:center;gap:14px;border:1px solid ${daysLeft!==null&&daysLeft<=10?'#B0432E':daysLeft!==null&&daysLeft<=35?'#E08600':'var(--line)'};border-radius:12px;padding:12px 14px;margin-bottom:10px">
     ${cover}
-    <div style="flex:1;min-width:0"><b style="font-size:14px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.title)}</b><div style="font-size:12px;color:var(--slate-l)">${projectLabel(p.type)} · saved ${new Date(p.updated_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div></div>
+    <div style="flex:1;min-width:0"><b style="font-size:14px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.title)}</b><div style="font-size:12px;color:var(--slate-l);display:flex;gap:10px;align-items:center;flex-wrap:wrap">${projectLabel(p.type)} · saved ${new Date(p.updated_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} ${expWarning}</div></div>
     <button class="btn btn-accent xs" onclick="openSavedProject('${p.id}')">Open &amp; edit</button>
+    <button class="btn btn-ghost xs" onclick="openCheckout('${p.type}')">Order print</button>
     <button class="btn btn-ghost xs" onclick="deleteSavedProject('${p.id}')">Remove</button>
   </div>`;}).join(''):'<p style="color:var(--slate-l);font-size:13px">No saved projects yet — open an editor and hit "Save."</p>';
 }
@@ -2918,10 +3072,10 @@ sb.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY'){authGo('new
 
 /* ================= STORE ================= */
 const CATALOG_DEFAULTS=[
- {id:'edition',name:'Signature Edition Photobook Cover',blurb:'Linen-wrapped hardcover upgrade for any Binder photobook.',price:349900,badge:'Popular',grad:['#141414','#0000FF'],img:null},
+ {id:'edition',name:'Signature Edition Photobook Cover',blurb:'Linen-wrapped hardcover upgrade for any Binder photobook.',price:349900,badge:'Popular',grad:['#141414','#52B57D'],img:null},
  {id:'sleeve',name:'Protective Book Sleeve',blurb:'Archival cotton sleeve, fits all Binder formats.',price:129900,badge:null,grad:['#2C2C2E','#86868B'],img:null},
- {id:'giftbox',name:'Gifting Box',blurb:'Rigid presentation box with ribbon pull.',price:99900,badge:'New',grad:['#0000FF','#141414'],img:null},
- {id:'printset',name:'Loose Art Print Set of 4',blurb:'6″×4″ prints on 300gsm archival stock.',price:159900,badge:null,grad:['#3A3A3C','#0000FF'],img:null},
+ {id:'giftbox',name:'Gifting Box',blurb:'Rigid presentation box with ribbon pull.',price:99900,badge:'New',grad:['#52B57D','#141414'],img:null},
+ {id:'printset',name:'Loose Art Print Set of 4',blurb:'6″×4″ prints on 300gsm archival stock.',price:159900,badge:null,grad:['#3A3A3C','#52B57D'],img:null},
 ];
 let CATALOG=loadJSON('binder_catalog',CATALOG_DEFAULTS);
 function saveCatalog(){saveJSON('binder_catalog',CATALOG)}
@@ -2952,9 +3106,30 @@ function openStoreCheckout(){if(!S.cart.length)return toast('Cart is empty');if(
   $('coSub').textContent=S.cart.reduce((a,c)=>a+c.qty,0)+' item(s)';
   $('coRows').innerHTML=S.cart.map(it=>{const p=CATALOG.find(c=>c.id===it.id);return `<div class="sum-row"><span>${esc(p.name)} × ${it.qty}</span><span>${inr(p.price*it.qty)}</span></div>`}).join('')+`<div class="sum-row total"><span>Total</span><span>${inr(total)}</span></div>`;
   $('payAmt').textContent=inr(total);primeCheckoutModal();show('checkoutModal');}
+function updatePhotobookPrice(){
+  const rule=PRICING_RULES.photobook;
+  const ed=EDS.photobook;
+  if(!rule||!ed)return;
+  const pages=ed.pageCount();
+  const extra=Math.max(0,pages-rule.basePages);
+  const extraCost=extra*rule.perPage; // paise
+  const total=rule.perCopyLow+extraCost; // paise
+  const fmt=p=>'₹'+Math.round(p/100).toLocaleString('en-IN');
+  const mainEl=$('pb-priceMain');
+  const subEl=$('pb-priceSub');
+  if(!mainEl)return;
+  mainEl.textContent=fmt(total)+'/copy';
+  if(extra>0){
+    mainEl.style.color='var(--accent)';
+    subEl.textContent=pages+' pages · base '+fmt(rule.perCopyLow)+' + '+fmt(extraCost)+' extra';
+  } else {
+    mainEl.style.color='var(--text)';
+    subEl.textContent=pages+' pages · base price';
+  }
+}
 const PRICING_RULES={
   tradebook:{basePages:100, perCopyLow:100000, perCopyBulk:60000, perPage:400, bulkFrom:10},
-  photobook:{basePages:20,  perCopyLow:220000, perCopyBulk:110000, perPage:4000, bulkFrom:10},
+  photobook:{basePages:20,  perCopyLow:220000, perCopyBulk:110000, perPage:5000, bulkFrom:10},
 };
 function quoteEditorOrder(editorKey,qty){
   const rule=PRICING_RULES[editorKey];
@@ -3100,7 +3275,7 @@ async function openRazorpay(amountRupees,desc,onSuccess,onCancel,phone){try{awai
   const cfg={key:PAYCFG.razorpayKeyId,amount:amountPaise,currency:'INR',name:'Binder',description:desc,
     prefill:{email:S.user?S.user.email:'',name:S.user?S.user.name:'',contact:phone||loadJSON('binder_phone','')||''},
     notes:{platform:'binder-web',product:desc},
-    theme:{color:'#0000FF'},
+    theme:{color:'#52B57D'},
     retry:{enabled:true,max_count:3},
     remember_customer:true,
     handler:async r=>{
@@ -3119,7 +3294,7 @@ async function openRazorpay(amountRupees,desc,onSuccess,onCancel,phone){try{awai
   rzp.open();
 }catch(e){toast('Could not load the payment gateway — check your connection and try again.');if(onCancel)onCancel();}}
 /* ================= ADMIN ================= */
-const ADMIN_USER='binder',ADMIN_PASS='Hugoroyale1#';
+const ADMIN_USER='binder',ADMIN_PASS='binder2026';
 function doAdminLogin(){const u=$('adminUser').value.trim(),p=$('adminPass').value;
   if(u===ADMIN_USER&&p===ADMIN_PASS){try{sessionStorage.setItem('binder_admin_ok','1')}catch(e){}
     $('adminGateErr').style.display='none';$('adminGate').style.display='none';$('adminPanel').style.display='grid';adminTab('dashboard');
@@ -3130,8 +3305,9 @@ function checkAdminGate(){let ok=false;try{ok=sessionStorage.getItem('binder_adm
 function adminTab(t){document.querySelectorAll('.admin-side button[data-ap]').forEach(b=>b.classList.toggle('on',b.dataset.ap===t));
   ['dashboard','orders','pdf','fonts','content','gallery-edit','products','journal','customers','payments'].forEach(x=>{const el=$('ap-'+x);if(el)el.style.display=x===t?'block':'none'});
   if(t==='dashboard')renderDashboard(); if(t==='orders')renderOrderRows(); if(t==='pdf')renderPdfRows();
-  if(t==='fonts')renderFontRows(); if(t==='content')renderContentFields();
+  if(t==='fonts')renderFontRows();
   if(t==='gallery-edit')renderGalAdmin(); if(t==='products')renderProductRows();
+  if(t==='content'){renderContentFields();loadSiteCfgIntoAdmin();}
   if(t==='journal')renderJournalAdmin();
   if(t==='customers')renderCustomerRows(); if(t==='payments')renderPaymentsForm();
 }
@@ -3150,7 +3326,7 @@ function renderPdfRows(){const tb=$('pdfRows');
   const bookOrders=S.orders.filter(o=>o.pdfFiles);
   tb.innerHTML=bookOrders.length?bookOrders.map(o=>{
     const spec=(o.product==='tradebook'?'5.5″×8″ trim + 0.1″ bleed · monochrome · 300dpi proof · trim marks':
-      o.product==='artprints'?'6″×4″ boards · 1″ margin · 0.1″ bleed · trim marks':'8.5″×8.5″ trim + 0.1″ bleed · 300dpi proof · trim marks')
+      o.product==='artprints'?'6″×4″ boards · 0.5″ safe margin · 0.1″ bleed · trim marks':'8.5″×8.5″ trim + 0.1″ bleed · 300dpi proof · trim marks')
       +(o.qty>1?` · ${o.qty} copies`:'');
     return Object.entries(o.pdfFiles).map(([file,status])=>{
       const ready=!!PDF_BLOBS[o.id+'|'+file];
@@ -3318,12 +3494,18 @@ function renderProductRows(){const wrap=$('productRows');wrap.innerHTML='';const
 function openProductForm(id){_editingProductId=id||null;_pendingProductImg=null;const p=id?CATALOG.find(x=>x.id===id):null;
   $('pfTitle').textContent=id?'Edit product':'Add product';$('pfName').value=p?p.name:'';$('pfBlurb').value=p?p.blurb:'';
   $('pfPrice').value=p?(p.price/100):'';$('pfBadge').value=p&&p.badge?p.badge:'';
-  const prev=$('pfImgPreview');if(p&&p.img){prev.src=p.img;prev.style.display='block'}else prev.style.display='none';show('productFormModal');}
+  const prev=$('pfImgPreview');
+  const imgUrl=p&&p.img&&!p.img.startsWith('data:')?p.img:'';
+  $('pfImgUrl').value=imgUrl;
+  if(p&&p.img){prev.src=p.img;prev.style.display='block'}else prev.style.display='none';
+  show('productFormModal');}
 function onProductImageUpload(file){if(!file)return;const r=new FileReader();r.onload=()=>{_pendingProductImg=r.result;const prev=$('pfImgPreview');prev.src=r.result;prev.style.display='block'};r.readAsDataURL(file);}
 function saveProductForm(){const name=$('pfName').value.trim(),blurb=$('pfBlurb').value.trim(),price=Math.round(parseFloat($('pfPrice').value)*100);
   if(!name)return toast('Enter a name'); if(!price)return toast('Enter a price');
-  if(_editingProductId){const p=CATALOG.find(x=>x.id===_editingProductId);Object.assign(p,{name,blurb,price,badge:$('pfBadge').value.trim()||null});if(_pendingProductImg)p.img=_pendingProductImg;}
-  else CATALOG.push({id:uid(),name,blurb,price,badge:$('pfBadge').value.trim()||null,grad:['#141414','#0000FF'],img:_pendingProductImg});
+  const urlImg=$('pfImgUrl').value.trim();
+  const finalImg=_pendingProductImg||(urlImg||null);
+  if(_editingProductId){const p=CATALOG.find(x=>x.id===_editingProductId);Object.assign(p,{name,blurb,price,badge:$('pfBadge').value.trim()||null});if(finalImg)p.img=finalImg;}
+  else CATALOG.push({id:uid(),name,blurb,price,badge:$('pfBadge').value.trim()||null,grad:['#141414','#52B57D'],img:finalImg});
   saveCatalog();hide('productFormModal');renderProductRows();renderStore();toast('Saved');}
 function deleteProduct(id){if(!confirm('Remove this product?'))return;CATALOG=CATALOG.filter(p=>p.id!==id);saveCatalog();renderProductRows();renderStore();}
 /* ================= Customers (detailed) =================
@@ -3562,7 +3744,7 @@ function renderJournalAdmin(){const wrap=$('jpPostRows');if(!wrap)return;wrap.in
   if(!POSTS.length){wrap.innerHTML='<p style="font-size:13px;color:#86868B">No posts yet.</p>';return}
   POSTS.forEach(p=>{const row=document.createElement('div');row.className='jp-row';
     const thumb=p.hero?`<img src="${p.hero}" style="width:52px;height:38px;object-fit:cover;border-radius:6px;flex:0 0 auto">`
-      :'<div style="width:52px;height:38px;border-radius:6px;background:linear-gradient(135deg,#141414,#0000FF);flex:0 0 auto"></div>';
+      :'<div style="width:52px;height:38px;border-radius:6px;background:linear-gradient(135deg,#141414,#52B57D);flex:0 0 auto"></div>';
     row.innerHTML=`${thumb}<div style="flex:1;min-width:0"><b style="font-size:14px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.title)}</b>
       <span style="font-size:12px;color:#86868B">${esc(p.date)}${p.updated?' · edited '+esc(p.updated):''}</span></div>
       <button class="btn btn-ghost xs" onclick="editPost('${p.id}')">Edit</button>
@@ -3610,7 +3792,7 @@ function heuristicArrange(target,arr,instruction){
 }
 
 /* ================= Gallery / Clients / Journal seed data ================= */
-const GAL_DEFAULT=Array.from({length:50},(_,i)=>({id:'g'+i,grad:[['#141414','#0000FF'],['#0000FF','#141414'],['#242424','#8A8A87'],['#3A3A3C','#0000FF']][i%4],caption:'Untitled study, plate '+(i+1)}));
+const GAL_DEFAULT=Array.from({length:50},(_,i)=>({id:'g'+i,grad:[['#141414','#52B57D'],['#52B57D','#141414'],['#242424','#8A8A87'],['#3A3A3C','#52B57D']][i%4],caption:'Untitled study, plate '+(i+1)}));
 let GALLERY=loadJSON('binder_gallery',GAL_DEFAULT);
 function renderGallery(){const g=$('galGrid');g.innerHTML='';GALLERY.forEach(it=>{const d=document.createElement('div');d.className='gal-item';
   d.innerHTML=`<div style="aspect-ratio:1;border-radius:10px;background:linear-gradient(135deg,${it.grad[0]},${it.grad[1]})"></div>`;g.appendChild(d);});}
@@ -3622,14 +3804,14 @@ function renderGalAdmin(){const wrap=$('galAdminRows');wrap.innerHTML='';const r
   wireRowReorder(rows,GALLERY,()=>{saveJSON('binder_gallery',GALLERY);renderGalAdmin();renderGallery();});}
 const CLIENTS_DEFAULT=[
   {label:'Individuals',count:'2750+',names:[
-    'Dileep Prakash','Gauri Gill','Valmik Thapar','Kairav Engineer (Astral LTD, Safari Crafters)',
-    'Vikas Khanna (chef)','Saumya Sankar Bose'
+    'Dileep Prakash','Gauri Gill','Vicky Roy','Valmik Thapar','Kairav Engineer (Astral LTD, Safari Crafters)',
+    'Vikas Khanna (chef)','Komal Bedi Sohal','Saumya Sankar Bose','Thakral & Tagra','Raj Sarkar'
   ]},
   {label:'Corporate',count:null,names:[
     'Photoink','Raw Mango','Lalit Hotels','Taj (Indian Hotels Company LTD)','Oberoi Hotels','Cove & Lane',
     'HCL','House on the Clouds','Nature Morte Art Gallery','MOMA (Museum of Modern Art)','Intel','Diageo',
-    'Nicobar','Good Earth','Tata Trust','Airbnb','Zoom','Maruti Udyog','Promanade Books',
-    'Charleville Book & Cafe','Landour Book House','All that Paper','Cofee Stains India'
+    'Nicobar','Good Earth','Tata Trust','Airbnb','Zoom','Amazon','Promanade Books',
+    'Charleville Book & Cafe','Sahapedia'
   ]},
   {label:'Government, education, training',count:null,names:[
     'National Rail Museum','Indian Railways',"United Services Institution of India (USI)",
