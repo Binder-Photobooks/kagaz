@@ -5225,11 +5225,11 @@ function adminTab(t){document.querySelectorAll('.admin-side button[data-ap]').fo
   if(t==='seomoat')renderSeoMoat();
   if(t==='coupons')renderCouponRows();
   // Binder Accounts & Projects (served from /accounts, same login as this admin)
-  const accOn=t==='accounts'||t==='projects',accEl=$('ap-accounts');
+  const accOn=t==='accounts'||t==='projects'||t==='daybook',accEl=$('ap-accounts');
   if(accEl){accEl.style.display=accOn?'block':'none';
-    if(accOn){const fr=$('accountsFrame'),view=t==='projects'?'board':'dashboard';
-      if(!fr.getAttribute('src'))fr.setAttribute('src','/accounts?embed=1#'+view);
-      else{try{fr.contentWindow.location.hash=view}catch(e){fr.setAttribute('src','/accounts?embed=1#'+view)}}}}
+    if(accOn){const fr=$('accountsFrame'),view=t==='projects'?'board':t==='daybook'?'daybook':'dashboard';
+      if(!fr.getAttribute('src'))fr.setAttribute('src','/accounts?embed=1&v=2.5.0#'+view);
+      else{try{fr.contentWindow.location.hash=view}catch(e){fr.setAttribute('src','/accounts?embed=1&v=2.5.0#'+view)}}}}
 }
 async function renderDashboard(){$('dashOrders').textContent=S.orders.length;$('dashRevenue').textContent='₹'+S.orders.reduce((a,o)=>a+o.amount,0).toLocaleString('en-IN');
   $('dashProducts').textContent=CATALOG.length;
