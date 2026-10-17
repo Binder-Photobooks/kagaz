@@ -3,6 +3,5 @@ Allow: /
 Disallow: /admin
 Disallow: /dashboard
 Disallow: /editor/
-Disallow: /accounts
 
 Sitemap: https://www.binder.co.in/sitemap.xml
