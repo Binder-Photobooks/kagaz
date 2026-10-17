@@ -1,5 +1,32 @@
 /* ================= BINDER — shared utilities ================= */
-const $=id=>document.getElementById(id);
+/* Private UI (account dashboard, checkout, editors, admin) lives in <template id="tpl-private">
+   in the HTML so it is not part of the public, indexable page. It is mounted into the document
+   the first time anything looks up one of its elements by id, so every existing call site keeps
+   working unchanged. */
+let PRIVATE_MOUNTED=false, APP_BOOTED=false;
+function mountPrivate(){
+  if(PRIVATE_MOUNTED)return false;
+  const t=document.getElementById('tpl-private'); if(!t){PRIVATE_MOUNTED=true;return false;}
+  PRIVATE_MOUNTED=true;
+  t.replaceWith(t.content);
+  if(APP_BOOTED)afterPrivateMount();
+  return true;
+}
+const $=id=>document.getElementById(id)||(mountPrivate()?document.getElementById(id):null);
+if(/^\/(admin|dashboard|editor)(\/|$)/.test(location.pathname))mountPrivate();
+// Canonical <link>: present in every prerendered page's HTML; the shared app shell (used for
+// /store/<slug>, /journal/<slug>, /admin …) ships without one so it never contradicts the URL.
+function canonLink(){
+  let l=document.querySelector('link[rel="canonical"]');
+  if(!l){l=document.createElement('link');l.rel='canonical';document.head.appendChild(l);}
+  return l;
+}
+function setMetaProp(prop,val){
+  let m=document.querySelector('meta[property="'+prop+'"]');
+  if(!m){m=document.createElement('meta');m.setAttribute('property',prop);document.head.appendChild(m);}
+  m.setAttribute('content',val);
+}
+function clearProductMeta(){ document.querySelectorAll('meta[property^="product:"]').forEach(m=>m.remove()); }
 const uid=()=>Math.random().toString(36).slice(2,9);
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove('show'),2800)}
 function show(id){$(id).classList.add('show')} function hide(id){$(id).classList.remove('show')}
@@ -66,6 +93,10 @@ const SEO_META={
     keywords:'photo scanning services Delhi, negative scanning India, document digitisation Delhi NCR, archival photo scanning'},
   photography:{title:'Photography Services Delhi — Architecture & Editorial',desc:'Professional photography in Delhi across architecture, editorial, corporate, and institutional work — from the team behind Binder\'s photobook printing studio.',
     keywords:'architecture photography Delhi, editorial photography India, corporate photography Delhi, professional photographer Delhi'},
+  sitemap:{title:'Sitemap | Binder',desc:'A full map of every page on Binder — photobooks, trade books, art prints, scanning and photography services, the store, Kagaz Journal, and more.',
+    keywords:'binder sitemap'},
+  templates:{title:'Ready-to-go Templates — Photobook, Trade Book & Art Print Starters | Binder',desc:'Blank starting templates sized exactly for each Binder format — cover, back cover, and pages ready to go. Pick a size and start designing.',
+    keywords:'photobook template blank, trade book template, art print template, book layout starter India'},
 };
 const DEFAULT_OG_IMAGE='https://www.binder.co.in/images/img-hero.jpg';
 function setPageSchema(obj){ const el=$('ldPage'); if(el)el.textContent=JSON.stringify(obj); }
@@ -141,13 +172,15 @@ function updateSeoMeta(v){
   const ogd=document.querySelector('meta[property="og:description"]'); if(ogd)ogd.setAttribute('content',m.desc);
   const ogi=document.querySelector('meta[property="og:image"]'); if(ogi)ogi.setAttribute('content',DEFAULT_OG_IMAGE);
   const ogtype=document.querySelector('meta[property="og:type"]'); if(ogtype)ogtype.setAttribute('content','website');
-  const ogp=document.querySelector('meta[property="product:price:amount"]'); if(ogp)ogp.setAttribute('content','');
+  clearProductMeta();
   clearPageSchema();
   const tt=document.querySelector('meta[name="twitter:title"]'); if(tt)tt.setAttribute('content',m.title);
   const td=document.querySelector('meta[name="twitter:description"]'); if(td)td.setAttribute('content',m.desc);
   const ti=document.querySelector('meta[name="twitter:image"]'); if(ti)ti.setAttribute('content',DEFAULT_OG_IMAGE);
-  const canon=document.querySelector('link[rel="canonical"]'); if(canon)canon.setAttribute('href','https://www.binder.co.in'+pathForView(v));
+  const canon=canonLink(); if(canon)canon.setAttribute('href','https://www.binder.co.in'+pathForView(v));
 }
+// Breadcrumb names per page — keep in step with the labels in scripts/prerender.mjs.
+const VIEW_LABELS={pricing:'Pricing',scanning:'Scanning Services',photography:'Photography Services',store:'Store',journal:'Kagaz Journal',isbn:'Free ISBN',publish:'Publish with us',gallery:'Gallery',templates:'Templates',clients:'Clients',contact:'Contact',sitemap:'Sitemap'};
 function go(v,push){
   if(v==='dashboard'&&!S.user){authGo('login');show('authModal');toast('Sign in to view your dashboard');return}
   const robots=document.querySelector('meta[name="robots"]');
@@ -160,10 +193,13 @@ function go(v,push){
   $('view-'+v).classList.add('active'); window.scrollTo(0,0);
   updateSeoMeta(v);
   if(v==='home')setPageSchema(buildFaqSchema()); // FAQ section only actually renders on the home view
+  else if(VIEW_LABELS[v])setPageSchema(buildBreadcrumbSchema([{name:'Home',url:'https://www.binder.co.in/'},{name:VIEW_LABELS[v],url:'https://www.binder.co.in'+pathForView(v)}]));
   if(push!==false)setPath(pathForView(v));
   if(v==='journal')renderBlog(); if(v==='store')renderStore(); if(v==='clients')renderClients(); if(v==='gallery')renderGallery();
+  if(v==='templates')renderTemplatesPageV2();
+  if(v==='home'&&typeof fitHeroHeading==='function')requestAnimationFrame(fitHeroHeading);
   if(v==='dashboard')renderCustomerDashboard();
-  if(v==='scanning'){const vid=$('scanHeroVideo');if(vid){vid.style.display='block';$('scanHeroStill').style.display='none';vid.currentTime=0;vid.play().catch(()=>{});}}
+  if(v==='scanning'){const vid=$('scanHeroVideo');if(vid){attachScanVideo(vid);if(vid.style.display!=='none'||!vid.dataset.imageMode){vid.style.display='block';$('scanHeroStill').style.display='none';vid.currentTime=0;vid.play().catch(()=>{});}}}
 }
 /* ================= "BEFORE YOU START" FORMAT PAGES =================
    One page per format (Photobook / Trade Book / Art Prints) that a visitor lands
@@ -177,13 +213,13 @@ const START_PATH_FOR_KEY={photobook:'photobooks',tradebook:'trade-books',artprin
 const START_KEY_FOR_PATH={photobooks:'photobook','trade-books':'tradebook','art-prints':'artprints'};
 const START_PAGES={
   photobook:{
-    label:'Photobook',heroImg:'/images/photobook-hero.mp4',heroImgKey:'photobookTileImageUrl',contentKey:'startPhotobookIntro',needKey:'startPhotobookNeed',stepsKey:'startPhotobookSteps',
+    label:'Photobook',h1:'Custom Photobook Printing',heroImg:'/images/photobook-hero.mp4',heroImgKey:'photobookTileImageUrl',contentKey:'startPhotobookIntro',needKey:'startPhotobookNeed',stepsKey:'startPhotobookSteps',
   },
   tradebook:{
-    label:'Trade Book',heroImg:'/images/img-3.jpg',heroImgKey:'tradebookTileImageUrl',contentKey:'startTradebookIntro',needKey:'startTradebookNeed',stepsKey:'startTradebookSteps',
+    label:'Trade Book',h1:'Trade Book Printing & Self-Publishing',heroImg:'/images/img-3.jpg',heroImgKey:'tradebookTileImageUrl',contentKey:'startTradebookIntro',needKey:'startTradebookNeed',stepsKey:'startTradebookSteps',
   },
   artprints:{
-    label:'Art Prints',heroImg:'/images/img-5.jpg',heroImgKey:'artprintsTileImageUrl',contentKey:'startArtprintsIntro',needKey:'startArtprintsNeed',stepsKey:'startArtprintsSteps',
+    label:'Art Prints',h1:'Archival Art Print Printing',heroImg:'/images/img-5.jpg',heroImgKey:'artprintsTileImageUrl',contentKey:'startArtprintsIntro',needKey:'startArtprintsNeed',stepsKey:'startArtprintsSteps',
   }
 };
 let ACTIVE_START_KEY=null;
@@ -215,11 +251,11 @@ function goStart(key,push){
     const ogImg=(info.heroImgKey&&CONTENT[info.heroImgKey]&&!isVideoUrl(CONTENT[info.heroImgKey]))?CONTENT[info.heroImgKey]:DEFAULT_OG_IMAGE;
     const ogi=document.querySelector('meta[property="og:image"]'); if(ogi)ogi.setAttribute('content',ogImg);
     const ogtype=document.querySelector('meta[property="og:type"]'); if(ogtype)ogtype.setAttribute('content','website');
-    const ogp=document.querySelector('meta[property="product:price:amount"]'); if(ogp)ogp.setAttribute('content','');
+    clearProductMeta();
     const tt=document.querySelector('meta[name="twitter:title"]'); if(tt)tt.setAttribute('content',seo.title);
     const td=document.querySelector('meta[name="twitter:description"]'); if(td)td.setAttribute('content',seo.desc);
     const ti=document.querySelector('meta[name="twitter:image"]'); if(ti)ti.setAttribute('content',ogImg);
-    const canon=document.querySelector('link[rel="canonical"]'); if(canon)canon.setAttribute('href','https://www.binder.co.in/'+START_PATH_FOR_KEY[key]);
+    const canon=canonLink(); if(canon)canon.setAttribute('href','https://www.binder.co.in/'+START_PATH_FOR_KEY[key]);
     const svc=buildServiceSchema(key);
     const crumbs=buildBreadcrumbSchema([{name:'Home',url:'https://www.binder.co.in/'},{name:info.label,url:'https://www.binder.co.in/'+START_PATH_FOR_KEY[key]}]);
     setPageSchema(svc?[svc,crumbs]:crumbs);
@@ -252,7 +288,7 @@ function renderStartPage(key){
       </div>`;
   wrap.innerHTML=`
     <span class="tag">Start creating</span>
-    <h1>${esc(info.label)}</h1>
+    <h1>${esc(info.h1||info.label)}</h1>
     <p class="lead">${esc(intro)}</p>
     ${heroBlock}
     <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);font-weight:700;margin-bottom:14px">What you'll need before you start</h4>
@@ -268,17 +304,17 @@ function renderStartPage(key){
     ${key==='photobook'?`
     <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);font-weight:700;margin-bottom:14px">Choose a size</h4>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-bottom:32px;max-width:960px">
-      <div style="border:1px solid var(--line);border-radius:14px;padding:26px;display:flex;flex-direction:column">
+      <div style="padding:4px 0 0;display:flex;flex-direction:column">
         <h3 style="font-size:19px;margin-bottom:6px">8.5″ × 8.5″</h3>
         <p style="font-size:14px;color:var(--slate);line-height:1.5;margin-bottom:20px">Our original layflat photobook. From ₹2,200/copy, 20 pages included.</p>
         <button class="btn btn-accent sm" style="margin-top:auto" onclick="openEditor('photobook')">Start 8.5″×8.5″ →</button>
       </div>
-      <div style="border:1px solid var(--line);border-radius:14px;padding:26px;display:flex;flex-direction:column">
+      <div style="padding:4px 0 0;display:flex;flex-direction:column">
         <h3 style="font-size:19px;margin-bottom:6px">12″ × 12″</h3>
         <p style="font-size:14px;color:var(--slate);line-height:1.5;margin-bottom:20px">A larger format for bigger, bolder spreads. From ₹4,200/copy, 20 pages included. Hardbound or softbound, same price.</p>
         <button class="btn btn-accent sm" style="margin-top:auto" onclick="openEditor('photobook12')">Start 12″×12″ →</button>
       </div>
-      <div style="border:1px solid var(--line);border-radius:14px;padding:26px;display:flex;flex-direction:column">
+      <div style="padding:4px 0 0;display:flex;flex-direction:column">
         <h3 style="font-size:19px;margin-bottom:6px">12″ × 18″</h3>
         <p style="font-size:14px;color:var(--slate);line-height:1.5;margin-bottom:20px">Our largest format, for a real coffee-table statement piece. Switch between portrait and landscape right in the editor. From ₹6,300/copy, 20 pages included. Hardbound or softbound, same price.</p>
         <button class="btn btn-accent sm" style="margin-top:auto" onclick="openEditor('photobook18')">Start 12″×18″ →</button>
@@ -318,7 +354,7 @@ function renderStartPage(key){
   `;
   document.title=info.label+' — Binder';
   const desc=document.querySelector('meta[name="description"]'); if(desc)desc.setAttribute('content',intro.slice(0,155));
-  const canon=document.querySelector('link[rel="canonical"]'); if(canon)canon.setAttribute('href','https://www.binder.co.in/'+START_PATH_FOR_KEY[key]);
+  const canon=canonLink(); if(canon)canon.setAttribute('href','https://www.binder.co.in/'+START_PATH_FOR_KEY[key]);
 }
 /* ================= URL ROUTER ================= */
 /* Every section, editor, and blog post gets its own real path (e.g. /store, /journal,
@@ -341,9 +377,11 @@ function routeFromPath(){
   if(!segs.length){ go('home',false); return; }
 
   const v=segs[0];
-  if($('view-'+v)){ go(v,false); return; }
-  // Unknown path — fall back to home without leaving the browser stuck on a dead URL.
+  if(document.getElementById('view-'+v)||v==='admin'||v==='dashboard'){ go(v,false); return; }
+  // Unknown path — fall back to home without leaving the browser stuck on a dead URL, but mark
+  // it noindex so search engines don't index the dead URL as a copy of the homepage.
   go('home',false);
+  const rb=document.querySelector('meta[name="robots"]'); if(rb)rb.setAttribute('content','noindex, follow');
 }
 window.addEventListener('popstate', routeFromPath);
 function loadJSON(key,fallback){try{const v=JSON.parse(localStorage.getItem(key));return v==null?fallback:v}catch(e){return fallback}}
@@ -476,10 +514,48 @@ async function uploadPhotoToStorage(photoId,blob,filename){
     if(error)throw error;
     const {data}=sb.storage.from('photos').getPublicUrl(path);
     PHOTO_PERMANENT_URLS[photoId]=data.publicUrl;
+    swapToPermanentPhotoUrl(photoId,data.publicUrl);
   }catch(e){console.warn('Photo upload failed, staying local for this session:',e.message||e)}
   finally{PENDING_UPLOADS--;}
 }
 const PHOTO_PERMANENT_URLS={}; // photoId -> permanent Supabase Storage URL, once uploaded
+// A newly-added photo displays instantly via a blob: URL (createObjectURL) while the real
+// upload happens in the background — but a blob: URL only lives as long as this browser tab
+// does. Until now, nothing ever replaced it with the permanent Storage URL once the upload
+// finished, so a photo would silently break — reverting to a broken-image icon with no way to
+// recover it in that project — the moment the tab was reloaded or the blob was released for any
+// reason, even though a permanent, reload-safe URL had been sitting there the whole time. This
+// swaps every reference to the photo over to the permanent URL the instant it's available, and
+// re-renders anywhere it's currently showing so the fix is visible immediately, not just after
+// the next save/reload.
+function swapToPermanentPhotoUrl(photoId,permanentUrl){
+  Object.values(EDS).forEach(ed=>{
+    const ph=ed.photos&&ed.photos.find(p=>p.id===photoId);
+    if(ph&&ph.url!==permanentUrl){
+      if(String(ph.url).startsWith('blob:'))URL.revokeObjectURL(ph.url);
+      ph.url=permanentUrl;
+      if(ed.doc)ed.renderAll();
+    }
+  });
+  if(typeof AP!=='undefined'&&AP.photos){
+    const ph=AP.photos.find(p=>p.id===photoId);
+    if(ph&&ph.url!==permanentUrl){
+      if(String(ph.url).startsWith('blob:'))URL.revokeObjectURL(ph.url);
+      ph.url=permanentUrl;
+      if(typeof renderArtPrints==='function')renderArtPrints();
+    }
+  }
+  if(typeof AP_SINGLE!=='undefined'){
+    Object.keys(AP_SINGLE).forEach(key=>{
+      const st=AP_SINGLE[key]; const ph=st&&st.photos&&st.photos.find(p=>p.id===photoId);
+      if(ph&&ph.url!==permanentUrl){
+        if(String(ph.url).startsWith('blob:'))URL.revokeObjectURL(ph.url);
+        ph.url=permanentUrl;
+        if(typeof renderApSingle==='function')renderApSingle(key);
+      }
+    });
+  }
+}
 
 // Per-file upload cap for the book editors' photo tray. The Supabase "photos" storage bucket
 // must ALSO be configured to allow files this large (its own file-size limit defaults to a much
@@ -530,139 +606,149 @@ function shapeClip(key){const s=SHAPES.find(x=>x.key===key);return s?s.clip:'non
 function mkShape(shapeKey,isPlaceholder,x,y,w,h){return {id:uid(),shapeKey,isPlaceholder,photo:null,x,y,w,h,rot:0,
   fill:isPlaceholder?'hsla(0,0%,80%,0.8)':'hsla(0,0%,0%,0.5)',b:100,c:100,sat:100};}
 
-/* ============ Editor Templates (starter layouts a customer can load into a blank project) ============
-   All layouts are built in percentages of the page (0–100), not fixed inches, so they render safely
-   on any page shape — including the 12×18 editor, which isn't square like the other two and can also
-   be flipped to landscape at any time. Proportions below were tuned against a square canvas, so boxes
-   read a little different at 12×18 (e.g. slightly taller/narrower collage panels) — acceptable since
-   every photo slot is an empty placeholder the customer replaces anyway, and fitBox() still preserves
-   each photo's real aspect ratio inside whatever shape the box ends up being. */
-const TEMPLATE_LOREM=[
-  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.",
-  "Nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
-  "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem.",
-  "Accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.",
-  "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.",
+/* ============================================================================================
+   CUSTOM TEMPLATES — blank, admin-built starting points, one per product/size
+   ============================================================================================
+   Unlike the old code-authored template system, these are pure data with zero pre-designed
+   content: a template is just the right *shape* for its product (single front cover, N blank
+   interior pages, single back cover for book-type products; blank board(s) for Art Prints),
+   built out by the admin inside the real editor via "Edit layout", exactly like a customer
+   would build a real project. Everything is stored in the same CMS table as the rest of the
+   site, under the 'custom_templates' key, so it's editable from any device and syncs to every
+   visitor. */
+function blankPage(){return {bg:'#FFFFFF',images:[],texts:[],shapes:[]};}
+const CUSTOM_TEMPLATE_DEFAULT_PAGES=20; // matches every book editor's own minPages floor
+const TEMPLATE_EDITOR_OPTIONS=[
+  {key:'photobook',label:'Photobook 8.5″×8.5″',kind:'book'},
+  {key:'photobook12',label:'Photobook 12″×12″',kind:'book'},
+  {key:'photobook18',label:'Photobook 12″×18″',kind:'book'},
+  {key:'tradebook',label:'Trade Book',kind:'book'},
+  {key:'artprints',label:'Art Prints (Set of 4)',kind:'artprints'},
+  {key:'artprint12x18',label:'Art Print 12″×18″ (Single)',kind:'artprint-single'},
+  {key:'artprint16x20',label:'Art Print 16″×20″ (Single)',kind:'artprint-single'},
 ];
-function tplLorem(n){const out=[];for(let i=0;i<n;i++)out.push(TEMPLATE_LOREM[i%TEMPLATE_LOREM.length]);return out.join(' ');}
+function templateEditorMeta(editorKey){ return TEMPLATE_EDITOR_OPTIONS.find(o=>o.key===editorKey)||TEMPLATE_EDITOR_OPTIONS[0]; }
+function newBlankTemplate(editorKey,label){
+  const meta=templateEditorMeta(editorKey);
+  const t={id:uid(),label:label||meta.label,description:'',editorKey,thumbUrl:null,assets:[]};
+  if(meta.kind==='book'){ t.cover=blankPage(); t.pages=Array.from({length:CUSTOM_TEMPLATE_DEFAULT_PAGES},blankPage); t.backCover=blankPage(); }
+  else if(meta.kind==='artprints'){ t.boards=[null,null,null,null]; }
+  else { t.board=null; }
+  return t;
+}
+function defaultCustomTemplates(){
+  return [
+    newBlankTemplate('photobook','Photobook 8.5″×8.5″'),
+    newBlankTemplate('photobook12','Photobook 12″×12″'),
+    newBlankTemplate('photobook18','Photobook 12″×18″'),
+    newBlankTemplate('tradebook','Trade Book'),
+    newBlankTemplate('artprints','Art Prints (Set of 4)'),
+    newBlankTemplate('artprint12x18','Art Print (Single)'),
+  ];
+}
+let CUSTOM_TEMPLATES=loadJSON('cms_custom_templates',null)||defaultCustomTemplates();
+function saveCustomTemplates(){
+  saveJSON('cms_custom_templates',CUSTOM_TEMPLATES);
+  cmsSet('custom_templates',CUSTOM_TEMPLATES).then(ok=>{toast(ok?'Saved ✓ — visible to all visitors':'⚠ Saved on this device only — cloud sync failed');});
+  renderTemplatesPageV2();
+}
+function templatePageCountV2(t){ return (t.pages||[]).length; }
+
+/* ---------- Public /templates page ---------- */
+function renderTemplatesPageV2(){
+  const wrap=$('tplGridV2'); if(!wrap)return;
+  const builtinCards=BUILTIN_TEMPLATES.map(t=>`
+    <div class="tpl-card">
+      <div class="tpl-card-thumb"><img src="${esc(t.thumbUrl)}" alt="${esc(t.label)}" loading="lazy" style="width:100%;height:100%;object-fit:cover"></div>
+      <div class="tpl-card-body">
+        <h3>${esc(t.label)}</h3>
+        <p>${esc(t.description)}</p>
+        <div class="tpl-card-meta">40 pages + cover</div>
+      </div>
+      <div class="tpl-card-foot">
+        <button class="btn btn-accent sm" onclick="startBuiltinTemplate('${t.id}')">Use this template</button>
+      </div>
+    </div>`).join('');
+  wrap.innerHTML=CUSTOM_TEMPLATES.map(t=>{
+    const meta=templateEditorMeta(t.editorKey);
+    const thumbHtml=t.thumbUrl
+      ? `<img src="${esc(t.thumbUrl)}" alt="${esc(t.label)}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`
+      : `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M3 9h18M9 9v12" stroke="currentColor" stroke-width="1.4"/></svg>`;
+    const metaLine=meta.kind==='book' ? `${templatePageCountV2(t)} pages + cover` : meta.kind==='artprints' ? 'Set of 4 prints' : 'Single print';
+    const desc=t.description||`A blank ${meta.label.toLowerCase()} starter, ready for your own layout.`;
+    return `
+    <div class="tpl-card">
+      <div class="tpl-card-thumb">${thumbHtml}</div>
+      <div class="tpl-card-body">
+        <h3>${esc(t.label)}</h3>
+        <p>${esc(desc)}</p>
+        <div class="tpl-card-meta">${metaLine}</div>
+      </div>
+      <div class="tpl-card-foot">
+        <button class="btn btn-accent sm" onclick="startCustomTemplate('${t.id}')">Use this template</button>
+      </div>
+    </div>`;
+  }).join('')+builtinCards;
+}
+// Merges a template's asset library into an editor's photo tray so any asset images already
+// placed on the template's pages resolve and render correctly (images are always looked up by
+// id against ed.photos, whether the id belongs to a customer's own upload or an admin asset).
+function seedTemplateAssetsIntoPhotos(ed,t){
+  (t.assets||[]).forEach(a=>{
+    if(!ed.photos.find(p=>p.id===a.id))ed.photos.push({id:a.id,name:a.name,url:a.url,w:a.w||1000,h:a.h||1000,isAsset:true});
+  });
+}
+// Customer-facing "Use this template" — opens the one specific editor/size this template was
+// built for (no size picker needed, since a template's layout is no longer shared across sizes)
+// and loads its content straight in.
+function editorHasContent(doc){
+  if(!doc)return false;
+  const pages=[doc.cover,doc.backCover,...(doc.pages||[])].filter(Boolean);
+  return pages.some(p=>(p.images&&p.images.length)||(p.texts&&p.texts.length)||(p.shapes&&p.shapes.length));
+}
+function startCustomTemplate(templateId){
+  const t=CUSTOM_TEMPLATES.find(x=>x.id===templateId); if(!t)return;
+  const meta=templateEditorMeta(t.editorKey);
+  if(meta.kind==='book'){
+    const ed=EDS[t.editorKey]; if(!ed)return toast('Editor not available.');
+    if(editorHasContent(ed.doc)&&!confirm('Load the "'+t.label+'" template? This replaces the current, unsaved '+ed.pageCount()+'-page project in this editor. This can\'t be undone once you navigate away.'))return;
+    ed.doc.cover=JSON.parse(JSON.stringify(t.cover||blankPage()));
+    ed.doc.pages=JSON.parse(JSON.stringify((t.pages&&t.pages.length)?t.pages:[blankPage()]));
+    ed.doc.backCover=JSON.parse(JSON.stringify(t.backCover||blankPage()));
+    ed.doc.title=t.label;
+    ed._savedId=null;
+    seedTemplateAssetsIntoPhotos(ed,t);
+    openEditor(t.editorKey);
+    toast('Template loaded ✓');
+  }else if(meta.kind==='artprints'){
+    if(AP.boards.some(Boolean)&&!confirm('Load the "'+t.label+'" template? This replaces the current, unsaved art print set. This can\'t be undone once you navigate away.'))return;
+    AP.boards=JSON.parse(JSON.stringify(t.boards||[null,null,null,null]));
+    AP.title='Untitled Art Print Set'; AP._savedId=null;
+    openEditor('artprints');
+    toast('Template loaded ✓');
+  }else{
+    const st=AP_SINGLE[t.editorKey]; if(!st)return toast('Editor not available.');
+    if(st.board&&!confirm('Load the "'+t.label+'" template? This replaces the current, unsaved print. This can\'t be undone once you navigate away.'))return;
+    st.board=t.board?JSON.parse(JSON.stringify(t.board)):null;
+    st._savedId=null;
+    openEditor(t.editorKey);
+    toast('Template loaded ✓');
+  }
+}
+
+/* ============================================================================================
+   BUILT-IN TEMPLATES — designed in code, shown on /templates beside the admin-made cards.
+   They are not stored in the CMS (nothing to lose in a save race) and are not editable in the
+   admin template list; the customer gets a fully editable copy when they press "Use this template".
+   ============================================================================================ */
 function tplText(html,x,y,w,size,opts){
   opts=opts||{};
   return {id:uid(),html,x,y,w,size,unit:opts.unit||'px',font:'Lora',weight:opts.weight||400,
     bold:!!opts.bold,italic:!!opts.italic,underline:false,align:opts.align||'left',
     lineHeight:opts.lineHeight||1.4,paraSpacing:8,color:opts.color||'#1D1D1F'};
 }
-const TPL_M=6, TPL_FULL_W=100-2*TPL_M; // safe margin %, full safe width %
 function tplPage(){return {bg:'#FFFFFF',images:[],texts:[],shapes:[]};}
-function tplDivider(sectionTitle,subtitle){
-  const p=tplPage(); p.bg='#1B4332';
-  p.texts.push(tplText(`<p>${subtitle}</p>`,TPL_M,40,TPL_FULL_W,13,{align:'center',color:'#D8E8DE'}));
-  p.texts.push(tplText(`<p>${sectionTitle}</p>`,TPL_M,46,TPL_FULL_W,34,{align:'center',bold:true,color:'#FFFFFF',lineHeight:1.15}));
-  return p;
-}
-function tplTitlePage(){
-  const p=tplPage();
-  p.shapes.push(mkShape('rect',true,15,12,70,55));
-  p.texts.push(tplText('<p>[School Name]</p>',TPL_M,72,TPL_FULL_W,26,{align:'center',bold:true}));
-  p.texts.push(tplText('<p>Annual Yearbook · 2025–26</p>',TPL_M,80,TPL_FULL_W,13,{align:'center'}));
-  return p;
-}
-function tplTOCPage(){
-  const p=tplPage();
-  p.texts.push(tplText('<p>Table of Contents</p>',TPL_M,8,TPL_FULL_W,20,{bold:true}));
-  const items=[['Message from the Principal',3],['School Life',9],['Academics',21],['Student Portraits',31],
-    ['Clubs & Activities',54],['Sports',65],['Graduating Class',75],['Autographs',79]];
-  let y=22;
-  items.forEach(([label,pg])=>{
-    p.texts.push(tplText(`<p>${label}</p>`,TPL_M,y,60,13));
-    p.texts.push(tplText(`<p>${pg}</p>`,80,y,12,13,{align:'right'}));
-    y+=6.5;
-  });
-  return p;
-}
-function tplMessagePage(heading){
-  const p=tplPage();
-  p.texts.push(tplText(`<p>${heading}</p>`,TPL_M,8,TPL_FULL_W,20,{bold:true}));
-  p.shapes.push(mkShape('rect',true,TPL_M,20,28,34));
-  p.texts.push(tplText(`<p>${tplLorem(2)}</p>`,38,20,56,11,{lineHeight:1.55}));
-  p.texts.push(tplText(`<p>${tplLorem(2)}</p>`,TPL_M,66,TPL_FULL_W,11,{lineHeight:1.55}));
-  return p;
-}
-function tplPortraitGridPage(className,rows,cols){
-  const p=tplPage();
-  p.texts.push(tplText(`<p>${className}</p>`,TPL_M,4,TPL_FULL_W,15,{bold:true}));
-  const gap=1.5, gridTop=13, gridW=TPL_FULL_W, gridH=100-gridTop-TPL_M;
-  const cellW=(gridW-(cols-1)*gap)/cols, cellH=(gridH-(rows-1)*gap)/rows;
-  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
-    const x=TPL_M+c*(cellW+gap), y=gridTop+r*(cellH+gap);
-    p.shapes.push(mkShape('rect',true,x,y,cellW,cellH*0.8));
-    p.texts.push(tplText('<p>Name</p>',x,y+cellH*0.8+1,cellW,7,{align:'center'}));
-  }
-  return p;
-}
-const TPL_COLLAGE_LAYOUTS=[
-  [[TPL_M,13,TPL_FULL_W,40],[TPL_M,55,42,39],[50,55,TPL_FULL_W-42,18],[50,75,TPL_FULL_W-42,19]],
-  [[TPL_M,13,42,50],[50,13,TPL_FULL_W-42,24],[50,39,TPL_FULL_W-42,24],[TPL_M,65,TPL_FULL_W,29]],
-  [[TPL_M,13,TPL_FULL_W,28],[TPL_M,43,29,50],[TPL_M+31,43,29,50],[TPL_M+62,43,TPL_FULL_W-62,50]],
-];
-function tplCollagePage(heading,layoutIdx){
-  const p=tplPage();
-  p.texts.push(tplText(`<p>${heading}</p>`,TPL_M,4,TPL_FULL_W,15,{bold:true}));
-  TPL_COLLAGE_LAYOUTS[layoutIdx%TPL_COLLAGE_LAYOUTS.length].forEach(([x,y,w,h])=>p.shapes.push(mkShape('rect',true,x,y,w,h)));
-  p.texts.push(tplText(`<p>${tplLorem(1)}</p>`,TPL_M,94,TPL_FULL_W,8.5,{lineHeight:1.3}));
-  return p;
-}
-function tplSeniorPage(){
-  const p=tplPage();
-  p.shapes.push(mkShape('rect',true,TPL_M,8,42,60));
-  p.texts.push(tplText('<p>Name Surname</p>',50,10,TPL_FULL_W-44,12,{bold:true}));
-  p.texts.push(tplText(`<p>${tplLorem(1)}</p>`,50,17,TPL_FULL_W-44,9,{lineHeight:1.4}));
-  p.shapes.push(mkShape('rect',true,50,45,22,22));
-  p.shapes.push(mkShape('rect',true,74,45,TPL_FULL_W-68,22));
-  return p;
-}
-function tplAutographPage(){
-  const p=tplPage();
-  p.texts.push(tplText('<p>Autographs</p>',TPL_M,6,TPL_FULL_W,16,{bold:true,align:'center'}));
-  for(let i=0;i<6;i++)p.shapes.push({id:uid(),shapeKey:'rect',isPlaceholder:false,photo:null,x:TPL_M,y:18+i*13,w:TPL_FULL_W,h:0.2,rot:0,fill:'#D8D8D8',b:100,c:100,sat:100});
-  return p;
-}
-function tplClosingPage(){
-  const p=tplPage();
-  p.texts.push(tplText('<p>A Year to Remember</p>',TPL_M,10,TPL_FULL_W,20,{bold:true,align:'center'}));
-  p.texts.push(tplText(`<p>${tplLorem(3)}</p>`,15,30,70,11.5,{align:'center',lineHeight:1.6}));
-  p.texts.push(tplText('<p>— The Yearbook Committee</p>',TPL_M,80,TPL_FULL_W,11,{align:'center',italic:true}));
-  return p;
-}
-// Builds the full 80-page English School Yearbook sequence — researched against typical yearbook
-// section proportions (portraits ~25-30%, sports/clubs/academics ~15-20% each, student life ~20-25%).
-function buildYearbookTemplatePages(){
-  const pages=[];
-  pages.push(tplTitlePage());
-  pages.push(tplTOCPage());
-  pages.push(tplMessagePage("Principal's Message"));
-  pages.push(tplMessagePage('From the Editorial Board'));
-  pages.push(tplMessagePage('About Our School'));
-  pages.push(tplMessagePage('Houses & School Colours'));
-  pages.push(tplDivider('Student Life','SECTION ONE'));
-  for(let i=0;i<11;i++)pages.push(tplCollagePage('School Life',i));
-  pages.push(tplDivider('Academics','SECTION TWO'));
-  for(let i=0;i<9;i++)pages.push(tplCollagePage('Academics',i));
-  pages.push(tplDivider('Student Portraits','SECTION THREE'));
-  const grades=['Nursery','LKG','UKG','Grade I','Grade II','Grade III','Grade IV','Grade V',
-    'Grade VI','Grade VII','Grade VIII','Grade IX','Grade X','Grade XI','Grade XII','Faculty & Staff'];
-  grades.forEach(g=>pages.push(tplPortraitGridPage(g,5,6)));
-  for(let i=0;i<7;i++)pages.push(tplPortraitGridPage(grades[i%grades.length]+' (contd.)',5,6));
-  pages.push(tplDivider('Clubs & Activities','SECTION FOUR'));
-  for(let i=0;i<9;i++)pages.push(tplCollagePage('Clubs & Activities',i));
-  pages.push(tplDivider('Sports','SECTION FIVE'));
-  for(let i=0;i<9;i++)pages.push(tplCollagePage('Sports',i));
-  for(let i=0;i<4;i++)pages.push(tplSeniorPage());
-  pages.push(tplAutographPage());
-  pages.push(tplAutographPage());
-  pages.push(tplAutographPage());
-  pages.push(tplClosingPage());
-  return pages;
-}
+
 /* ============ "The Night Sky" — astrophotography photobook template ============
    40 interior pages + a dark-blue front cover (hand-plotted Orion) + a back cover with an
    "About the Photographer" panel. Everything is built from plain rectangles + rotation + rgba fills
@@ -1012,53 +1098,365 @@ function buildNightSkyPages(ed){
   return P;
 }
 
-const EDITOR_TEMPLATES=[
-  {id:'yearbook-english-school',label:'English School Yearbook',appliesTo:['photobook','photobook12','photobook18'],
-   description:'An 80-page starter layout covering the standard sections of a school yearbook — portraits by grade, student life, academics, clubs, sports, and a graduating class spread. All photo slots are empty placeholders and text is dummy copy, ready for you to replace.',
-   pageCount:80, build:buildYearbookTemplatePages},
-  {id:'the-night-sky',label:'The Night Sky',appliesTo:['photobook','photobook12','photobook18'],
-   description:'An astrophotography book: 40 pages plus a dark-blue cover with a hand-plotted Orion and a back cover with an About the Photographer panel. Opens with a publisher\'s page, then four sections — Moon & Planets, Milky Way & Nightscapes, Deep-Sky Objects and Sky Events — each photo page carrying editable capture details (target, date, location, camera, optics, mount, exposure, processing). Ends with The Rig, Dark Sky Sites, a glossary, acknowledgements and observing notes. Replace every [bracketed] line with your own.',
-   pageCount:40, build:buildNightSkyPages, buildCover:buildNightSkyCover, buildBack:buildNightSkyBack,
-   fonts:['Cormorant Garamond','Josefin Sans','Lora'], loadedHint:'replace the [bracketed] text with your own'},
+const NS_DESC='An astrophotography book: 40 pages plus a dark-blue cover with a hand-plotted Orion and a back cover with an About the Photographer panel. Opens with a publisher\'s page, then four sections — Moon & Planets, Milky Way & Night Landscapes, Deep Sky, and Techniques — with capture-data pages, a glossary and observing notes. Every [bracketed] line is yours to replace.';
+const BUILTIN_TEMPLATES=[
+  {id:'builtin-night-sky-12',label:'The Night Sky — 12″×12″',editorKey:'photobook12',description:NS_DESC,thumbUrl:'images/nightsky-cover.jpg'},
+  {id:'builtin-night-sky-85',label:'The Night Sky — 8.5″×8.5″',editorKey:'photobook',description:NS_DESC,thumbUrl:'images/nightsky-cover.jpg'},
+  {id:'builtin-night-sky-18',label:'The Night Sky — 12″×18″',editorKey:'photobook18',description:NS_DESC,thumbUrl:'images/nightsky-cover.jpg'},
 ];
-function applyEditorTemplate(editorKey,templateId){
-  const tpl=EDITOR_TEMPLATES.find(t=>t.id===templateId); if(!tpl)return;
-  const ed=EDS[editorKey]; if(!ed)return;
-  const hasCovers=!!(tpl.buildCover||tpl.buildBack);
-  const msg='Load the "'+tpl.label+'" template? This replaces all '+ed.pageCount()+' current pages'+(hasCovers?' and your front and back cover':'')+' with the template\'s '+tpl.pageCount+' pages'+(hasCovers?' and new covers':'')+'. You can still Ctrl+Z right after loading if you change your mind, but once you save or navigate away the old pages are gone for good.';
-  if(!confirm(msg))return;
-  // Fonts first, so text measures correctly the first time it renders.
-  (tpl.fonts||['Lora']).forEach(loadGoogleFont);
-  ed.mutate(d=>{
-    d.pages=tpl.build(ed);
-    if(tpl.buildCover)d.cover=tpl.buildCover(ed);
-    if(tpl.buildBack)d.backCover=tpl.buildBack(ed);
-    d.title=tpl.label;
-  });
+function startBuiltinTemplate(id){
+  const t=BUILTIN_TEMPLATES.find(x=>x.id===id); if(!t)return;
+  const ed=EDS[t.editorKey]; if(!ed)return toast('Editor not available.');
+  if(editorHasContent(ed.doc)&&!confirm('Load the "'+t.label+'" template? This replaces the current, unsaved '+ed.pageCount()+'-page project in this editor. This can\'t be undone once you navigate away.'))return;
+  ['Cormorant Garamond','Josefin Sans','Lora'].forEach(loadGoogleFont); // fonts first so text measures correctly
+  openEditor(t.editorKey);
+  nsSetCtx(ed);
+  ed.doc.cover=buildNightSkyCover(ed);
+  ed.doc.pages=buildNightSkyPages(ed);
+  ed.doc.backCover=buildNightSkyBack(ed);
+  ed.doc.title='The Night Sky';
+  ed._savedId=null;
   if($(ed.cfg.prefix+'-title'))$(ed.cfg.prefix+'-title').value=ed.doc.title;
-  ed.cur=tpl.buildCover?'cover':0; ed.sel=null; // land on the new cover when the template has one
-  ed.renderAll();
-  if(editorKey==='photobook'||editorKey==='photobook12'||editorKey==='photobook18')updatePhotobookPrice(editorKey);
-  toast('Template loaded — '+tpl.pageCount+' pages, priced accordingly'+(tpl.loadedHint?' · '+tpl.loadedHint:'')+' ✓');
-  hide('templatePickerModal');
+  ed.cur='cover'; ed.sel=null; ed.renderAll();
+  updatePhotobookPrice(t.editorKey);
+  toast('Template loaded — 40 pages, priced accordingly · replace the [bracketed] text with your own ✓');
 }
-function d_titleFallback(ed){return ed.doc.title;}
-function openTemplatePicker(editorKey){
-  const wrap=$('templatePickerList'); if(!wrap)return;
-  const applicable=EDITOR_TEMPLATES.filter(t=>t.appliesTo.includes(editorKey));
-  wrap.innerHTML=applicable.length?applicable.map(t=>`
-    <div style="border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px">
-      <b style="font-size:14px">${esc(t.label)}</b>
-      <p style="font-size:12.5px;color:var(--slate);line-height:1.5;margin:6px 0 12px">${esc(t.description)}</p>
-      <button class="btn btn-accent sm" onclick="applyEditorTemplate('${editorKey}','${t.id}')">Load this template</button>
-    </div>`).join(''):'<p style="font-size:13px;color:var(--slate-l)">No templates available for this book size yet.</p>';
-  show('templatePickerModal');
+
+/* ---------- Admin: template CRUD, thumbnails, assets ---------- */
+function populateNewTplEditorSelect(){
+  const sel=document.getElementById('newTplEditorSelect'); if(!sel)return;
+  sel.innerHTML=TEMPLATE_EDITOR_OPTIONS.map(o=>`<option value="${o.key}">${esc(o.label)}</option>`).join('');
 }
+function addCustomTemplateFromAdmin(){
+  const sel=$('newTplEditorSelect'); const editorKey=sel?sel.value:'photobook';
+  const nameInput=$('newTplNameInput'); const customName=nameInput?nameInput.value.trim():'';
+  CUSTOM_TEMPLATES.push(newBlankTemplate(editorKey,customName||null));
+  if(nameInput)nameInput.value='';
+  saveCustomTemplates(); renderCustomTemplatesAdmin();
+}
+function deleteCustomTemplate(id){
+  if(!confirm('Delete this template? This cannot be undone.'))return;
+  CUSTOM_TEMPLATES=CUSTOM_TEMPLATES.filter(t=>t.id!==id);
+  saveCustomTemplates(); renderCustomTemplatesAdmin();
+}
+function updateCustomTemplateField(id,field,value){
+  const t=CUSTOM_TEMPLATES.find(x=>x.id===id); if(!t)return;
+  t[field]=value; saveCustomTemplates();
+}
+function updateCustomTemplateEditorKey(id,editorKey){
+  const t=CUSTOM_TEMPLATES.find(x=>x.id===id); if(!t)return;
+  const oldMeta=templateEditorMeta(t.editorKey), newMeta=templateEditorMeta(editorKey);
+  if(oldMeta.kind!==newMeta.kind){
+    if(!confirm('Switching to a different product type will reset this template\'s blank pages/boards to match it. Continue?')){renderCustomTemplatesAdmin();return;}
+    const fresh=newBlankTemplate(editorKey,t.label);
+    Object.keys(t).forEach(k=>delete t[k]);
+    Object.assign(t,fresh);
+  }else{
+    t.editorKey=editorKey;
+  }
+  saveCustomTemplates(); renderCustomTemplatesAdmin();
+}
+async function uploadCustomTemplateThumb(id,file){
+  if(!file)return;
+  toast('Uploading thumbnail…');
+  try{
+    const path=`custom-templates/${id}-${uid()}`;
+    const {error,url}=await uploadWebImage(path,file,1200);
+    if(error)throw error;
+    const t=CUSTOM_TEMPLATES.find(x=>x.id===id); if(!t)return;
+    t.thumbUrl=url;
+    saveCustomTemplates(); renderCustomTemplatesAdmin();
+  }catch(e){
+    console.warn('Template thumbnail upload failed:',e.message||e);
+    toast('⚠ Thumbnail upload failed — is the "cms-images" storage bucket created (public) in Supabase? '+(e.message||''));
+  }
+}
+function removeCustomTemplateThumb(id){
+  const t=CUSTOM_TEMPLATES.find(x=>x.id===id); if(!t)return;
+  t.thumbUrl=null; saveCustomTemplates(); renderCustomTemplatesAdmin();
+}
+async function uploadCustomTemplateAssets(templateId,fileList){
+  const files=Array.from(fileList||[]).filter(Boolean); if(!files.length)return;
+  const t=CUSTOM_TEMPLATES.find(x=>x.id===templateId); if(!t)return;
+  toast(`Uploading ${files.length} asset${files.length>1?'s':''}…`);
+  let okCount=0, failCount=0;
+  for(const file of files){
+    try{
+      const path=`template-assets/${templateId}/${uid()}`;
+      const {error,url}=await uploadWebImage(path,file,2000);
+      if(error)throw error;
+      const dim=await new Promise(res=>{const im=new Image();im.onload=()=>res({w:im.naturalWidth,h:im.naturalHeight});im.onerror=()=>res({w:1000,h:1000});im.src=url;});
+      t.assets=t.assets||[];
+      t.assets.push({id:uid(),url,name:file.name,w:dim.w,h:dim.h});
+      okCount++;
+    }catch(e){
+      console.warn('Asset upload failed:',file.name,e.message||e);
+      failCount++;
+    }
+  }
+  saveCustomTemplates(); renderCustomTemplatesAdmin();
+  if(failCount)toast(`⚠ ${okCount} uploaded, ${failCount} failed — is the "cms-images" storage bucket created (public) in Supabase?`);
+  else toast(`${okCount} asset${okCount>1?'s':''} uploaded ✓`);
+}
+function deleteCustomTemplateAsset(templateId,assetId){
+  const t=CUSTOM_TEMPLATES.find(x=>x.id===templateId); if(!t)return;
+  if(!confirm('Remove this asset? Any copies already placed on the template\'s pages will stay as-is.'))return;
+  t.assets=(t.assets||[]).filter(a=>a.id!==assetId);
+  saveCustomTemplates(); renderCustomTemplatesAdmin();
+}
+function renderCustomTemplatesAdmin(){
+  populateNewTplEditorSelect();
+  const wrap=document.getElementById('customTemplatesAdminRows'); if(!wrap)return; wrap.innerHTML='';
+  CUSTOM_TEMPLATES.forEach(t=>{
+    const meta=templateEditorMeta(t.editorKey);
+    const url=t.thumbUrl;
+    const row=document.createElement('div');
+    row.style.cssText='border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff';
+    row.innerHTML=`
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <div style="flex:0 0 auto;width:150px">
+          <div style="position:relative">
+            <div style="width:100%;aspect-ratio:4/3;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:${url?`url(${url}) center/cover`:'var(--cream)'};display:flex;align-items:center;justify-content:center;cursor:pointer" data-role="tile">
+              ${url?'':'<span style="font-size:10px;color:var(--slate-l);text-align:center;padding:0 10px">Click to upload thumbnail</span>'}
+            </div>
+            ${url?'<button style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#fff;border:1px solid var(--line);cursor:pointer;font-size:12px;line-height:1;color:var(--slate)" title="Remove thumbnail" data-role="remove">×</button>':''}
+          </div>
+          <input type="file" accept="image/*" style="display:none" data-role="thumbInput">
+          <div style="font-size:11px;color:var(--slate-l);margin-top:8px">${meta.kind==='book'?templatePageCountV2(t)+' pages + cover':meta.kind==='artprints'?'Set of 4':'Single print'}</div>
+          <button type="button" class="btn btn-accent xs" style="width:100%;justify-content:center;margin-top:8px" data-role="editLayout">Edit layout</button>
+          <button type="button" class="btn btn-ghost xs" style="width:100%;justify-content:center;margin-top:6px;color:#B0432E" data-role="deleteTpl">Delete template</button>
+        </div>
+        <div style="flex:1 1 260px;min-width:220px">
+          <label style="font-size:10.5px;color:var(--slate-l);text-transform:uppercase;letter-spacing:.05em;font-weight:700">Product / size</label>
+          <select class="field" style="margin:4px 0 10px" data-role="editorSelect">${TEMPLATE_EDITOR_OPTIONS.map(o=>`<option value="${o.key}" ${o.key===t.editorKey?'selected':''}>${esc(o.label)}</option>`).join('')}</select>
+          <label style="font-size:10.5px;color:var(--slate-l);text-transform:uppercase;letter-spacing:.05em;font-weight:700">Card title</label>
+          <input class="field" style="margin:4px 0 10px" data-role="labelInput" value="${esc(t.label)}">
+          <label style="font-size:10.5px;color:var(--slate-l);text-transform:uppercase;letter-spacing:.05em;font-weight:700">Card description</label>
+          <textarea class="field" style="margin:4px 0;min-height:60px;resize:vertical" data-role="descInput" placeholder="Shown on the public Templates page">${esc(t.description||'')}</textarea>
+        </div>
+        <div style="flex:1 1 220px;min-width:200px">
+          <label style="font-size:10.5px;color:var(--slate-l);text-transform:uppercase;letter-spacing:.05em;font-weight:700">Assets (shows as "Clip Art" in the editor)</label>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;margin:8px 0" data-role="assetGrid">
+            ${(t.assets||[]).map(a=>`
+              <div style="position:relative">
+                <div style="width:100%;aspect-ratio:1/1;border:1px solid var(--line);border-radius:8px;background:url(${esc(a.url)}) center/contain no-repeat,repeating-conic-gradient(#f0f0f0 0 25%,#fff 0 50%) 0 0/10px 10px" title="${esc(a.name)}"></div>
+                <button style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#fff;border:1px solid var(--line);cursor:pointer;font-size:10px;line-height:1;color:var(--slate)" data-role="deleteAsset" data-asset-id="${a.id}">×</button>
+              </div>`).join('')}
+            ${meta.kind!=='book'?'':`<button type="button" style="width:100%;aspect-ratio:1/1;border:1.5px dashed var(--line);border-radius:8px;background:none;cursor:pointer;color:var(--slate-l);font-size:20px" data-role="addAsset" title="Add asset">＋</button>`}
+          </div>
+          <input type="file" accept="image/*,.svg" multiple style="display:none" data-role="assetInput">
+          ${meta.kind!=='book'?'<div class="hint">Assets apply to book-type templates only.</div>':''}
+        </div>
+      </div>`;
+    row.querySelector('[data-role="tile"]').onclick=()=>row.querySelector('[data-role="thumbInput"]').click();
+    row.querySelector('[data-role="thumbInput"]').onchange=function(){uploadCustomTemplateThumb(t.id,this.files[0]);};
+    const removeBtn=row.querySelector('[data-role="remove"]');
+    if(removeBtn)removeBtn.onclick=(e)=>{e.stopPropagation();removeCustomTemplateThumb(t.id);};
+    row.querySelector('[data-role="editLayout"]').onclick=()=>openCustomTemplateEditor(t.id);
+    row.querySelector('[data-role="deleteTpl"]').onclick=()=>deleteCustomTemplate(t.id);
+    row.querySelector('[data-role="editorSelect"]').addEventListener('change',function(){updateCustomTemplateEditorKey(t.id,this.value);});
+    row.querySelector('[data-role="labelInput"]').addEventListener('change',function(){updateCustomTemplateField(t.id,'label',this.value);});
+    row.querySelector('[data-role="descInput"]').addEventListener('change',function(){updateCustomTemplateField(t.id,'description',this.value);});
+    const addAssetBtn=row.querySelector('[data-role="addAsset"]');
+    if(addAssetBtn)addAssetBtn.onclick=()=>row.querySelector('[data-role="assetInput"]').click();
+    const assetInput=row.querySelector('[data-role="assetInput"]');
+    if(assetInput)assetInput.onchange=function(){uploadCustomTemplateAssets(t.id,this.files);this.value='';};
+    row.querySelectorAll('[data-role="deleteAsset"]').forEach(btn=>{
+      btn.onclick=()=>deleteCustomTemplateAsset(t.id,btn.dataset.assetId);
+    });
+    wrap.appendChild(row);
+  });
+}
+
+/* ---------- Admin: "Edit layout" (opens the template in the real editor) ---------- */
+let ADMIN_EDIT_TEMPLATE=null; // {id, editorKey, kind}
+function openCustomTemplateEditor(templateId){
+  const t=CUSTOM_TEMPLATES.find(x=>x.id===templateId); if(!t)return;
+  const meta=templateEditorMeta(t.editorKey);
+  ADMIN_EDIT_TEMPLATE={id:templateId,editorKey:t.editorKey,kind:meta.kind};
+  if(meta.kind==='book'){
+    const ed=EDS[t.editorKey]; if(!ed)return toast('Editor not available.');
+    ed.doc.cover=JSON.parse(JSON.stringify(t.cover||blankPage()));
+    ed.doc.pages=JSON.parse(JSON.stringify((t.pages&&t.pages.length)?t.pages:[blankPage()]));
+    ed.doc.backCover=JSON.parse(JSON.stringify(t.backCover||blankPage()));
+    ed.doc.title=t.label;
+    ed._savedId=null;
+    seedTemplateAssetsIntoPhotos(ed,t);
+    openEditor(t.editorKey);
+    ed.cur='cover'; ed.sel=null; ed.renderAll();
+    showUploadsTool(t.editorKey,true);
+  }else if(meta.kind==='artprints'){
+    AP.boards=JSON.parse(JSON.stringify(t.boards||[null,null,null,null]));
+    AP.title=t.label; AP._savedId=null;
+    openEditor('artprints');
+  }else{
+    const st=AP_SINGLE[t.editorKey]; if(!st)return toast('Editor not available.');
+    st.board=t.board?JSON.parse(JSON.stringify(t.board)):null;
+    st.title=t.label; st._savedId=null;
+    openEditor(t.editorKey);
+  }
+  showTemplateEditBar(t,t.editorKey);
+}
+function showUploadsTool(key,show){
+  document.querySelectorAll('#editor-'+key+' [data-tool="uploads"]').forEach(b=>b.style.display=show?'':'none');
+}
+// Hides/repurposes the parts of the normal editor chrome that don't make sense while editing a
+// template (ordering a print, saving to "My Dashboard" as if it were a real project) and adds a
+// banner explaining the mode, with Save/Exit actions. Everything overridden here is restored by
+// hideTemplateEditBar() on exit — nothing here permanently changes the editor for real customers.
+// Works for every editor kind (book and Art Print alike) since they all share the same generic
+// ed-top toolbar structure (back icon-button, brand link, Save/Preview/Order print/My Dashboard).
+function showTemplateEditBar(t,key){
+  const root=$('editor-'+key); if(!root)return;
+  const top=root.querySelector('.ed-top'); if(!top)return;
+  const backBtn=top.children[0], brandLink=top.querySelector('.ed-brand');
+  [backBtn,brandLink].forEach(el=>{
+    if(!el)return;
+    el._tplOrigOnclick=el.onclick;
+    el.onclick=(e)=>{e.preventDefault();exitCustomTemplateEditor();};
+  });
+  top.querySelectorAll('button').forEach(btn=>{
+    const txt=btn.textContent.trim();
+    if(txt==='Order print →'||txt==='My Dashboard'){ btn.dataset.tplHidden='1'; btn.style.display='none'; }
+    if(txt==='Save'){ btn._tplOrigOnclick=btn.onclick; btn.onclick=(e)=>{e.preventDefault();saveCustomTemplateLayout();}; }
+  });
+  let bar=$('templateEditBar'); if(bar)bar.remove();
+  bar=document.createElement('div');
+  bar.id='templateEditBar';
+  bar.style.cssText='background:#EAF3FF;border-bottom:1px solid #C5DCF8;color:#1A4A7A;padding:10px 18px;font-size:13px;display:flex;align-items:center;gap:14px;flex-wrap:wrap';
+  bar.innerHTML=`<span>✏️ Editing the <strong>${esc(t.label)}</strong> template. Changes here update the template for every future customer who uses it — not any single project.</span>
+    <span style="flex:1"></span>
+    <button class="btn btn-ghost sm" onclick="exitCustomTemplateEditor()">Exit without saving</button>
+    <button class="btn btn-accent sm" onclick="saveCustomTemplateLayout()">Save as Template</button>`;
+  top.insertAdjacentElement('afterend',bar);
+}
+function hideTemplateEditBar(key){
+  const root=$('editor-'+key); if(!root)return;
+  const top=root.querySelector('.ed-top');
+  if(top){
+    const backBtn=top.children[0], brandLink=top.querySelector('.ed-brand');
+    [backBtn,brandLink].forEach(el=>{ if(el&&el._tplOrigOnclick!==undefined){ el.onclick=el._tplOrigOnclick; delete el._tplOrigOnclick; } });
+    top.querySelectorAll('button').forEach(btn=>{
+      if(btn.dataset.tplHidden){ btn.style.display=''; delete btn.dataset.tplHidden; }
+      if(btn._tplOrigOnclick!==undefined){ btn.onclick=btn._tplOrigOnclick; delete btn._tplOrigOnclick; }
+    });
+  }
+  showUploadsTool(key,false);
+  const bar=$('templateEditBar'); if(bar)bar.remove();
+}
+async function saveCustomTemplateLayout(){
+  if(!ADMIN_EDIT_TEMPLATE)return;
+  const {id,editorKey,kind}=ADMIN_EDIT_TEMPLATE;
+  const t=CUSTOM_TEMPLATES.find(x=>x.id===id); if(!t)return;
+  if(kind==='book'){
+    const ed=EDS[editorKey]; if(!ed)return;
+    const pages=JSON.parse(JSON.stringify(ed.doc.pages||[]));
+    if(!pages.length){toast('A template needs at least one interior page.');return;}
+    t.cover=JSON.parse(JSON.stringify(ed.doc.cover||blankPage()));
+    t.pages=pages;
+    t.backCover=JSON.parse(JSON.stringify(ed.doc.backCover||blankPage()));
+  }else if(kind==='artprints'){
+    t.boards=JSON.parse(JSON.stringify(AP.boards||[null,null,null,null]));
+  }else{
+    const st=AP_SINGLE[editorKey]; if(st)t.board=st.board?JSON.parse(JSON.stringify(st.board)):null;
+  }
+  saveCustomTemplates();
+  toast('Template saved ✓ — used by every new customer from now on');
+  exitCustomTemplateEditor();
+}
+function exitCustomTemplateEditor(){
+  if(!ADMIN_EDIT_TEMPLATE)return;
+  const {editorKey}=ADMIN_EDIT_TEMPLATE;
+  hideTemplateEditBar(editorKey);
+  ADMIN_EDIT_TEMPLATE=null;
+  ACTIVE_EDITOR=null;
+  document.querySelectorAll('.ed-root').forEach(x=>x.classList.remove('active'));
+  document.querySelector('.site-nav').style.display='';
+  if($('siteFooter'))$('siteFooter').style.display='block';
+  go('admin');
+  adminTab('templates');
+}
+
 /* Fits a photo into a slot (x,y,w,h in %) preserving the photo's true pixel aspect
    ratio, so it is never stretched or cropped — shrinks to fit within the slot and
    centers there. containerR is the on-screen width/height ratio of the box the
    percentages are relative to (a page, or an Art Print board), since a % box only
    looks square/rectangular on screen if the container itself is that shape. */
+/* ============================================================================================
+   REAL per-pixel Shadows/Highlights (canvas-based, non-destructive proof of concept)
+   ============================================================================================
+   Everything else in Photo Edit (brightness, contrast, saturation, temperature, blur) stays as
+   simple CSS filters — fast, and guaranteed to render identically live and in the exported PDF,
+   since html2canvas (the print/PDF renderer) only understands the standard CSS Filter Functions,
+   not custom per-pixel processing. Shadows/Highlights is the one adjustment that genuinely needs
+   real pixel access — no combination of brightness()/contrast() can selectively brighten only
+   the dark pixels of a photo. So for this one adjustment, we actually read and rewrite pixels on
+   an offscreen canvas, then bake the result into a plain <img> (via a data URL) — which sidesteps
+   the html2canvas-compatibility risk entirely, since by the time the page is captured for print,
+   it's just a normal image, identical in the browser and in the PDF.
+
+   Non-destructive: only the two numbers (shadows, highlights) are ever stored on the image
+   object, exactly like every other Photo Edit slider — the original uploaded photo is never
+   touched or replaced. The adjusted pixels are recomputed on demand, cached in memory by
+   (photo, shadow value, highlight value, resolution) so repeated renders at the same settings
+   are instant, and cleared automatically as soon as the browser tab closes. */
+const TONE_CANVAS_CACHE=new Map();
+const TONE_SOURCE_IMG_CACHE=new Map(); // photo URL -> loaded <img>, so repeat processing doesn't re-fetch over the network
+function loadImageElForTone(url){
+  if(TONE_SOURCE_IMG_CACHE.has(url))return TONE_SOURCE_IMG_CACHE.get(url);
+  const p=new Promise((resolve,reject)=>{
+    const im=new Image(); im.crossOrigin='anonymous';
+    im.onload=()=>resolve(im); im.onerror=reject;
+    im.src=url;
+  });
+  TONE_SOURCE_IMG_CACHE.set(url,p);
+  return p;
+}
+// The actual per-pixel algorithm. Luminance-weighted so shadows and highlights can be pushed
+// independently: dark pixels respond almost entirely to the Shadows control, bright pixels
+// almost entirely to Highlights, with a smooth handoff through the midtones — the same basic
+// idea as Photoshop's Shadow/Highlight tool, applied equally to R/G/B to keep hue stable.
+function applyShadowHighlightPixels(imageData,shadowVal,highlightVal){
+  if(!shadowVal&&!highlightVal)return;
+  const d=imageData.data;
+  const sAmt=(shadowVal||0)/100*90, hAmt=(highlightVal||0)/100*90; // up to ±90 luminance units at full effect
+  for(let i=0;i<d.length;i+=4){
+    const r=d[i],g=d[i+1],b=d[i+2];
+    const lum=0.299*r+0.587*g+0.114*b; // 0–255
+    const shadowWeight=Math.max(0,1-lum/128);       // 1 at black, 0 by mid-grey
+    const highlightWeight=Math.max(0,(lum-128)/127); // 0 at mid-grey, 1 at white
+    const delta=sAmt*shadowWeight+hAmt*highlightWeight;
+    if(delta===0)continue;
+    d[i]=Math.max(0,Math.min(255,r+delta));
+    d[i+1]=Math.max(0,Math.min(255,g+delta));
+    d[i+2]=Math.max(0,Math.min(255,b+delta));
+  }
+}
+// Renders the source photo through the pixel algorithm at up to maxDim on its long edge, and
+// returns a PNG data URL. maxDim keeps live-preview processing fast (a downscaled pass is
+// imperceptibly different on screen but far cheaper); PDF export calls this with no cap so the
+// printed file gets the full-resolution treatment.
+async function getToneAdjustedImageUrl(sourceUrl,shadowVal,highlightVal,maxDim){
+  const cacheKey=`${sourceUrl}|${shadowVal||0}|${highlightVal||0}|${maxDim||'full'}`;
+  if(TONE_CANVAS_CACHE.has(cacheKey))return TONE_CANVAS_CACHE.get(cacheKey);
+  const promise=(async()=>{
+    const img=await loadImageElForTone(sourceUrl);
+    let w=img.naturalWidth,h=img.naturalHeight;
+    if(maxDim&&Math.max(w,h)>maxDim){const s=maxDim/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
+    const canvas=document.createElement('canvas'); canvas.width=w; canvas.height=h;
+    const ctx=canvas.getContext('2d');
+    ctx.drawImage(img,0,0,w,h);
+    if(shadowVal||highlightVal){
+      const data=ctx.getImageData(0,0,w,h);
+      applyShadowHighlightPixels(data,shadowVal,highlightVal);
+      ctx.putImageData(data,0,0);
+    }
+    return canvas.toDataURL('image/png');
+  })();
+  TONE_CANVAS_CACHE.set(cacheKey,promise);
+  return promise;
+}
+
 function fitPhotoBox(ph,containerR,x,y,w,h){
   const pr=(ph&&ph.w&&ph.h)?ph.w/ph.h:1;
   let fw=w, fh=w*containerR/pr;
@@ -1083,7 +1481,7 @@ function dpiWarningEl(dpi){
   if(dpi===null||dpi>=MIN_PRINT_DPI)return null;
   const el=document.createElement('div'); el.className='dpi-warning';
   el.title='This photo is too low-resolution for a sharp print at its current size — use a higher-resolution photo, or shrink it on the board.';
-  el.textContent=`⚠ ${dpi} DPI — below ${MIN_PRINT_DPI} recommended`;
+  el.textContent=`⚠ ${dpi} DPI — ${MIN_PRINT_DPI} Recommended`;
   return el;
 }
 function createEditor(key,cfg){
@@ -1104,6 +1502,33 @@ function createEditor(key,cfg){
       orientation:cfg.hasOrientation?(cfg.defaultOrientation||'portrait'):undefined},
     cur:-1, sel:null, tool:'photos', armed:null, history:[], future:[], _coverZone:'cover', grid:false, zoom:100,
     fitBox(ph,x,y,w,h){return fitPhotoBox(ph,pageR(),x,y,w,h);},
+    // Places one photo seamlessly across BOTH pages of an open two-page spread — used when a
+    // photo is dropped or click-placed near the shared gutter between them, rather than confined
+    // to a single page. Reuses the exact same fitPhotoBox() "contain" math already used for every
+    // other photo placement in this editor (so it stays visually consistent with "Fit whole
+    // photo" elsewhere), just computed against a box twice as wide — the two open pages side by
+    // side — instead of one page alone. The resulting box is given to BOTH pages verbatim, with
+    // the second page's copy shifted left by exactly 100% (one page-width) of page-relative
+    // percentage space; each page's own overflow:hidden then naturally clips it to that page's
+    // own bounds, with the crop lining up exactly at the seam since both copies come from the
+    // one shared computation, not two independent fits that would have to coincidentally agree.
+    trySpanningPlace(ph,pageRef,siblingIdx,side,cx){
+      if(!side||siblingIdx==null)return false;
+      const nearGutter = side==='l' ? cx>=65 : cx<=35; // inner 35% of either page — a large, deliberately generous target, paired with the live visual highlight during drag so it's never a guess
+      if(!nearGutter)return false;
+      const box=fitPhotoBox(ph, 2*pageR(), 0, 0, 200, 100); // 200%-wide box = both open pages combined
+      const leftIdx = side==='l' ? pageRef : siblingIdx;
+      const rightIdx = side==='l' ? siblingIdx : pageRef;
+      ed.mutate(d=>{
+        const leftImg=mkImg(ph.id, box.x, box.y, box.w, box.h);
+        const rightImg=mkImg(ph.id, box.x-100, box.y, box.w, box.h); // shifted one page-width left, so the same underlying scale/position is windowed by the right page's own 0–100% instead
+        d.pages[leftIdx].images.push(leftImg);
+        d.pages[rightIdx].images.push(rightImg);
+      });
+      ed.sel={page:pageRef,kind:'image',id:ed.pageRefObj(pageRef).images.slice(-1)[0].id};
+      toast('Placed across both pages — drag either half to fine-tune, they\'re independent from here');
+      return true;
+    },
     /* ---------- Orientation (portrait/landscape) — only wired up for editors created with
        cfg.hasOrientation:true. Swaps cfg.pageInW/pageInH/aspect between the base (portrait)
        dimensions and their landscape flip, then re-renders. Content stays in place because every
@@ -1200,6 +1625,7 @@ function createEditor(key,cfg){
     },
 
     setTool(t){ed.tool=t;if(t==='cover'&&cfg.hasSpine){ed.cur='coverspread';ed.sel=null;}
+      else if(t==='cover'&&typeof ed.cur==='number'){ed.cur='cover';ed.sel=null;} // Cover tool always shows the cover
       document.querySelectorAll('#'+cfg.prefix+'-rail button').forEach(b=>b.classList.toggle('on',b.dataset.tool===t));ed.renderPanel();ed.renderStage();ed.renderStrip();},
     setCur(c){ed.cur=c;ed.sel=null;ed.renderAll()},
     toggleGrid(){ed.grid=!ed.grid;const b=$(cfg.prefix+'-gridBtn');if(b)b.classList.toggle('on',ed.grid);ed.renderStage();},
@@ -1208,7 +1634,28 @@ function createEditor(key,cfg){
       const st=$(cfg.prefix+'-stage');if(st)st.style.transform='scale('+(ed.zoom/100)+')';
       const lbl=$(cfg.prefix+'-zoomVal');if(lbl)lbl.textContent=ed.zoom+'%';},
 
-    imgFilter(im,blurScale){let f=`brightness(${im.b??100}%) contrast(${im.c??100}%) saturate(${im.sat??100}%)`;
+    imgFilter(im,blurScale){
+      // Shadows/Highlights are folded into brightness+contrast rather than a true per-pixel
+      // tone curve — html2canvas (used for print/PDF export) only understands the standard CSS
+      // Filter Functions (brightness, contrast, saturate, sepia, hue-rotate, blur, grayscale),
+      // not custom SVG filter references, so this keeps what's on screen and what actually
+      // prints guaranteed identical rather than risking a look that silently doesn't export.
+      // NOTE: this approximation is now only used as the instant first paint before the real
+      // canvas-based pixel pass (see getToneAdjustedImageUrl) finishes and takes over — see
+      // imgFilterBase() for the CSS filter used once that real version is showing.
+      const shadows=im.shadows||0, highlights=im.highlights||0;
+      const bAdj=(im.b??100)+shadows*0.15+highlights*0.1, cAdj=(im.c??100)-shadows*0.1+highlights*0.05;
+      let f=`brightness(${bAdj}%) contrast(${cAdj}%) saturate(${im.sat??100}%)`;
+      const t=im.temp||0;
+      if(!cfg.monochrome&&t>0)f+=` sepia(${Math.round(t*0.35)}%) saturate(${100+t*0.3}%)`;
+      if(!cfg.monochrome&&t<0)f+=` hue-rotate(${Math.round(t*0.25)}deg) saturate(${100+t*0.15}%)`;
+      if(im.blur)f+=` blur(${(im.blur*(blurScale||1)).toFixed(2)}px)`;
+      if(cfg.monochrome)f+=' grayscale(100%)';return f},
+    // Same as imgFilter() but WITHOUT the shadow/highlight brightness/contrast approximation —
+    // used once the real per-pixel canvas version of the photo has loaded, since applying both
+    // would double up the effect.
+    imgFilterBase(im,blurScale){
+      let f=`brightness(${im.b??100}%) contrast(${im.c??100}%) saturate(${im.sat??100}%)`;
       const t=im.temp||0;
       if(!cfg.monochrome&&t>0)f+=` sepia(${Math.round(t*0.35)}%) saturate(${100+t*0.3}%)`;
       if(!cfg.monochrome&&t<0)f+=` hue-rotate(${Math.round(t*0.25)}deg) saturate(${100+t*0.15}%)`;
@@ -1243,8 +1690,78 @@ function createEditor(key,cfg){
       line.style.display='block';
     },
     clearGuides(pageEl){pageEl.querySelectorAll('.snap-line').forEach(l=>l.style.display='none');},
+    // Adds all 8 resize handles (4 edges + 4 corners) to an already-positioned object element `d`,
+    // wired to resize `obj` (anything with x/y/w/h in page %, shared shape by images/shapes/AP
+    // boards) from whichever side is grabbed — each moving edge snaps against the same
+    // page/grid/sibling-object targets a move-drag uses. Holding Shift while dragging a corner
+    // preserves the object's original aspect ratio; Alt (like moving) temporarily disables
+    // snapping. `onStart` fires at mousedown (e.g. to select the object); `onDone` fires once,
+    // after mouseup, for resize-only side effects (e.g. growing a photo back out to bleed).
+    // lockAspect: when true (images), every handle — edges included — always preserves the
+    // object's original aspect ratio, with no way to distort it; when false (shapes), behaves
+    // as before — free-form by default, Shift held on a corner handle locks proportions.
+    wireResizeHandles(d,obj,page,el,onStart,onDone,lockAspect){
+      ['n','s','e','w','ne','nw','se','sw'].forEach(dir=>{
+        const rh=document.createElement('div'); rh.className='rh rh-'+dir; d.appendChild(rh);
+        rh.onmousedown=e=>{
+          e.preventDefault();e.stopPropagation();
+          if(obj.locked)return;
+          if(onStart)onStart();
+          const rect=el.getBoundingClientRect();
+          const sx=e.clientX, sy=e.clientY;
+          const ox=obj.x, oy=obj.y, ow=obj.w, oh=obj.h, ratio=(oh||1)/(ow||1);
+          const right=ox+ow, bottom=oy+oh; // fixed anchor edges for this drag
+          const targets=ed.snapTargets(page,obj.id);
+          const MIN=4;
+          const mv=ev=>{
+            const dx=(ev.clientX-sx)/rect.width*100, dy=(ev.clientY-sy)/rect.height*100;
+            ed.clearGuides(el);
+            let nx=ox, ny=oy, nw=ow, nh=oh;
+            if(dir.includes('e')){
+              let r=right+dx;
+              if(!ev.altKey)r=ed.snapValue(r,0,targets.xs,'v',el);
+              nw=Math.max(MIN,r-ox);
+            }
+            if(dir.includes('w')){
+              let l=ox+dx;
+              if(!ev.altKey)l=ed.snapValue(l,0,targets.xs,'v',el);
+              l=Math.min(l,right-MIN);
+              nx=l; nw=right-l;
+            }
+            if(dir.includes('s')){
+              let b=bottom+dy;
+              if(!ev.altKey)b=ed.snapValue(b,0,targets.ys,'h',el);
+              nh=Math.max(MIN,b-oy);
+            }
+            if(dir.includes('n')){
+              let t=oy+dy;
+              if(!ev.altKey)t=ed.snapValue(t,0,targets.ys,'h',el);
+              t=Math.min(t,bottom-MIN);
+              ny=t; nh=bottom-t;
+            }
+            if(lockAspect||(ev.shiftKey&&dir.length===2)){
+              if(dir.length===2){ // corner — whichever axis moved further drives the resize
+                if(Math.abs(dx)>=Math.abs(dy)){nh=nw*ratio; if(dir.includes('n'))ny=bottom-nh;}
+                else{nw=nh/ratio; if(dir.includes('w'))nx=right-nw;}
+              }else if(dir==='e'||dir==='w'){ // edge — width drives, height follows, centered
+                nh=nw*ratio; ny=oy+(oh-nh)/2;
+              }else{ // 'n' or 's' — height drives, width follows, centered
+                nw=nh/ratio; nx=ox+(ow-nw)/2;
+              }
+              nw=Math.max(MIN,nw); nh=Math.max(MIN,nh);
+            }
+            obj.x=nx;obj.y=ny;obj.w=nw;obj.h=nh;
+            d.style.left=nx+'%';d.style.top=ny+'%';d.style.width=nw+'%';d.style.height=nh+'%';
+          };
+          const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);ed.clearGuides(el);
+            if(onDone)onDone();
+            ed.snap();ed.autosave();ed.renderStrip();ed.renderAll();};
+          window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);
+        };
+      });
+    },
 
-    buildPage(page,pageRef,_pgNum,_side,interactive,showSafeArea){
+    buildPage(page,pageRef,siblingIdx,side,interactive,showSafeArea){
       // Applied here, at the top of the one function every page (cover/back/spine/interior) goes
       // through on every render, rather than only once when the editor first opens — that one-time
       // approach turned out to miss sessions where the editor was already open, or where a page
@@ -1288,9 +1805,16 @@ function createEditor(key,cfg){
           let tf=`rotate(${im.rot}deg)`;
           if(fit==='cover'){img.style.objectPosition=`${im.fx??50}% ${im.fy??50}%`;if((im.zoom||100)!==100)tf+=` scale(${(im.zoom/100).toFixed(2)})`;}
           img.style.transform=tf;
-          d.appendChild(img);}
+          d.appendChild(img);
+          if((im.shadows||im.highlights)&&!cfg.monochrome){
+            const genAt=++img._toneGen||(img._toneGen=1);
+            getToneAdjustedImageUrl(ph.url,im.shadows||0,im.highlights||0,1400).then(url=>{
+              if(img._toneGen!==genAt||!img.isConnected)return; // a newer edit or a re-render superseded this one
+              img.src=url; img.style.filter=ed.imgFilterBase(im);
+            }).catch(()=>{}); // network/CORS hiccup — the CSS approximation stays showing, nothing breaks
+          }}
         if(!interactive){el.appendChild(d);return}
-        const rh=document.createElement('div');rh.className='rh';if(!im.locked)d.appendChild(rh);
+        if(ph){const dpiEl=dpiWarningEl(computePrintDpi(ph,cfg.pageInW,cfg.pageInH,im)); if(dpiEl)d.appendChild(dpiEl);}
         const addDel=()=>{if(im.locked||d.querySelector('.obj-del'))return;const del=document.createElement('div');del.className='obj-del';del.textContent='×';
           del.onmousedown=e=>{e.preventDefault();e.stopPropagation()};
           del.onclick=e=>{e.preventDefault();e.stopPropagation();ed.mutate(()=>{const arr=ed.pageRefObj(pageRef).images;const i=arr.findIndex(o=>o.id===im.id);if(i>-1)arr.splice(i,1)});ed.sel=null;ed.renderAll()};
@@ -1301,7 +1825,7 @@ function createEditor(key,cfg){
           d.classList.add('sel');addDel();el.appendChild(d);
           ed.tool=cfg.hasAdjust?'adjust':'photos';document.querySelectorAll('#'+cfg.prefix+'-rail button').forEach(b=>b.classList.toggle('on',b.dataset.tool===ed.tool));
           ed.renderPanel();};
-        d.onmousedown=e=>{if(e.target===rh)return;e.preventDefault();e.stopPropagation();select();
+        d.onmousedown=e=>{if(e.target.classList&&e.target.classList.contains('rh'))return;e.preventDefault();e.stopPropagation();select();
           if(im.locked)return;
           const rect=el.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ox=im.x,oy=im.y;let moved=false;
           const targets=ed.snapTargets(page,im.id);
@@ -1312,18 +1836,22 @@ function createEditor(key,cfg){
             im.x=nx;im.y=ny; d.style.left=im.x+'%';d.style.top=im.y+'%';};
           const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);ed.clearGuides(el);if(moved){ed.growEdgesToBleed(im);ed.snap();ed.autosave();ed.renderStrip();ed.renderAll();}};
           window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);};
-        rh.onmousedown=e=>{e.preventDefault();e.stopPropagation();select();
-          const rect=el.getBoundingClientRect(),sx=e.clientX,ow=im.w,oh=im.h,ratio=oh/ow;
-          const wTargets=[...new Set(page.images.filter(o=>o.id!==im.id).map(o=>o.w))];
-          const mv=ev=>{const dw=(ev.clientX-sx)/rect.width*100;let nw=Math.max(8,ow+dw);
-            ed.clearGuides(el);
-            if(!ev.altKey){const close=wTargets.find(w=>Math.abs(w-nw)<1.3);if(close!==undefined)nw=close;}
-            im.w=nw;im.h=im.w*ratio;d.style.width=im.w+'%';d.style.height=im.h+'%';};
-          const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);ed.clearGuides(el);ed.growEdgesToBleed(im);ed.snap();ed.autosave();ed.renderStrip();ed.renderAll();};
-          window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);};
+        if(!im.locked)ed.wireResizeHandles(d,im,page,el,select,()=>ed.growEdgesToBleed(im),true);
         d.ondragover=ev=>{ev.preventDefault();d.classList.add('dragover')};
         d.ondragleave=()=>d.classList.remove('dragover');
         d.ondrop=ev=>{ev.preventDefault();d.classList.remove('dragover');const id=ev.dataTransfer.getData('photo');if(!id)return;
+          if(side){const hi=el.parentElement.querySelector('.gutter-hi');if(hi)hi.classList.remove('active');}
+          // An existing image sitting near the gutter would otherwise catch this drop itself (to
+          // swap its own photo) before the page-level spanning check ever runs — check for a
+          // spanning placement FIRST, using coordinates relative to the whole PAGE (not this
+          // smaller image box), so dropping near the spine still spans correctly even when it
+          // lands on top of something already there.
+          const newPh=ed.photos.find(p=>p.id===id);
+          if(newPh){
+            const pageRect=el.getBoundingClientRect();
+            const pageCx=(ev.clientX-pageRect.left)/pageRect.width*100;
+            if(ed.trySpanningPlace(newPh,pageRef,siblingIdx,side,pageCx)){ed.renderAll();return;}
+          }
           ed.mutate(()=>{im.photo=id});ed.sel={page:pageRef,kind:'image',id:im.id};ed.renderAll();};
         el.appendChild(d);
       });
@@ -1339,7 +1867,7 @@ function createEditor(key,cfg){
         else{mask.style.background=sh.fill;}
         d.appendChild(mask);
         if(!interactive){el.appendChild(d);return}
-        const rh=document.createElement('div');rh.className='rh';if(!sh.locked)d.appendChild(rh); // same rule as images: a locked object shows no resize handle
+        if(ph){const dpiEl=dpiWarningEl(computePrintDpi(ph,cfg.pageInW,cfg.pageInH,sh)); if(dpiEl)d.appendChild(dpiEl);}
         const addDel=()=>{if(d.querySelector('.obj-del'))return;const del=document.createElement('div');del.className='obj-del';del.textContent='×';
           del.onmousedown=e=>{e.preventDefault();e.stopPropagation()};
           del.onclick=e=>{e.preventDefault();e.stopPropagation();ed.mutate(()=>{const arr=ed.pageRefObj(pageRef).shapes||[];const i=arr.findIndex(o=>o.id===sh.id);if(i>-1)arr.splice(i,1)});ed.sel=null;ed.renderAll()};
@@ -1350,7 +1878,7 @@ function createEditor(key,cfg){
           d.classList.add('sel');addDel();el.appendChild(d);
           ed.tool='shapes';document.querySelectorAll('#'+cfg.prefix+'-rail button').forEach(b=>b.classList.toggle('on',b.dataset.tool==='shapes'));
           ed.renderPanel();};
-        d.onmousedown=e=>{if(e.target===rh)return;e.preventDefault();e.stopPropagation();select();
+        d.onmousedown=e=>{if(e.target.classList&&e.target.classList.contains('rh'))return;e.preventDefault();e.stopPropagation();select();
           if(sh.locked)return;
           const rect=el.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ox=sh.x,oy=sh.y;let moved=false;
           const targets=ed.snapTargets(page,sh.id);
@@ -1361,19 +1889,21 @@ function createEditor(key,cfg){
             sh.x=nx;sh.y=ny;d.style.left=sh.x+'%';d.style.top=sh.y+'%';};
           const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);ed.clearGuides(el);if(moved){ed.snap();ed.autosave();ed.renderStrip();}};
           window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);};
-        rh.onmousedown=e=>{e.preventDefault();e.stopPropagation();select();
-          if(sh.locked)return;
-          const rect=el.getBoundingClientRect(),sx=e.clientX,ow=sh.w,oh=sh.h,ratio=oh/ow;
-          const wTargets=[...new Set((page.shapes||[]).filter(o=>o.id!==sh.id).map(o=>o.w))];
-          const mv=ev=>{const dw=(ev.clientX-sx)/rect.width*100;let nw=Math.max(8,Math.min(100-sh.x,ow+dw));
-            if(!ev.altKey){const close=wTargets.find(w=>Math.abs(w-nw)<1.3);if(close!==undefined)nw=close;}
-            sh.w=nw;sh.h=sh.w*ratio;d.style.width=sh.w+'%';d.style.height=sh.h+'%';};
-          const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);ed.snap();ed.autosave();ed.renderStrip();};
-          window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);};
+        if(!sh.locked)ed.wireResizeHandles(d,sh,page,el,select,null,!!sh.isPlaceholder);
         if(sh.isPlaceholder){
           d.ondragover=ev=>{ev.preventDefault();d.classList.add('dragover')};
           d.ondragleave=()=>d.classList.remove('dragover');
           d.ondrop=ev=>{ev.preventDefault();d.classList.remove('dragover');const id=ev.dataTransfer.getData('photo');if(!id)return;
+            if(side){const hi=el.parentElement.querySelector('.gutter-hi');if(hi)hi.classList.remove('active');}
+            // Same reasoning as the per-image handler above — a placeholder frame sitting near
+            // the gutter would otherwise swallow this drop for itself before the page-level
+            // spanning check ever gets a chance to run.
+            const newPh=ed.photos.find(p=>p.id===id);
+            if(newPh){
+              const pageRect=el.getBoundingClientRect();
+              const pageCx=(ev.clientX-pageRect.left)/pageRect.width*100;
+              if(ed.trySpanningPlace(newPh,pageRef,siblingIdx,side,pageCx)){ed.renderAll();return;}
+            }
             ed.mutate(()=>{sh.photo=id});ed.sel={page:pageRef,kind:'shape',id:sh.id};ed.renderAll();};
         }
         el.appendChild(d);
@@ -1424,12 +1954,20 @@ function createEditor(key,cfg){
         el.onclick=e=>{
           if(ed.armed&&e.target===el){const ph=ed.photos.find(p=>p.id===ed.armed);if(ph){
             const rect=el.getBoundingClientRect();const cx=(e.clientX-rect.left)/rect.width*100,cy=(e.clientY-rect.top)/rect.height*100;
+            if(ed.trySpanningPlace(ph,pageRef,siblingIdx,side,cx)){ed.armed=null;ed.renderAll();return;}
             const fb=ed.fitBox(ph,cx-18,cy-18,36,36);
             ed.mutate(()=>{ed.pageRefObj(pageRef).images.push(mkImg(ph.id,Math.max(0,Math.min(100-fb.w,fb.x)),Math.max(0,Math.min(100-fb.h,fb.y)),fb.w,fb.h))});
             ed.armed=null;ed.sel={page:pageRef,kind:'image',id:ed.pageRefObj(pageRef).images.slice(-1)[0].id};ed.renderAll();return;}}
           ed.sel=null;ed.renderAll();};
-        el.ondragover=e=>e.preventDefault();
+        el.ondragover=e=>{e.preventDefault();
+          if(!side)return; // only relevant in an open two-page spread
+          const rect=el.getBoundingClientRect();const cx=(e.clientX-rect.left)/rect.width*100;
+          const near=side==='l'?cx>=65:cx<=35;
+          const hi=el.parentElement.querySelector('.gutter-hi');if(hi)hi.classList.toggle('active',near);
+        };
+        el.ondragleave=e=>{if(!side)return;const hi=el.parentElement.querySelector('.gutter-hi');if(hi)hi.classList.remove('active');};
         el.ondrop=e=>{if(e.target!==el)return;e.preventDefault();
+          if(side){const hi=el.parentElement.querySelector('.gutter-hi');if(hi)hi.classList.remove('active');}
           const shapeData=e.dataTransfer.getData('shape');
           if(shapeData){const {shapeKey,isPlaceholder}=JSON.parse(shapeData);
             const rect=el.getBoundingClientRect();const cx=(e.clientX-rect.left)/rect.width*100,cy=(e.clientY-rect.top)/rect.height*100;
@@ -1441,6 +1979,7 @@ function createEditor(key,cfg){
           const id=e.dataTransfer.getData('photo');if(!id)return;
           const ph=ed.photos.find(p=>p.id===id);if(!ph)return;
           const rect=el.getBoundingClientRect();const cx=(e.clientX-rect.left)/rect.width*100,cy=(e.clientY-rect.top)/rect.height*100;
+          if(ed.trySpanningPlace(ph,pageRef,siblingIdx,side,cx)){ed.renderAll();return;}
           const fb=ed.fitBox(ph,cx-18,cy-18,36,36);
           ed.mutate(()=>{ed.pageRefObj(pageRef).images.push(mkImg(id,Math.max(0,fb.x),Math.max(0,fb.y),fb.w,fb.h))});
           ed.sel={page:pageRef,kind:'image',id:ed.pageRefObj(pageRef).images.slice(-1)[0].id};ed.renderAll();};
@@ -1500,8 +2039,9 @@ function createEditor(key,cfg){
           spread.classList.add('single');
           spread.appendChild(ed.buildPage(ed.doc.pages[item.idx],item.idx,null,null,true,true));
         }else{
-          spread.appendChild(ed.buildPage(ed.doc.pages[item.l],item.l,null,null,true,true));
-          spread.appendChild(ed.buildPage(ed.doc.pages[item.r],item.r,null,null,true,true));
+          spread.appendChild(ed.buildPage(ed.doc.pages[item.l],item.l,item.r,'l',true,true));
+          spread.appendChild(ed.buildPage(ed.doc.pages[item.r],item.r,item.l,'r',true,true));
+          const gutterHi=document.createElement('div');gutterHi.className='gutter-hi';spread.appendChild(gutterHi);
         }
       }
       st.appendChild(spread);
@@ -1665,6 +2205,13 @@ function cmykCommit(edKey,kind){
 }
 
 function genericRenderPanel(ed){
+  // The Cover panel only belongs to the cover. When an inside page is selected (thumbnail strip,
+  // arrows, adding pages…), switch to the tool that suits inside pages instead of leaving the
+  // "Cover, spine & back cover" panel up for Page 1, Pages 2–3 and so on.
+  if(ed.tool==='cover'&&typeof ed.cur==='number'){
+    ed.tool=ed.cfg.hasManuscript?'text':'photos';
+    document.querySelectorAll('#'+ed.cfg.prefix+'-rail button').forEach(b=>b.classList.toggle('on',b.dataset.tool===ed.tool));
+  }
   const P=$(ed.cfg.prefix+'-panel'); const page=ed.curPage(); const pageRef=ed.curPageRef();
   if(ed.tool==='photos'){
     const used=ed.usedIds();
@@ -1720,13 +2267,31 @@ function genericRenderPanel(ed){
       g.appendChild(d)});
     if(!ed.photos.length)g.innerHTML='<div class="hint" style="grid-column:1/-1">Your tray is empty.</div>';
   }
+  else if(ed.tool==='uploads'){
+    // Admin-only, shown while building a template (see showUploadsTool) — a read-only browsable
+    // library of this template's reusable graphics (logos, badges, borders, etc.), placed onto
+    // the page the exact same way a customer's own photo is: click to arm, then click the page.
+    // Uploading/removing assets themselves happens in Admin → Templates, not here.
+    const assets=ed.photos.filter(p=>p.isAsset);
+    P.innerHTML=`<h4>Clip Art</h4>
+      <div class="photo-grid" id="${ed.cfg.prefix}-uGrid"></div>`;
+    const g=$(ed.cfg.prefix+'-uGrid');
+    assets.forEach(ph=>{const d=document.createElement('div');
+      d.className='photo-th'+(ed.armed===ph.id?' armed':'');
+      d.style.backgroundImage=`url(${ph.url})`;
+      d.title=ph.name; d.draggable=true;
+      d.ondragstart=e=>e.dataTransfer.setData('photo',ph.id);
+      d.onclick=()=>{ed.armed=ed.armed===ph.id?null:ph.id;ed.renderPanel();if(ed.armed)toast('Armed — click the page to place')};
+      g.appendChild(d)});
+    if(!assets.length)g.innerHTML='<div class="hint" style="grid-column:1/-1">No assets yet — add some from Admin → Templates.</div>';
+  }
   else if(ed.tool==='shapes'){
     const sh=ed.curShape();
     const hue=sh?ed.hueOf(sh.fill):0;
     const density=sh?(100-ed.lightnessOf(sh.fill)):100;
     const alpha=sh?ed.alphaOf(sh.fill):50;
     P.innerHTML=`<h4>Shapes</h4>
-      <div class="hint">Click a placeholder or shape below to drop it onto the page, then drag to move, use the corner handle to resize, and drag a photo from the Photos tab onto a placeholder to fill it.</div>
+      <div class="hint">Click a placeholder or shape below to drop it onto the page, then drag to move, use any of the 8 edge/corner handles to resize — photos and placeholders always keep their proportions; hold Shift on a decorative shape's corner to keep its proportions too — and drag a photo from the Photos tab onto a placeholder to fill it.</div>
       <div class="rte-label">Image placeholders</div>
       <div class="hint" style="margin-bottom:8px">Hold a photo, keep its shape.</div>
       ${shapeGridHTML(ed.key,true)}
@@ -1765,15 +2330,15 @@ function genericRenderPanel(ed){
   }
   else if(ed.tool==='adjust'){
     const im=(ed.sel&&ed.sel.kind==='image')?ed.pageRefObj(ed.sel.page).images.find(o=>o.id===ed.sel.id):null;
-    if(!im){P.innerHTML=`<h4>Adjust photo</h4><div class="hint">Select a photo to correct brightness, contrast${ed.cfg.monochrome?'':', saturation, temperature,'} blur, opacity and shadow — or apply a one-click look.</div>`;return}
+    if(!im){P.innerHTML=`<h4>Photo Edit</h4><div class="hint">Select a photo to correct brightness, contrast${ed.cfg.monochrome?'':', saturation, temperature, shadows, highlights,'} blur, opacity and shadow — or apply a one-click look.</div>`;return}
     const ph=ed.photos.find(p=>p.id===im.photo);
     const sliders=ed.cfg.monochrome
       ?[['Brightness','b',50,150,'%'],['Contrast','c',50,150,'%'],['Blur','blur',0,8,'px'],['Opacity','op',10,100,'%'],['Drop shadow','shadow',0,30,'']]
-      :[['Brightness','b',50,150,'%'],['Contrast','c',50,150,'%'],['Saturation','sat',0,200,'%'],['Temperature','temp',-100,100,''],['Blur','blur',0,8,'px'],['Opacity','op',10,100,'%'],['Drop shadow','shadow',0,30,'']];
+      :[['Brightness','b',50,150,'%'],['Contrast','c',50,150,'%'],['Saturation','sat',0,200,'%'],['Shadows','shadows',-100,100,''],['Highlights','highlights',-100,100,''],['Temperature','temp',-100,100,''],['Blur','blur',0,8,'px'],['Opacity','op',10,100,'%'],['Drop shadow','shadow',0,30,'']];
     const presets=ed.cfg.monochrome
       ?[['Original','orig'],['Soft','matte'],['Punch','noir']]
-      :[['Original','orig'],['Vivid','vivid'],['Warm','warm'],['Cool','cool'],['Matte','matte'],['Noir','noir'],['Fade','fade']];
-    P.innerHTML=`<h4>Adjust photo</h4>
+      :[['Original','orig'],['Vivid','vivid'],['Warm','warm'],['Cool','cool'],['Matte','matte'],['Noir','noir'],['Fade','fade'],['Film','film'],['Vintage','vintage'],['B&W','bw'],['Golden','golden']];
+    P.innerHTML=`<h4>Photo Edit</h4>
       ${ph&&ph.lowRes?'<div class="quality-warn">⚠ This photo is below 300 DPI for full-size print — consider a higher-resolution version.</div>':''}
       <div class="rte-label">Frame fit</div>
       <div class="align-row" style="margin-bottom:10px">
@@ -1851,19 +2416,19 @@ function genericRenderPanel(ed){
         <button style="font-style:italic" onmousedown="event.preventDefault()" onclick="rteCmd('formatBlock','<blockquote>')">Quote</button>
       </div>
 
-      <div class="slider-row"><label>Line spacing<span>${(tt.lineHeight??1.3).toFixed(2)}</span></label><input type="range" min="1" max="2.2" step="0.05" value="${tt.lineHeight??1.3}" oninput="EDS.${ed.key}.tAdj('lineHeight',+this.value)"></div>
-      <div class="slider-row"><label>Paragraph spacing<span>${tt.paraSpacing??8}px</span></label><input type="range" min="0" max="32" value="${tt.paraSpacing??8}" oninput="EDS.${ed.key}.tAdj('paraSpacing',+this.value)"></div>
-      <div class="slider-row"><label>First-line indent<span>${(tt.indent??0)}em</span></label><input type="range" min="0" max="3" step="0.2" value="${tt.indent??0}" oninput="EDS.${ed.key}.tAdj('indent',+this.value)"></div>
-      <div class="slider-row"><label>Letter spacing<span>${(tt.ls??0)}px</span></label><input type="range" min="-1" max="4" step="0.1" value="${tt.ls??0}" oninput="EDS.${ed.key}.tAdj('ls',+this.value)"></div>
-      <div class="slider-row"><label>Size<span>${tt.size}${tt.unit||'px'}</span></label><input type="range" min="${tt.unit==='pt'?4:10}" max="${tt.unit==='pt'?48:96}" step="${tt.unit==='pt'?0.5:1}" value="${tt.size}" oninput="EDS.${ed.key}.tAdj('size',+this.value)"></div>
-      <div class="slider-row"><label>Drop shadow<span>${tt.shadow??0}</span></label><input type="range" min="0" max="30" value="${tt.shadow??0}" oninput="EDS.${ed.key}.tAdj('shadow',+this.value)"></div>
+      <div class="slider-row"><label>Line spacing<span id="${ed.cfg.prefix}-tVal-lineHeight">${(tt.lineHeight??1.3).toFixed(2)}</span></label><input type="range" min="1" max="2.2" step="0.05" value="${tt.lineHeight??1.3}" oninput="EDS.${ed.key}.tAdj('lineHeight',+this.value)" onchange="EDS.${ed.key}.tAdjCommit()"></div>
+      <div class="slider-row"><label>Paragraph spacing<span id="${ed.cfg.prefix}-tVal-paraSpacing">${tt.paraSpacing??8}px</span></label><input type="range" min="0" max="32" value="${tt.paraSpacing??8}" oninput="EDS.${ed.key}.tAdj('paraSpacing',+this.value)" onchange="EDS.${ed.key}.tAdjCommit()"></div>
+      <div class="slider-row"><label>First-line indent<span id="${ed.cfg.prefix}-tVal-indent">${(tt.indent??0)}em</span></label><input type="range" min="0" max="3" step="0.2" value="${tt.indent??0}" oninput="EDS.${ed.key}.tAdj('indent',+this.value)" onchange="EDS.${ed.key}.tAdjCommit()"></div>
+      <div class="slider-row"><label>Letter spacing<span id="${ed.cfg.prefix}-tVal-ls">${(tt.ls??0)}px</span></label><input type="range" min="-1" max="4" step="0.1" value="${tt.ls??0}" oninput="EDS.${ed.key}.tAdj('ls',+this.value)" onchange="EDS.${ed.key}.tAdjCommit()"></div>
+      <div class="slider-row"><label>Size<span id="${ed.cfg.prefix}-tVal-size">${tt.size}${tt.unit||'px'}</span></label><input type="range" min="${tt.unit==='pt'?4:10}" max="${tt.unit==='pt'?48:96}" step="${tt.unit==='pt'?0.5:1}" value="${tt.size}" oninput="EDS.${ed.key}.tAdj('size',+this.value)" onchange="EDS.${ed.key}.tAdjCommit()"></div>
+      <div class="slider-row"><label>Drop shadow<span id="${ed.cfg.prefix}-tVal-shadow">${tt.shadow??0}</span></label><input type="range" min="0" max="30" value="${tt.shadow??0}" oninput="EDS.${ed.key}.tAdj('shadow',+this.value)" onchange="EDS.${ed.key}.tAdjCommit()"></div>
       <div class="rte-label">Text styles — save once, apply anywhere</div>
       <div class="preset-row">
         ${(ed.doc.textStyles||[]).map(st=>`<span class="preset-chip" onclick="EDS.${ed.key}.applyTextStyle('${st.id}')">${esc(st.name)}<b class="chip-x" onclick="event.stopPropagation();EDS.${ed.key}.deleteTextStyle('${st.id}')">×</b></span>`).join('')}
         <button class="preset-chip add" onclick="EDS.${ed.key}.saveTextStyle()">＋ Save current</button>
       </div>
-      ${ed.cfg.monochrome?`<div class="rte-label">Black density<span style="float:right;color:var(--text);font-weight:600;text-transform:none;letter-spacing:0">${tt.blackPct??100}%</span></div>
-      <div class="hue-row"><div class="hue-swatch" style="background:hsl(0,0%,${100-(tt.blackPct??100)}%)"></div><input type="range" class="density-slider" min="1" max="100" step="1" value="${tt.blackPct??100}" oninput="EDS.${ed.key}.tAdj('blackPct',+this.value)"></div>
+      ${ed.cfg.monochrome?`<div class="rte-label">Black density<span id="${ed.cfg.prefix}-tVal-blackPct" style="float:right;color:var(--text);font-weight:600;text-transform:none;letter-spacing:0">${tt.blackPct??100}%</span></div>
+      <div class="hue-row"><div class="hue-swatch" id="${ed.cfg.prefix}-tBlackSwatch" style="background:hsl(0,0%,${100-(tt.blackPct??100)}%)"></div><input type="range" class="density-slider" min="1" max="100" step="1" value="${tt.blackPct??100}" oninput="EDS.${ed.key}.tAdj('blackPct',+this.value)" onchange="EDS.${ed.key}.tAdjCommit()"></div>
       <div class="hint" style="margin-top:-6px;margin-bottom:10px">1% = faint grey · 100% = full black ink.</div>`
         :`<div class="slider-row"><label>Colour</label><div class="swatches">${['#141414','#FFFFFF','#52B57D','#5C5C5A','#B0432E'].map(c=>`<div class="swatch ${tt.color===c?'on':''}" style="background:${c}" onclick="EDS.${ed.key}.tAdj('color','${c}')"></div>`).join('')}</div></div>
       ${cmykSectionHTML(ed,'text',tt.color||'#141414','Exact ink colour — CMYK')}`}
@@ -1875,6 +2440,7 @@ function genericRenderPanel(ed){
       </div>`}
       <input class="font-search" id="${ed.cfg.prefix}-fontSearch" placeholder="Search fonts…" oninput="EDS.${ed.key}.renderFontList(this.value)">
       <div class="font-list" id="${ed.cfg.prefix}-fontList"></div>
+      <button class="btn btn-ghost xs" style="width:100%;justify-content:center;margin-top:8px" onclick="EDS.${ed.key}.applyFontToWholeBook()">Apply this font to the whole book</button>
       <div class="rte-row" style="margin-top:10px">
         <button onclick="EDS.${ed.key}.dupText()">⧉ Duplicate</button>
         <button onclick="EDS.${ed.key}.layerText('front')">To front</button>
@@ -1961,19 +2527,36 @@ function wireEditorMethods(ed){
         el.style.objectPosition=`${im.fx??50}% ${im.fy??50}%`;
         let tf=`rotate(${im.rot||0}deg)`;if((im.zoom||100)!==100)tf+=` scale(${(im.zoom/100).toFixed(2)})`;
         el.style.transform=tf;}}
+    else if(k==='shadows'||k==='highlights'){
+      const el=d.querySelector('img');if(!el)return;
+      el.style.filter=ed.imgFilter(im); // instant approximate feedback while dragging — no lag
+      const ph=ed.photos.find(p=>p.id===im.photo);if(!ph)return;
+      clearTimeout(el._toneTimer);
+      el._toneTimer=setTimeout(()=>{
+        const genAt=++el._toneGen||(el._toneGen=1);
+        getToneAdjustedImageUrl(ph.url,im.shadows||0,im.highlights||0,1400).then(url=>{
+          if(el._toneGen!==genAt||!el.isConnected)return;
+          el.src=url; el.style.filter=ed.imgFilterBase(im);
+        }).catch(()=>{});
+      },120); // waits for the drag to pause briefly before running the real (heavier) pixel pass
+    }
     else{const el=d.querySelector('img');if(el)el.style.filter=ed.imgFilter(im);}};
   ed.applyPreset=(key)=>{const P={
-      orig:{b:100,c:100,sat:100,temp:0,blur:0},
-      vivid:{b:104,c:118,sat:145,temp:0,blur:0},
-      warm:{b:103,c:104,sat:110,temp:45,blur:0},
-      cool:{b:102,c:106,sat:105,temp:-45,blur:0},
-      matte:{b:108,c:82,sat:88,temp:8,blur:0},
-      noir:{b:98,c:132,sat:0,temp:0,blur:0},
-      fade:{b:112,c:88,sat:70,temp:12,blur:0}}[key];if(!P)return;
+      orig:{b:100,c:100,sat:100,temp:0,blur:0,shadows:0,highlights:0},
+      vivid:{b:104,c:118,sat:145,temp:0,blur:0,shadows:0,highlights:0},
+      warm:{b:103,c:104,sat:110,temp:45,blur:0,shadows:0,highlights:0},
+      cool:{b:102,c:106,sat:105,temp:-45,blur:0,shadows:0,highlights:0},
+      matte:{b:108,c:82,sat:88,temp:8,blur:0,shadows:20,highlights:-10},
+      noir:{b:98,c:132,sat:0,temp:0,blur:0,shadows:-15,highlights:-10},
+      fade:{b:112,c:88,sat:70,temp:12,blur:0,shadows:25,highlights:-15},
+      film:{b:105,c:92,sat:88,temp:20,blur:0,shadows:15,highlights:-20},
+      vintage:{b:107,c:85,sat:65,temp:30,blur:0,shadows:25,highlights:-10},
+      bw:{b:102,c:104,sat:0,temp:0,blur:0,shadows:0,highlights:0},
+      golden:{b:106,c:98,sat:112,temp:55,blur:0,shadows:10,highlights:-15}}[key];if(!P)return;
     ed.mutate(()=>{const im=ed.pageRefObj(ed.sel.page).images.find(o=>o.id===ed.sel.id);if(im)Object.assign(im,P);});
     ed.renderAll();};
   ed.rotImg=()=>{ed.mutate(()=>{const im=ed.pageRefObj(ed.sel.page).images.find(o=>o.id===ed.sel.id);im.rot=(im.rot+90)%360});ed.renderAll();};
-  ed.resetImg=()=>{ed.mutate(()=>{Object.assign(ed.pageRefObj(ed.sel.page).images.find(o=>o.id===ed.sel.id),{b:100,c:100,sat:100,rot:0,temp:0,blur:0,op:100,shadow:0,fit:'contain',zoom:100,fx:50,fy:50})});ed.renderAll();};
+  ed.resetImg=()=>{ed.mutate(()=>{Object.assign(ed.pageRefObj(ed.sel.page).images.find(o=>o.id===ed.sel.id),{b:100,c:100,sat:100,rot:0,temp:0,blur:0,op:100,shadow:0,shadows:0,highlights:0,fit:'contain',zoom:100,fx:50,fy:50})});ed.renderAll();};
   ed.setFit=(mode)=>{ed.mutate(()=>{const im=ed.pageRefObj(ed.sel.page).images.find(o=>o.id===ed.sel.id);if(!im)return;im.fit=mode==='bleed'?'cover':mode;im._fullBleed=false;if(mode==='cover'||mode==='bleed'){im.zoom=im.zoom||100;im.fx=im.fx??50;im.fy=im.fy??50;}});ed.renderAll();};
   ed.setFullBleed=()=>{ed.mutate(()=>{const im=ed.pageRefObj(ed.sel.page).images.find(o=>o.id===ed.sel.id);if(!im)return;im.fit='cover';im.x=0;im.y=0;im.w=100;im.h=100;im.zoom=100;im.fx=50;im.fy=50;im._fullBleed=true;});ed.renderAll();};
   // If a photo's edge is dragged or resized to (or very near) the trim line, it should actually
@@ -2047,6 +2630,12 @@ function wireEditorMethods(ed){
     const arr=ed.pageRefObj(pageRef).texts; ed.sel={page:pageRef,kind:'text',id:arr[arr.length-1].id};
     ed.tool='text';document.querySelectorAll('#'+ed.cfg.prefix+'-rail button').forEach(b=>b.classList.toggle('on',b.dataset.tool==='text'));
     ed.renderAll();};
+  // Sliders in the Text panel (size, spacing, shadow, etc.) call this on every drag tick.
+  // Patch the value + the live DOM directly rather than going through ed.renderAll() — a full
+  // panel rebuild on every 'input' event destroys and recreates the very <input> the mouse is
+  // still dragging, which is what made these controls look unresponsive. tAdjCommit() (wired to
+  // the input's onchange) flashes the "Saved" indicator once the drag actually ends.
+  const TEXT_LIVE_KEYS=new Set(['lineHeight','paraSpacing','indent','ls','size','shadow','blackPct']);
   ed.tAdj=(k,v)=>{
     if((k==='font'||k==='size')&&rteHasSelection()){
       const inner=rteActiveInner();
@@ -2059,8 +2648,42 @@ function wireEditorMethods(ed){
         return;
       }
     }
+    const t=ed.pageRefObj(ed.sel.page).texts.find(o=>o.id===ed.sel.id); if(!t)return;
+    if(TEXT_LIVE_KEYS.has(k)){
+      t[k]=v;
+      const inner=document.querySelector('#'+ed.cfg.prefix+'-stage .tbox.sel .tbox-inner');
+      if(inner){
+        if(k==='size')inner.style.fontSize=v+(t.unit||'px');
+        else if(k==='lineHeight')inner.style.lineHeight=v;
+        else if(k==='paraSpacing')inner.style.setProperty('--para-gap',v+'px');
+        else if(k==='ls')inner.style.letterSpacing=v+'px';
+        else if(k==='indent')inner.style.textIndent=v+'em';
+        else if(k==='shadow')inner.style.textShadow=v?`0 ${(v*0.006).toFixed(3)}em ${(v*0.014).toFixed(3)}em rgba(0,0,0,.42)`:'none';
+        else if(k==='blackPct')inner.style.color=`rgba(0,0,0,${v/100})`;
+      }
+      const lbl=$(ed.cfg.prefix+'-tVal-'+k);
+      if(lbl)lbl.textContent=k==='lineHeight'?(+v).toFixed(2):k==='paraSpacing'?v+'px':k==='indent'?v+'em':k==='ls'?v+'px':k==='size'?v+(t.unit||'px'):k==='blackPct'?v+'%':v;
+      if(k==='blackPct'){const sw=$(ed.cfg.prefix+'-tBlackSwatch');if(sw)sw.style.background=`hsl(0,0%,${100-v}%)`;}
+      return;
+    }
     ed.mutate(()=>{const t=ed.pageRefObj(ed.sel.page).texts.find(o=>o.id===ed.sel.id);t[k]=v;if(k==='color')t.cmyk=hex2cmyk(cssToHex(v));if(k==='font')loadGoogleFont(v);});
     ed.renderAll();
+  };
+  ed.tAdjCommit=()=>{ed.autosave();};
+  // "Global project settings" (matching what larger photobook platforms call whole-project
+  // styling) — applies the currently-selected text box's font to every text box in the book at
+  // once (cover, every interior page, back cover) instead of requiring it one box at a time.
+  ed.applyFontToWholeBook=()=>{
+    const t=ed._findSel(); if(!t||!t.font)return;
+    const font=t.font;
+    if(!confirm('Apply "'+font+'" to every text box in this book — cover, all pages, and back cover? This can be undone with Ctrl+Z.'))return;
+    ed.mutate(d=>{
+      const allPages=[d.cover,d.backCover,...(d.pages||[])].filter(Boolean);
+      allPages.forEach(p=>{(p.texts||[]).forEach(tx=>{tx.font=font;});});
+    });
+    loadGoogleFont(font);
+    ed.renderAll();
+    toast('Applied "'+font+'" to every text box in the book ✓');
   };
   ed.delText=()=>{const o=ed._findSel();if(o&&o.locked)return toast('Locked — unlock it in the Layers panel first');
     ed.mutate(()=>{const arr=ed.pageRefObj(ed.sel.page).texts;const i=arr.findIndex(o=>o.id===ed.sel.id);if(i>-1)arr.splice(i,1)});ed.sel=null;ed.renderAll();};
@@ -2190,6 +2813,7 @@ function openEditor(key,push){
 }
 function exitEditor(){
   if(ADMIN_EDIT_ORDER){ exitAdminEditor(false); return; }
+  if(ADMIN_EDIT_TEMPLATE){ exitCustomTemplateEditor(); return; }
   ACTIVE_EDITOR=null; go('home');
 }
 
@@ -2222,15 +2846,18 @@ async function pollRenderStatus(orderId, onUpdate){
   };
   poll();
 }
-/* ---------- Editor light/dark theme ---------- */
+/* ---------- Editor light/dark theme ----------
+   Dark by default for every editor (photobooks, trade book, art prints). A customer who switches
+   to light mode keeps that choice (stored in localStorage as binder_ed_theme_v2 — a new key, so
+   earlier light-mode choices are reset and every editor starts dark once). */
 function applyEditorTheme(){
-  const dark=loadJSON('binder_ed_theme','light')==='dark';
+  const dark=loadJSON('binder_ed_theme_v2','dark')==='dark';
   document.querySelectorAll('.ed-root').forEach(r=>r.classList.toggle('ed-dark',dark));
   document.querySelectorAll('.ed-theme-btn').forEach(b=>{b.innerHTML=dark?`<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="3" stroke="#52B57D" stroke-width="1.7"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M11.5 3.1l-1.4 1.4M4.5 11.5l-1.4 1.4" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round"/></svg>`:`<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;b.title=dark?'Switch to light mode':'Switch to dark mode';});
 }
 function toggleEditorTheme(){
-  const next=loadJSON('binder_ed_theme','light')==='dark'?'light':'dark';
-  saveJSON('binder_ed_theme',next);
+  const next=loadJSON('binder_ed_theme_v2','dark')==='dark'?'light':'dark';
+  saveJSON('binder_ed_theme_v2',next);
   applyEditorTheme();
 }
 // Fixes a real bug that predates this change: none of the editor title inputs (<input class="title">)
@@ -2575,12 +3202,16 @@ async function runManuscriptLayout(){
 }
 
 /* ---------- 7. Wire the manuscript file input + drop zone ---------- */
-$('msFileInput').addEventListener('change',e=>{msReadTextFile(e.target.files[0]);e.target.value='';});
-(()=>{const dz=$('msDropUp');if(!dz)return;
+// Runs once the private UI (which contains the manuscript modal) is mounted — see mountPrivate().
+function wireManuscriptInputs(){
+const fi=document.getElementById('msFileInput'); if(!fi||fi.dataset.wired)return; fi.dataset.wired='1';
+fi.addEventListener('change',e=>{msReadTextFile(e.target.files[0]);e.target.value='';});
+(()=>{const dz=document.getElementById('msDropUp');if(!dz)return;
   dz.onclick=()=>$('msFileInput').click();
   dz.ondragover=e=>{e.preventDefault();dz.classList.add('over')};
   dz.ondragleave=()=>dz.classList.remove('over');
   dz.ondrop=e=>{e.preventDefault();dz.classList.remove('over');msReadTextFile(e.dataTransfer.files[0])};})();
+}
 
 /* ================= Client-side PDF rendering =================
    Produces real, downloadable proof PDFs entirely in the browser via html2canvas + jsPDF:
@@ -2620,7 +3251,19 @@ function pdfBuildPage(page,dims,photoMap,dpi,monochrome,textOnly,imagesOnly){
   const el=document.createElement('div');
   el.style.cssText=`position:relative;width:${wpx}px;height:${hpx}px;background:${(page&&page.bg)||'#FFFFFF'};overflow:hidden`;
   if(!page)return el;
-  const printFilter=(o,blurScale)=>{let f=`brightness(${o.b??100}%) contrast(${o.c??100}%) saturate(${o.sat??100}%)`;
+  // Shadows/Highlights print via this same brightness/contrast approximation the live editor
+  // shows for the first instant before its real per-pixel canvas pass swaps in (see imgFilter/
+  // imgFilterBase) — intentionally NOT running that per-pixel pass again here at full, uncapped
+  // print resolution. Doing that per-image, synchronously, inside this page-building loop was
+  // producing PDFs with no images at all — almost certainly a hang or unhandled slowdown on a
+  // large source photo stalling the whole sequential loop, so every image after it in the loop
+  // silently never got built. Reliability at export time matters more than exactness on this one
+  // adjustment, so this reverts to the simpler, proven-stable approximation for print only; the
+  // live editor keeps the real pixel-level version, unaffected by this.
+  const printFilter=(o,blurScale)=>{
+    const shadows=o.shadows||0, highlights=o.highlights||0;
+    const bAdj=(o.b??100)+shadows*0.15+highlights*0.1, cAdj=(o.c??100)-shadows*0.1+highlights*0.05;
+    let f=`brightness(${bAdj}%) contrast(${cAdj}%) saturate(${o.sat??100}%)`;
     const t=o.temp||0;
     if(!monochrome&&t>0)f+=` sepia(${Math.round(t*0.35)}%) saturate(${100+t*0.3}%)`;
     if(!monochrome&&t<0)f+=` hue-rotate(${Math.round(t*0.25)}deg) saturate(${100+t*0.15}%)`;
@@ -2693,7 +3336,6 @@ async function pdfRenderPhotoLayer(page, dims, photoMap, dpi, monochrome, bleedI
 
   const holder = document.createElement('div');
   holder.style.cssText = `position:fixed;left:-99999px;top:0;width:${wpx}px;height:${hpx}px;background:transparent`;
-
   // Any image positioned or resized so it extends past the trim edge (dragging already allowed
   // this; resizing was fixed to allow it too) needs its pixels to actually reach the bleed edge
   // in print — pdfBuildPage's page element clips everything at the trim line, so left alone the
@@ -2730,7 +3372,14 @@ async function pdfRenderPhotoLayer(page, dims, photoMap, dpi, monochrome, bleedI
     scale: 1,
     useCORS: true,
     allowTaint: false,
-    backgroundColor: null,
+    // Was `null` (transparent) — but this canvas gets converted to JPEG a few lines up the call
+    // stack in pdfPageHybrid, and JPEG has no alpha channel at all. Browsers silently fill
+    // transparent JPEG pixels with solid BLACK by default — which is exactly what was showing
+    // up as a black margin anywhere the bleed area wasn't covered by an actual photo (the bleed
+    // strip on every edge, and any gaps between images). Compositing against the page's real
+    // background colour here means there's no transparency left by the time it becomes a JPEG,
+    // so those areas correctly show the intended background instead of defaulting to black.
+    backgroundColor: (page && page.bg) || '#FFFFFF',
     width: wpx,
     height: hpx,
     logging: false
@@ -2922,115 +3571,173 @@ async function pdfPageCanvas(page,dims,photoMap,dpi,monochrome,bleedIn,hardMono)
   return canvas;
 }
 function pdfTrimMarks(doc,totalWIn,totalHIn,bleedIn){
-  const PT=72; const len=0.15*PT;
+  // Industry-standard crop marks: short hairlines at each trim corner, pointing OUTWARD into
+  // the bleed margin — away from the printable page — never into it. The previous version had
+  // this backwards, drawing marks that crossed into the visible trimmed area, which is exactly
+  // what a print shop's crop marks must never do. A small gap keeps the mark from touching the
+  // trim line itself, matching standard convention; both gap and length are sized to fit safely
+  // within a 0.2in (14.4pt) bleed margin, which is what every Binder product uses.
+  const PT=72;
+  const gap=2, len=10; // points
   const tw=totalWIn*PT, th=totalHIn*PT, bl=bleedIn*PT;
-  doc.setDrawColor(0); doc.setLineWidth(0.4); // 0.4pt hairline
-  [[bl,bl,1,1],[tw-bl,bl,-1,1],[bl,th-bl,1,-1],[tw-bl,th-bl,-1,-1]].forEach(([x,y,dx,dy])=>{
-    doc.line(x,y,x+dx*len,y); doc.line(x,y,x,y+dy*len);
+  doc.setDrawColor(0); doc.setLineWidth(0.5); // a touch heavier than a true hairline so marks reproduce reliably at any print shop's RIP
+  [[bl,bl,-1,-1],[tw-bl,bl,1,-1],[bl,th-bl,-1,1],[tw-bl,th-bl,1,1]].forEach(([x,y,dx,dy])=>{
+    doc.line(x+dx*gap, y, x+dx*(gap+len), y); // horizontal mark
+    doc.line(x, y+dy*gap, x, y+dy*(gap+len)); // vertical mark
   });
 }
 function finalizePdf(pdfDoc,order,fileKey){
   const blob=pdfDoc.output('blob'); const url=URL.createObjectURL(blob);
+  const prevUrl=PDF_BLOBS[order.id+'|'+fileKey]; if(prevUrl)URL.revokeObjectURL(prevUrl); // re-rendering the same file (e.g. after an admin edit) would otherwise leak the old blob
   PDF_BLOBS[order.id+'|'+fileKey]=url;
   order.pdfFiles[fileKey]='Ready'; saveJSON('binder_orders',S.orders); renderPdfRows();
   toast('Rendered ✦ "'+fileKey+'" is ready to download — a high-resolution proof PDF.');
 }
-async function generatePdfForOrder(orderId,fileKey,btn){
-  const o=S.orders.find(x=>x.id===orderId);
-  if(!o||!o.snapshot)return toast('No design data was saved with this order — this can happen for orders placed before PDF rendering was added.');
-  if(btn){btn.disabled=true;btn.textContent='Rendering…';}
-  try{
-    await ensurePdfLibs();
-    const {jsPDF}=window.jspdf; const BLEED=0.2, DPI=300; const PT=72;
+// Pure rendering core — given a full order object (snapshot + product) and which file to build
+// (a cover set or the interior pages), assembles and returns the finished jsPDF document with NO
+// browser-UI side effects at all (no toasts, no button state, nothing written to S.orders or
+// localStorage). This is what actually does the work; both the interactive "Render" button
+// (generatePdfForOrder, below) and the headless server-side render worker (renderOrderHeadless,
+// further below — driven by a real headless browser, see /render-service in the deployment
+// package) call this exact same function, so there is only ever one rendering code path to keep
+// correct, not two that can quietly drift apart.
+async function buildPdfForOrder(o,fileKey,onProgress){
+  await ensurePdfLibs();
+  const {jsPDF}=window.jspdf; const BLEED=0.2, DPI=300; const PT=72;
 
-    // ── Art Prints ──────────────────────────────────────────────────────────
-    if(o.product==='artprints'){
-      const boardOrient=o.snapshot.orient||['landscape','landscape','landscape','landscape'];
-      let doc=null;
-      for(let i=0;i<o.snapshot.boards.length;i++){
-        const orient=boardOrient[i]||'landscape';
-        const dims=orient==='portrait'?{w:4,h:6,ref:4*DPI}:{w:6,h:4,ref:6*DPI};
-        const tw=dims.w+2*BLEED, th=dims.h+2*BLEED;
-        const pageOrientation=tw>th?'landscape':'portrait';
-        if(!doc)doc=new jsPDF({orientation:pageOrientation,unit:'pt',format:[tw*PT,th*PT]});
-        else doc.addPage([tw*PT,th*PT],pageOrientation);
-        const b=o.snapshot.boards[i];
-        const page={bg:'#FFFFFF',images:b?[{photo:b.photoId,x:b.x,y:b.y,w:b.w,h:b.h,b:100,c:100,sat:100,rot:0,fit:'cover',fx:50,fy:50}]:[],texts:[],shapes:[]};
-        await pdfPageHybrid(doc,page,dims,o.snapshot.photoMap,DPI,false,BLEED,false,0,0);
-        pdfTrimMarks(doc,tw,th,BLEED);
-      }
-      finalizePdf(doc,o,fileKey); return;
-    }
-
-    // ── Single Art Print (12×18 or 16×20) ────────────────────────────────────
-    if(AP_SINGLE_VARIANTS[o.product]){
-      const variant=AP_SINGLE_VARIANTS[o.product];
-      const orient=o.snapshot.orient||'portrait';
-      const wIn=orient==='portrait'?variant.wIn:variant.hIn, hIn=orient==='portrait'?variant.hIn:variant.wIn;
-      const dims={w:wIn,h:hIn,ref:wIn*DPI};
-      const tw=wIn+2*BLEED, th=hIn+2*BLEED;
-      const doc=new jsPDF({orientation:th>tw?'portrait':'landscape',unit:'pt',format:[tw*PT,th*PT]});
-      const b=o.snapshot.board;
+  // ── Art Prints ──────────────────────────────────────────────────────────
+  if(o.product==='artprints'){
+    const boardOrient=o.snapshot.orient||['landscape','landscape','landscape','landscape'];
+    let doc=null;
+    for(let i=0;i<o.snapshot.boards.length;i++){
+      const orient=boardOrient[i]||'landscape';
+      const dims=orient==='portrait'?{w:4,h:6,ref:4*DPI}:{w:6,h:4,ref:6*DPI};
+      const tw=dims.w+2*BLEED, th=dims.h+2*BLEED;
+      const pageOrientation=tw>th?'landscape':'portrait';
+      if(!doc)doc=new jsPDF({orientation:pageOrientation,unit:'pt',format:[tw*PT,th*PT]});
+      else doc.addPage([tw*PT,th*PT],pageOrientation);
+      const b=o.snapshot.boards[i];
       const page={bg:'#FFFFFF',images:b?[{photo:b.photoId,x:b.x,y:b.y,w:b.w,h:b.h,b:100,c:100,sat:100,rot:0,fit:'cover',fx:50,fy:50}]:[],texts:[],shapes:[]};
       await pdfPageHybrid(doc,page,dims,o.snapshot.photoMap,DPI,false,BLEED,false,0,0);
       pdfTrimMarks(doc,tw,th,BLEED);
-      finalizePdf(doc,o,fileKey); return;
+    }
+    return doc;
+  }
+
+  // ── Single Art Print (12×18 or 16×20) ────────────────────────────────────
+  if(AP_SINGLE_VARIANTS[o.product]){
+    const variant=AP_SINGLE_VARIANTS[o.product];
+    const orient=o.snapshot.orient||'portrait';
+    const wIn=orient==='portrait'?variant.wIn:variant.hIn, hIn=orient==='portrait'?variant.hIn:variant.wIn;
+    const dims={w:wIn,h:hIn,ref:wIn*DPI};
+    const tw=wIn+2*BLEED, th=hIn+2*BLEED;
+    const doc=new jsPDF({orientation:th>tw?'portrait':'landscape',unit:'pt',format:[tw*PT,th*PT]});
+    const b=o.snapshot.board;
+    const page={bg:'#FFFFFF',images:b?[{photo:b.photoId,x:b.x,y:b.y,w:b.w,h:b.h,b:100,c:100,sat:100,rot:0,fit:'cover',fx:50,fy:50}]:[],texts:[],shapes:[]};
+    await pdfPageHybrid(doc,page,dims,o.snapshot.photoMap,DPI,false,BLEED,false,0,0);
+    pdfTrimMarks(doc,tw,th,BLEED);
+    return doc;
+  }
+
+  const ed=EDS[o.product];
+  // Orientation-switchable editors (12×18 photobook) aren't in the static PAGE_DIMS table since
+  // their trim size depends on the doc — derive it from the saved order snapshot's orientation
+  // rather than the live editor's current cfg, since the two can differ (e.g. the customer opened
+  // a different project in the same tab after ordering).
+  let dims=PAGE_DIMS[o.product];
+  if(!dims){
+    const orient=(o.snapshot&&o.snapshot.doc&&o.snapshot.doc.orientation)||'portrait';
+    const baseW=ed.cfg._baseW||ed.cfg.pageInW, baseH=ed.cfg._baseH||ed.cfg.pageInH;
+    dims=orient==='landscape'?{w:baseH,h:baseW,ref:420}:{w:baseW,h:baseH,ref:420};
+  }
+  const mono=ed.cfg.monochrome;
+
+  // ── Cover: three separate single pages (back, spine, front) ─────────────
+  if(fileKey.indexOf('cover')===0){
+    const spineIn=ed.cfg.hasSpine?+((o.snapshot.doc.pages.length)*(ed.cfg.spineCaliperIn||0.0035)).toFixed(3):0;
+
+    // Page 1: Back cover
+    const backW=dims.w+2*BLEED, backH=dims.h+2*BLEED;
+    const doc=new jsPDF({orientation:backH>backW?'portrait':'landscape',unit:'pt',format:[backW*PT,backH*PT]});
+    await pdfPageHybrid(doc,o.snapshot.doc.backCover||{},dims,o.snapshot.photoMap,DPI,mono,BLEED,false,0,0);
+    pdfTrimMarks(doc,backW,backH,BLEED);
+
+    // Page 2: Spine (only for books with a spine)
+    if(ed.cfg.hasSpine&&spineIn>0){
+      const spineW=spineIn+2*BLEED, spineH=dims.h+2*BLEED;
+      doc.addPage([spineW*PT,spineH*PT],spineH>spineW?'portrait':'landscape');
+      const spineDims={w:spineIn,h:dims.h,ref:spineIn*DPI};
+      await pdfPageHybrid(doc,o.snapshot.doc.spine||{},spineDims,o.snapshot.photoMap,DPI,mono,BLEED,false,0,0);
+      pdfTrimMarks(doc,spineW,spineH,BLEED);
     }
 
-    const ed=EDS[o.product];
-    // Orientation-switchable editors (12×18 photobook) aren't in the static PAGE_DIMS table since
-    // their trim size depends on the doc — derive it from the saved order snapshot's orientation
-    // rather than the live editor's current cfg, since the two can differ (e.g. the customer opened
-    // a different project in the same tab after ordering).
-    let dims=PAGE_DIMS[o.product];
-    if(!dims){
-      const orient=(o.snapshot&&o.snapshot.doc&&o.snapshot.doc.orientation)||'portrait';
-      const baseW=ed.cfg._baseW||ed.cfg.pageInW, baseH=ed.cfg._baseH||ed.cfg.pageInH;
-      dims=orient==='landscape'?{w:baseH,h:baseW,ref:420}:{w:baseW,h:baseH,ref:420};
-    }
-    const mono=ed.cfg.monochrome;
+    // Page 3: Front cover
+    doc.addPage([backW*PT,backH*PT],backH>backW?'portrait':'landscape');
+    await pdfPageHybrid(doc,o.snapshot.doc.cover,dims,o.snapshot.photoMap,DPI,mono,BLEED,false,0,0);
+    pdfTrimMarks(doc,backW,backH,BLEED);
 
-    // ── Cover: three separate single pages (back, spine, front) ─────────────
-    if(fileKey.indexOf('cover')===0){
-      const spineIn=ed.cfg.hasSpine?+((o.snapshot.doc.pages.length)*(ed.cfg.spineCaliperIn||0.0035)).toFixed(3):0;
+    return doc;
+  }
 
-      // Page 1: Back cover
-      const backW=dims.w+2*BLEED, backH=dims.h+2*BLEED;
-      const doc=new jsPDF({orientation:backH>backW?'portrait':'landscape',unit:'pt',format:[backW*PT,backH*PT]});
-      await pdfPageHybrid(doc,o.snapshot.doc.backCover||{},dims,o.snapshot.photoMap,DPI,mono,BLEED,false,0,0);
-      pdfTrimMarks(doc,backW,backH,BLEED);
+  // ── Interior pages ────────────────────────────────────────────────────────
+  const totalW=dims.w+2*BLEED, totalH=dims.h+2*BLEED;
+  const doc=new jsPDF({orientation:totalH>totalW?'portrait':'landscape',unit:'pt',format:[totalW*PT,totalH*PT]});
+  const pages=o.snapshot.doc.pages;
+  for(let i=0;i<pages.length;i++){
+    if(i>0)doc.addPage([totalW*PT,totalH*PT]);
+    await pdfPageHybrid(doc,pages[i],dims,o.snapshot.photoMap,DPI,mono,BLEED,mono,0,0);
+    pdfTrimMarks(doc,totalW,totalH,BLEED);
+    if(onProgress&&i%5===0)onProgress(i+1,pages.length);
+  }
+  return doc;
+}
 
-      // Page 2: Spine (only for books with a spine)
-      if(ed.cfg.hasSpine&&spineIn>0){
-        const spineW=spineIn+2*BLEED, spineH=dims.h+2*BLEED;
-        doc.addPage([spineW*PT,spineH*PT],spineH>spineW?'portrait':'landscape');
-        const spineDims={w:spineIn,h:dims.h,ref:spineIn*DPI};
-        await pdfPageHybrid(doc,o.snapshot.doc.spine||{},spineDims,o.snapshot.photoMap,DPI,mono,BLEED,false,0,0);
-        pdfTrimMarks(doc,spineW,spineH,BLEED);
-      }
-
-      // Page 3: Front cover
-      doc.addPage([backW*PT,backH*PT],backH>backW?'portrait':'landscape');
-      await pdfPageHybrid(doc,o.snapshot.doc.cover,dims,o.snapshot.photoMap,DPI,mono,BLEED,false,0,0);
-      pdfTrimMarks(doc,backW,backH,BLEED);
-
-      finalizePdf(doc,o,fileKey); return;
-    }
-
-    // ── Interior pages ────────────────────────────────────────────────────────
-    const totalW=dims.w+2*BLEED, totalH=dims.h+2*BLEED;
-    const doc=new jsPDF({orientation:totalH>totalW?'portrait':'landscape',unit:'pt',format:[totalW*PT,totalH*PT]});
-    const pages=o.snapshot.doc.pages;
-    for(let i=0;i<pages.length;i++){
-      if(i>0)doc.addPage([totalW*PT,totalH*PT]);
-      await pdfPageHybrid(doc,pages[i],dims,o.snapshot.photoMap,DPI,mono,BLEED,mono,0,0);
-      pdfTrimMarks(doc,totalW,totalH,BLEED);
-      if(btn&&i%5===0)btn.textContent=`Rendering… ${i+1}/${pages.length}`;
-    }
+async function generatePdfForOrder(orderId,fileKey,btn){
+  let o=S.orders.find(x=>x.id===orderId);
+  if(!o||!o.snapshot){
+    // The local browser's copy is missing the design data — most likely because this order was
+    // placed on a different device/session than whoever is rendering it right now (or this
+    // session's localStorage was cleared/hit its size limit). Supabase is the real source of
+    // truth — every order's snapshot is saved there at checkout — so fall back to fetching it
+    // from there rather than incorrectly reporting the order as unrenderable.
+    const {data:dbOrder}=await sb.from('orders').select('*').eq('id',orderId).single();
+    if(dbOrder&&dbOrder.snapshot)o={...(o||{}),...dbOrder};
+  }
+  if(!o||!o.snapshot)return toast('No design data was saved with this order — this can happen for orders placed before PDF rendering was added.');
+  if(btn){btn.disabled=true;btn.textContent='Rendering…';}
+  try{
+    const doc=await buildPdfForOrder(o,fileKey,(done,total)=>{if(btn)btn.textContent=`Rendering… ${done}/${total}`;});
     finalizePdf(doc,o,fileKey);
   }catch(e){console.error(e);toast('Render failed: '+(e.message||e));}
   if(btn){btn.disabled=false;btn.textContent='Re-render';}
 }
+
+// Headless entry point for the server-side render worker (see /render-service in the deployment
+// package, a small Node service run separately from this site — not part of the Vercel deploy).
+// That service fetches an order's full data itself, server-side, using the Supabase service-role
+// key (so this function needs no special auth or permissions of its own), drives a real headless
+// Chrome instance to this site, and calls this function directly once the page has loaded —
+// passing the order object straight in as a JS argument rather than this page ever needing to
+// query Supabase itself. Reuses buildPdfForOrder exactly as the interactive Render button does,
+// so there is no separate rendering logic to drift out of sync — the same DOM building, image
+// placement, and DPI math that already work in the browser today.
+//
+// Deliberately does NOT return the PDF data from this function. Puppeteer's page.evaluate() has
+// a hard ~100MB limit on what it can pass back to Node — confirmed directly against Puppeteer's
+// own issue tracker — and a full-resolution, many-page, high-photo-count book can exceed that
+// easily as a base64 string, silently failing (which is exactly what was producing blank PDFs
+// for real orders while small test ones worked fine). Instead, this triggers a real browser
+// download of the finished file; the server-side worker intercepts that download directly via
+// Chrome's own download mechanism (see render-worker.js), which has no such size ceiling.
+window.renderOrderHeadless=async(order,fileKey)=>{
+  try{
+    const doc=await buildPdfForOrder(order,fileKey);
+    doc.save('render-output.pdf'); // jsPDF's own save() — triggers a standard browser download
+    return {ok:true};
+  }catch(e){
+    return {ok:false,error:(e&&e.message)||String(e)};
+  }
+};
 function downloadPdf(orderId,fileKey){
   const order=S.orders.find(o=>o.id===orderId);
   if(!order||!order.paymentId){toast('A print order must be placed before downloading the PDF.');return;}
@@ -3038,95 +3745,6 @@ function downloadPdf(orderId,fileKey){
   if(!url)return toast('Render it first — the file lives in this browser session only.');
   const a=document.createElement('a'); a.href=url; a.download=orderId+' — '+fileKey+'.pdf'; a.click();
 }
-
-/* ---------- Preview ---------- */
-let PV={key:null,idx:-1};
-function openPreview(key){PV.key=key;PV.idx=(EDS[key]&&EDS[key].cfg.hasSpine)?'coverspread':'cover';pvRender();show('previewModal')}
-function pvRender(){
-  const st=$('pvStage');st.innerHTML='';
-  if(PV.key==='artprints'){
-    const grid=document.createElement('div');grid.className='artboard-grid';grid.style.cssText+='background:transparent;box-shadow:none;width:min(640px,80vw)';
-    AP.boards.forEach((b,i)=>{
-      const orient=(AP.orient&&AP.orient[i])||'landscape';
-      const board=document.createElement('div');board.className='artboard';board.style.cssText=`width:100%;aspect-ratio:${orient==='portrait'?'4/6':'6/4'}`;
-      if(b){const ph=AP.photos.find(p=>p.id===b.photoId);
-        if(ph){const im=document.createElement('div');im.style.cssText=`position:absolute;left:${b.x??16.6}%;top:${b.y??16.6}%;width:${b.w??66.8}%;height:${b.h??66.8}%;overflow:hidden`;
-          const img=document.createElement('img');img.src=ph.url;img.style.cssText='width:100%;height:100%;object-fit:contain';im.appendChild(img);board.appendChild(im);}
-      }
-      grid.appendChild(board);
-    });
-    st.appendChild(grid);
-    $('pvLabel').textContent='4 artboards · 6″×4″ (or 4″×6″ portrait)';
-    document.querySelectorAll('#previewModal .pv-navbtn').forEach(b=>b.style.display='none');
-    return;
-  }
-  if(AP_SINGLE_VARIANTS[PV.key]){
-    const variant=AP_SINGLE_VARIANTS[PV.key], stv=AP_SINGLE[PV.key];
-    const dims=apSingleDims(PV.key,stv.orient);
-    // Deliberately NOT using .artboard-grid here — that class lays out a 2-column grid meant for
-    // the 4-print set's boards, so a single board dropped into it only ever occupied one column
-    // (roughly half the intended width), rendering small and pushed to one side instead of
-    // centered. Dimensions are computed explicitly in px (rather than aspect-ratio+auto sizing)
-    // because auto-sizing collapses to 0×0 here — the board has no normal-flow content to anchor
-    // an intrinsic size to, since its photo is positioned absolutely.
-    const maxW=Math.min(560,window.innerWidth*0.8), maxH=window.innerHeight*0.6;
-    let boardWpx=maxW, boardHpx=maxW*(dims.h/dims.w);
-    if(boardHpx>maxH){boardHpx=maxH; boardWpx=maxH*(dims.w/dims.h);}
-    const wrap=document.createElement('div');wrap.style.cssText='display:flex;justify-content:center;padding:20px';
-    const board=document.createElement('div');board.className='artboard';
-    board.style.cssText=`width:${Math.round(boardWpx)}px;height:${Math.round(boardHpx)}px;flex-shrink:0;background:#fff`;
-    const b=stv.board;
-    if(b){const ph=stv.photos.find(p=>p.id===b.photoId);
-      if(ph){const im=document.createElement('div');im.style.cssText=`position:absolute;left:${b.x??8.3}%;top:${b.y??8.3}%;width:${b.w??83.4}%;height:${b.h??83.4}%;overflow:hidden`;
-        const img=document.createElement('img');img.src=ph.url;img.style.cssText='width:100%;height:100%;object-fit:contain';im.appendChild(img);board.appendChild(im);}
-    }
-    wrap.appendChild(board);
-    st.appendChild(wrap);
-    $('pvLabel').textContent=`${variant.label} · ${dims.w}″×${dims.h}″`;
-    document.querySelectorAll('#previewModal .pv-navbtn').forEach(b=>b.style.display='none');
-    return;
-  }
-  document.querySelectorAll('#previewModal .pv-navbtn').forEach(b=>b.style.display='');
-  const ed=EDS[PV.key];
-  if(PV.idx==='coverspread'){
-    const wrap=document.createElement('div');wrap.className='spread wrap-cover';
-    const back=ed.buildPage(ed.doc.backCover,'back',null,null,false);
-    const spineEl=ed.buildPage(ed.doc.spine,'spine',null,null,false);
-    const spineWidthPx=Math.max(14,ed.spineWidthIn()*140);
-    spineEl.style.width=spineWidthPx+'px';spineEl.style.aspectRatio='unset';spineEl.style.height='auto';spineEl.classList.add('spine-zone');
-    const front=ed.buildPage(ed.doc.cover,'cover',null,null,false);
-    wrap.append(back,spineEl,front);
-    wrap.querySelectorAll('.book-page').forEach(p=>{if(!p.classList.contains('spine-zone'))p.style.width='200px'});
-    st.appendChild(wrap);
-    $('pvLabel').textContent=`Cover · Spine (${ed.spineWidthIn()}″) · Back`;
-    return;
-  }
-  const spread=document.createElement('div');spread.className='spread';
-  if(PV.idx==='cover'||PV.idx==='back'){spread.classList.add('single');spread.appendChild(ed.buildPage(PV.idx==='cover'?ed.doc.cover:ed.doc.backCover,PV.idx,null,null,false));$('pvLabel').textContent=PV.idx==='cover'?'Cover':'Back cover';}
-  else{
-    const item=ed.interiorLayout()[PV.idx];
-    if(item.type==='single'){
-      spread.classList.add('single');
-      spread.appendChild(ed.buildPage(ed.doc.pages[item.idx],item.idx,null,null,false));
-      $('pvLabel').textContent=`Page ${item.idx+1} of ${ed.pageCount()}`;
-    }else{
-      spread.appendChild(ed.buildPage(ed.doc.pages[item.l],item.l,null,null,false));
-      spread.appendChild(ed.buildPage(ed.doc.pages[item.r],item.r,null,null,false));
-      $('pvLabel').textContent=`Pages ${item.l+1}–${item.r+1} of ${ed.pageCount()}`;
-    }
-  }
-  spread.querySelectorAll('.book-page').forEach(p=>{p.style.width='280px'});
-  st.appendChild(spread);
-}
-function pvNav(d){if(PV.key==='artprints')return;const ed=EDS[PV.key];const max=ed.interiorLayout().length-1;
-  if(ed.cfg.hasSpine){
-    if(PV.idx==='coverspread')PV.idx=d>0?0:'coverspread';
-    else{PV.idx+=d; if(PV.idx<0)PV.idx='coverspread'; if(PV.idx>max)PV.idx=max;}
-  }else{
-    if(PV.idx==='cover')PV.idx=d>0?0:'cover'; else if(PV.idx==='back')PV.idx=d<0?max:'back';
-    else{PV.idx+=d; if(PV.idx<0)PV.idx='cover'; if(PV.idx>max)PV.idx='back';}
-  }
-  pvRender();}
 
 /* ================= ART PRINTS EDITOR ================= */
 const AP={title:'Untitled Art Print Set',photos:[],boards:[null,null,null,null],orient:['landscape','landscape','landscape','landscape']}; // each board: {photoId,x,y,w,h} or null
@@ -3147,6 +3765,51 @@ function toggleBoardOrient(i){AP.orient[i]=(AP.orient[i]==='portrait')?'landscap
   const b=AP.boards[i];
   if(b){const ph=AP.photos.find(p=>p.id===b.photoId);if(ph)Object.assign(b,fitPhotoBox(ph,boardRatio(AP.orient[i]),AP_MARGIN,AP_MARGIN,AP_INSET,AP_INSET));}
   renderArtPrints();}
+// Shared 8-handle resize (4 edges + 4 corners, with page/margin snapping) for a single Art Print
+// board's photo — used by both the 4-print set (renderArtPrints) and the single 12×18/16×20
+// variants (renderApSingle), which otherwise duplicate this exact board/image/snap-target setup.
+// `targets` is {xs,ys} in board %, matching the {xs,ys} shape already built at each call site.
+function wireArtBoardResize(im,board,b,targets,onResized){
+  const clearG=()=>board.querySelectorAll('.snap-line').forEach(l=>l.style.display='none');
+  const showG=(axis,pos)=>{let line=board.querySelector('.snap-line.'+axis);
+    if(!line){line=document.createElement('div');line.className='snap-line '+axis;board.appendChild(line);}
+    if(axis==='v')line.style.left=pos+'%';else line.style.top=pos+'%'; line.style.display='block';};
+  const snap=(val,arr,axis)=>{let best=null,bestDelta=1.5;
+    arr.forEach(t=>{const delta=Math.abs(val-t);if(delta<bestDelta){bestDelta=delta;best=t;}});
+    if(best!==null)showG(axis,best); return best!==null?best:val;};
+  ['n','s','e','w','ne','nw','se','sw'].forEach(dir=>{
+    const rh=document.createElement('div'); rh.className='rh rh-'+dir; im.appendChild(rh);
+    rh.onmousedown=e=>{
+      e.preventDefault();e.stopPropagation();
+      const rect=board.getBoundingClientRect();
+      const sx=e.clientX, sy=e.clientY;
+      const ox=b.x, oy=b.y, ow=b.w, oh=b.h, ratio=(oh||1)/(ow||1);
+      const right=ox+ow, bottom=oy+oh;
+      const MIN=10;
+      const mv=ev=>{
+        const dx=(ev.clientX-sx)/rect.width*100, dy=(ev.clientY-sy)/rect.height*100;
+        clearG();
+        let nx=ox, ny=oy, nw=ow, nh=oh;
+        if(dir.includes('e')){let r=right+dx; if(!ev.altKey)r=snap(r,targets.xs,'v'); nw=Math.max(MIN,r-ox);}
+        if(dir.includes('w')){let l=ox+dx; if(!ev.altKey)l=snap(l,targets.xs,'v'); l=Math.min(l,right-MIN); nx=l; nw=right-l;}
+        if(dir.includes('s')){let bo=bottom+dy; if(!ev.altKey)bo=snap(bo,targets.ys,'h'); nh=Math.max(MIN,bo-oy);}
+        if(dir.includes('n')){let t=oy+dy; if(!ev.altKey)t=snap(t,targets.ys,'h'); t=Math.min(t,bottom-MIN); ny=t; nh=bottom-t;}
+        // A board always holds a single photo, so — same as the book editors — proportions are
+        // always preserved here, on every handle, not just corners with Shift held.
+        if(dir.length===2){
+          if(Math.abs(dx)>=Math.abs(dy)){nh=nw*ratio; if(dir.includes('n'))ny=bottom-nh;}
+          else{nw=nh/ratio; if(dir.includes('w'))nx=right-nw;}
+        }else if(dir==='e'||dir==='w'){ nh=nw*ratio; ny=oy+(oh-nh)/2; }
+        else{ nw=nh/ratio; nx=ox+(ow-nw)/2; }
+        nw=Math.max(MIN,nw); nh=Math.max(MIN,nh);
+        b.x=nx;b.y=ny;b.w=nw;b.h=nh;
+        im.style.left=nx+'%';im.style.top=ny+'%';im.style.width=nw+'%';im.style.height=nh+'%';
+      };
+      const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);clearG();if(onResized)onResized();};
+      window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);
+    };
+  });
+}
 function renderArtPrints(){
   renderApPhotoGrid();
   const dz=$('ap-dropUp');
@@ -3178,7 +3841,6 @@ function renderArtPrints(){
       if(b.x===undefined)Object.assign(b,ph?fitPhotoBox(ph,boardRatio(orient),MARGIN,MARGIN,INSET,INSET):{x:MARGIN,y:MARGIN,w:INSET,h:INSET});
       const im=document.createElement('div');im.className='img-obj';im.style.cssText=`left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%`;
       if(ph){const img=document.createElement('img');img.src=ph.url;im.appendChild(img);}
-      const rh=document.createElement('div');rh.className='rh';im.appendChild(rh);
       board.appendChild(im);
       const dpiEl=dpiWarningEl(computePrintDpi(ph,wIn,hIn,b)); if(dpiEl)board.appendChild(dpiEl);
       const del=document.createElement('div');del.className='obj-del';del.textContent='×';del.style.cssText+='top:6px;right:6px';
@@ -3192,7 +3854,7 @@ function renderArtPrints(){
       const snap=(val,size,arr,axis)=>{const edges=[val,val+size/2,val+size];let best=null,bestDelta=1.5,bestGuide=null;
         edges.forEach((edge,idx)=>{arr.forEach(t=>{const delta=Math.abs(edge-t);if(delta<bestDelta){bestDelta=delta;bestGuide=t;best=idx===0?t:idx===1?t-size/2:t-size;}});});
         if(best!==null)showG(axis,bestGuide); return best!==null?best:val;};
-      im.onmousedown=e=>{if(e.target===rh||(e.target.classList&&e.target.classList.contains('obj-del')))return;
+      im.onmousedown=e=>{if((e.target.classList&&e.target.classList.contains('rh'))||(e.target.classList&&e.target.classList.contains('obj-del')))return;
         e.preventDefault();e.stopPropagation();
         const rect=board.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ox=b.x,oy=b.y;
         const mv=ev=>{const dx=(ev.clientX-sx)/rect.width*100,dy=(ev.clientY-sy)/rect.height*100;
@@ -3201,11 +3863,7 @@ function renderArtPrints(){
           b.x=nx;b.y=ny;im.style.left=b.x+'%';im.style.top=b.y+'%';};
         const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);clearG();};
         window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);};
-      rh.onmousedown=e=>{e.preventDefault();e.stopPropagation();
-        const rect=board.getBoundingClientRect(),sx=e.clientX,ow=b.w,oh=b.h,ratio=oh/ow;
-        const mv=ev=>{const dw=(ev.clientX-sx)/rect.width*100;b.w=Math.max(10,ow+dw);b.h=b.w*ratio;im.style.width=b.w+'%';im.style.height=b.h+'%';};
-        const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);renderArtPrints();};
-        window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);};
+      wireArtBoardResize(im,board,b,targets,()=>renderArtPrints());
     }else{
       const ph=document.createElement('div');ph.style.cssText='position:absolute;inset:16.6%;display:flex;align-items:center;justify-content:center;color:var(--slate-l);font-size:12px;text-align:center;pointer-events:none';
       ph.textContent=`Drop a photo here — ${orient==='portrait'?'4″×6″':'6″×4″'} board, 0.5″ safe margin`;board.appendChild(ph);
@@ -3272,7 +3930,6 @@ function renderApSingle(key){
     if(b.x===undefined)Object.assign(b,ph?fitPhotoBox(ph,dims.w/dims.h,MX,MY,INX,INY):{x:MX,y:MY,w:INX,h:INY});
     const im=document.createElement('div');im.className='img-obj';im.style.cssText=`left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%`;
     if(ph){const img=document.createElement('img');img.src=ph.url;im.appendChild(img);}
-    const rh=document.createElement('div');rh.className='rh';im.appendChild(rh);
     board.appendChild(im);
     const dpiEl=dpiWarningEl(computePrintDpi(ph,dims.w,dims.h,b)); if(dpiEl)board.appendChild(dpiEl);
     const del=document.createElement('div');del.className='obj-del';del.textContent='×';del.style.cssText+='top:6px;right:6px';
@@ -3286,7 +3943,7 @@ function renderApSingle(key){
     const snap=(val,size,arr,axis)=>{const edges=[val,val+size/2,val+size];let best=null,bestDelta=1.5,bestGuide=null;
       edges.forEach((edge,idx)=>{arr.forEach(t=>{const delta=Math.abs(edge-t);if(delta<bestDelta){bestDelta=delta;bestGuide=t;best=idx===0?t:idx===1?t-size/2:t-size;}});});
       if(best!==null)showG(axis,bestGuide); return best!==null?best:val;};
-    im.onmousedown=e=>{if(e.target===rh||(e.target.classList&&e.target.classList.contains('obj-del')))return;
+    im.onmousedown=e=>{if((e.target.classList&&e.target.classList.contains('rh'))||(e.target.classList&&e.target.classList.contains('obj-del')))return;
       e.preventDefault();e.stopPropagation();
       const rect=board.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ox=b.x,oy=b.y;
       const mv=ev=>{const dx=(ev.clientX-sx)/rect.width*100,dy=(ev.clientY-sy)/rect.height*100;
@@ -3295,11 +3952,7 @@ function renderApSingle(key){
         b.x=nx;b.y=ny;im.style.left=b.x+'%';im.style.top=b.y+'%';};
       const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);clearG();};
       window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);};
-    rh.onmousedown=e=>{e.preventDefault();e.stopPropagation();
-      const rect=board.getBoundingClientRect(),sx=e.clientX,ow=b.w,oh=b.h,ratio=oh/ow;
-      const mv=ev=>{const dw=(ev.clientX-sx)/rect.width*100;b.w=Math.max(10,ow+dw);b.h=b.w*ratio;im.style.width=b.w+'%';im.style.height=b.h+'%';};
-      const up=()=>{window.removeEventListener('mousemove',mv);window.removeEventListener('mouseup',up);renderApSingle(key);};
-      window.addEventListener('mousemove',mv);window.addEventListener('mouseup',up);};
+    wireArtBoardResize(im,board,b,targets,()=>renderApSingle(key));
   }else{
     const ph=document.createElement('div');ph.style.cssText='position:absolute;inset:'+MY+'% '+MX+'%;display:flex;align-items:center;justify-content:center;color:var(--slate-l);font-size:12px;text-align:center;pointer-events:none';
     ph.textContent=`Drop a photo here — ${dims.w}″×${dims.h}″, 0.5″ safe margin`;board.appendChild(ph);
@@ -3315,7 +3968,7 @@ function renderApSingle(key){
   wrap.appendChild(board);
 }
 function renderApPhotoGrid(){
-  const g=$('ap-photoGrid'); if(!g)return; g.innerHTML='';
+  const g=document.getElementById('ap-photoGrid'); if(!g)return; g.innerHTML='';
   AP.photos.forEach(ph=>{const d=document.createElement('div');d.className='photo-th'+(window._apArmed===ph.id?' armed':'');
     d.style.backgroundImage=`url(${ph.url})`;d.draggable=true;
     d.ondragstart=e=>e.dataTransfer.setData('photo',ph.id);
@@ -3407,9 +4060,9 @@ async function cmsRetryDirtyKeys(){
   }
   refreshCmsSyncBanner();
 }
-const CMS_KEY_LABELS={content:'Site text/images',catalog:'Store products',posts:'Kagaz Journal posts',clients:'Clients list',site_cfg:'Site settings',faq:'FAQ'};
+const CMS_KEY_LABELS={content:'Site text/images',catalog:'Store products',posts:'Kagaz Journal posts',clients:'Clients list',site_cfg:'Site settings',faq:'FAQ',custom_templates:'Templates'};
 function refreshCmsSyncBanner(){
-  const banner=$('cmsSyncBanner'); if(!banner)return;
+  const banner=document.getElementById('cmsSyncBanner'); if(!banner)return;
   const stuck=CMS_KNOWN_KEYS.filter(k=>cmsIsDirty(k));
   if(!stuck.length){ banner.style.display='none'; return; }
   const names=stuck.map(k=>CMS_KEY_LABELS[k]||k).join(', ');
@@ -3430,30 +4083,7 @@ async function cmsClearCache(key){
 }
 
 // Load ALL cms keys at startup in one query — fast, single round trip
-const CMS_KNOWN_KEYS=['content','catalog','posts','clients','site_cfg','faq','photo_services','gallery'];
-// ============ THE "vanishing images" BUG ============
-// GALLERY / PHOTO_SERVICES / POSTS / CATALOG are all declared further down with a synchronous
-// starter value — this browser's local cache, or (on a browser with no cache yet, e.g. a fresh
-// tab, a hard refresh, or "test as a new visitor" right after a deploy) a near-empty hardcoded
-// default. The REAL content only arrives a moment later, once cmsLoadAll()'s request to Supabase
-// resolves. In that short window, any admin action that mutates-and-saves — publishing a Journal
-// post, adding/uploading a Gallery or Photography Services image, editing a caption — writes
-// whatever is CURRENTLY sitting in memory straight back to Supabase, silently overwriting the
-// real, larger dataset with that stale/incomplete snapshot. Checking a fresh deploy and then
-// immediately publishing/adding something is exactly when this window gets hit, which is why it
-// looked like content "vanishes with every new development."
-// Fix: CMS_INITIAL_SYNC_DONE flips true only once cmsLoadAll's response has been fully merged
-// into every live variable (see the very end of the cmsLoadAll().then(...) below). Every
-// mutate-and-save entry point for these collections checks cmsGuardReady() first — refusing to
-// act (with a clear "still loading, try again in a moment" toast for a deliberate click, or
-// silently for a keystroke-driven caption edit) rather than ever saving over data it hasn't
-// confirmed yet.
-let CMS_INITIAL_SYNC_DONE=false;
-function cmsGuardReady(silent){
-  if(CMS_INITIAL_SYNC_DONE)return true;
-  if(!silent)toast('Still loading the latest content from the server — try again in a moment');
-  return false;
-}
+const CMS_KNOWN_KEYS=['content','catalog','posts','clients','site_cfg','faq','photo_services','gallery','custom_templates'];
 async function cmsLoadAll(){
   const fetchStartedAt = Date.now(); // captured BEFORE asking Supabase, so we can tell if a
   // local write happened while this request was in flight — see below.
@@ -3531,9 +4161,9 @@ const CONTENT_DEFAULTS={
   startPhotobookIntro:'Everything worth knowing before you lay out your first spread — trim size, page limits, image resolution, and how the free-form editor works.',
   startTradebookIntro:'Everything worth knowing before you drop in your manuscript — trim size, page limits, typography, and how ISBN and cover design work.',
   startArtprintsIntro:'Everything worth knowing before you pick your four images — print size, paper, and how orientation and cropping work.',
-  storeBooksTagline:'Linen covers, archival sleeves, and gifting editions — finishing touches for every Binder book.',
+  storeBooksTagline:'',
   storePhotoTagline:'Loose prints and framing-ready editions, pulled on 300gsm archival stock.',
-  heroHeading:"It's your moment, live it.",
+  heroHeading:"It's your moment, save it.",
   heroBody:'A publishing platform for everyone. Publish photobooks, novel-grade trade books, and gallery art prints, all professional grade.',
   publishHeading:'The basics of Binder photobooks',
   publishBody:'<p>Every Binder book is printed on 250gsm matte art paper, bound layflat, and colour-checked before it ships. We work in small batches out of Delhi, so every order gets a proof review before it goes to press.</p>',
@@ -3592,7 +4222,7 @@ function applyContent(){
 }
 
 /* ---- Site Config (colours, contact, footer, social) ---- */
-let SITE_CFG=loadJSON('cms_site_cfg',{accentColor:'#52B57D',siteFont:'',headingWeight:'300',contactEmail:'',contactPhone:'',instagram:'',twitter:'',facebook:'',whatsapp:'',footerTagline:'',address:''});
+let SITE_CFG=loadJSON('cms_site_cfg',{accentColor:'#52B57D',siteFont:'',headingWeight:'300',contactEmail:'',contactPhone:'',instagram:'',twitter:'',facebook:'',whatsapp:'',footerTagline:'',address:'',renderServiceUrl:'',renderServiceSecret:''});
 function saveSiteCfg(){
   SITE_CFG.contactEmail=($('cfgContactEmail')||{value:''}).value.trim();
   SITE_CFG.contactPhone=($('cfgContactPhone')||{value:''}).value.trim();
@@ -3602,6 +4232,8 @@ function saveSiteCfg(){
   SITE_CFG.whatsapp=($('cfgWhatsapp')||{value:''}).value.trim();
   SITE_CFG.footerTagline=($('cfgFooterTagline')||{value:''}).value.trim();
   SITE_CFG.address=($('cfgAddress')||{value:''}).value.trim();
+  SITE_CFG.renderServiceUrl=($('cfgRenderServiceUrl')||{value:''}).value.trim().replace(/\/$/,'');
+  SITE_CFG.renderServiceSecret=($('cfgRenderServiceSecret')||{value:''}).value.trim();
   saveJSON('cms_site_cfg',SITE_CFG);
   applySiteCfgToPublicSite();
   cmsSet('site_cfg',SITE_CFG).then(ok=>{toast(ok?'Saved ✓ — visible to all visitors':'⚠ Saved on this device only — cloud sync failed, other visitors won\'t see this yet');});
@@ -3618,8 +4250,8 @@ function applySiteColor(type,val){
     document.documentElement.style.setProperty('--accent-d',dk([r,g,b]));
     saveJSON('cms_site_cfg',SITE_CFG);
     cmsSet('site_cfg',SITE_CFG).then(ok=>{toast(ok?'Saved ✓ — visible to all visitors':'⚠ Saved on this device only — cloud sync failed, other visitors won\'t see this yet');});
-    if($('cfgAccentHex'))$('cfgAccentHex').value=hex;
-    if($('cfgAccentColor'))$('cfgAccentColor').value=hex;
+    if(document.getElementById('cfgAccentHex'))$('cfgAccentHex').value=hex;
+    if(document.getElementById('cfgAccentColor'))$('cfgAccentColor').value=hex;
   }
 }
 function applySiteFont(family){
@@ -3675,18 +4307,20 @@ function applySiteCfgToPublicSite(){
   }
 }
 function loadSiteCfgIntoAdmin(){
-  if($('cfgAccentColor'))$('cfgAccentColor').value=SITE_CFG.accentColor||'#52B57D';
-  if($('cfgAccentHex'))$('cfgAccentHex').value=SITE_CFG.accentColor||'#52B57D';
-  if($('cfgSiteFont'))$('cfgSiteFont').value=SITE_CFG.siteFont||'';
-  if($('cfgHeadingWeight'))$('cfgHeadingWeight').value=SITE_CFG.headingWeight||'300';
-  if($('cfgContactEmail'))$('cfgContactEmail').value=SITE_CFG.contactEmail||'';
-  if($('cfgContactPhone'))$('cfgContactPhone').value=SITE_CFG.contactPhone||'';
-  if($('cfgInstagram'))$('cfgInstagram').value=SITE_CFG.instagram||'';
-  if($('cfgTwitter'))$('cfgTwitter').value=SITE_CFG.twitter||'';
-  if($('cfgFacebook'))$('cfgFacebook').value=SITE_CFG.facebook||'';
-  if($('cfgWhatsapp'))$('cfgWhatsapp').value=SITE_CFG.whatsapp||'';
-  if($('cfgFooterTagline'))$('cfgFooterTagline').value=SITE_CFG.footerTagline||'';
-  if($('cfgAddress'))$('cfgAddress').value=SITE_CFG.address||'';
+  if(document.getElementById('cfgAccentColor'))$('cfgAccentColor').value=SITE_CFG.accentColor||'#52B57D';
+  if(document.getElementById('cfgAccentHex'))$('cfgAccentHex').value=SITE_CFG.accentColor||'#52B57D';
+  if(document.getElementById('cfgSiteFont'))$('cfgSiteFont').value=SITE_CFG.siteFont||'';
+  if(document.getElementById('cfgHeadingWeight'))$('cfgHeadingWeight').value=SITE_CFG.headingWeight||'300';
+  if(document.getElementById('cfgContactEmail'))$('cfgContactEmail').value=SITE_CFG.contactEmail||'';
+  if(document.getElementById('cfgContactPhone'))$('cfgContactPhone').value=SITE_CFG.contactPhone||'';
+  if(document.getElementById('cfgInstagram'))$('cfgInstagram').value=SITE_CFG.instagram||'';
+  if(document.getElementById('cfgTwitter'))$('cfgTwitter').value=SITE_CFG.twitter||'';
+  if(document.getElementById('cfgFacebook'))$('cfgFacebook').value=SITE_CFG.facebook||'';
+  if(document.getElementById('cfgWhatsapp'))$('cfgWhatsapp').value=SITE_CFG.whatsapp||'';
+  if(document.getElementById('cfgFooterTagline'))$('cfgFooterTagline').value=SITE_CFG.footerTagline||'';
+  if(document.getElementById('cfgAddress'))$('cfgAddress').value=SITE_CFG.address||'';
+  if(document.getElementById('cfgRenderServiceUrl'))$('cfgRenderServiceUrl').value=SITE_CFG.renderServiceUrl||'';
+  if(document.getElementById('cfgRenderServiceSecret'))$('cfgRenderServiceSecret').value=SITE_CFG.renderServiceSecret||'';
 }
 // Apply saved config on load
 (function initSiteCfg(){
@@ -3998,15 +4632,15 @@ function loadAccountInfo(){
   sb.auth.getUser().then(({data})=>{
     if(!data.user)return;
     const m=data.user.user_metadata||{};
-    if($('acctName'))$('acctName').value=m.name||S.user.name||'';
-    if($('acctPhone'))$('acctPhone').value=m.phone||'';
-    if($('acctAddr1'))$('acctAddr1').value=m.address1||'';
-    if($('acctAddr2'))$('acctAddr2').value=m.address2||'';
-    if($('acctCity'))$('acctCity').value=m.city||'';
-    if($('acctPin'))$('acctPin').value=m.pin||'';
-    if($('acctState'))$('acctState').value=m.state||'';
-    if($('acctGstin'))$('acctGstin').value=m.gstin||'';
-    if($('acctBizName'))$('acctBizName').value=m.bizName||'';
+    if(document.getElementById('acctName'))$('acctName').value=m.name||S.user.name||'';
+    if(document.getElementById('acctPhone'))$('acctPhone').value=m.phone||'';
+    if(document.getElementById('acctAddr1'))$('acctAddr1').value=m.address1||'';
+    if(document.getElementById('acctAddr2'))$('acctAddr2').value=m.address2||'';
+    if(document.getElementById('acctCity'))$('acctCity').value=m.city||'';
+    if(document.getElementById('acctPin'))$('acctPin').value=m.pin||'';
+    if(document.getElementById('acctState'))$('acctState').value=m.state||'';
+    if(document.getElementById('acctGstin'))$('acctGstin').value=m.gstin||'';
+    if(document.getElementById('acctBizName'))$('acctBizName').value=m.bizName||'';
   });
 }
 async function doChangePassword(){
@@ -4163,7 +4797,7 @@ function backfillProductSlugs(){
 }
 function saveCatalog(){
   saveJSON('cms_catalog',CATALOG);
-  if(cmsGuardReady(true))cmsSet('catalog', CATALOG).then(ok => { toast(ok?'Store updated ✓ — visible to all visitors':'⚠ Saved on this device only — cloud sync failed, other visitors won\'t see this yet'); });
+  cmsSet('catalog', CATALOG).then(ok => { toast(ok?'Store updated ✓ — visible to all visitors':'⚠ Saved on this device only — cloud sync failed, other visitors won\'t see this yet'); });
 }
 function inr(p){return '₹'+(p/100).toLocaleString('en-IN')}
 function productVisual(p){return p.img?`background-image:url(${p.img})`:`background:#8A8A87`}
@@ -4215,7 +4849,7 @@ function renderStore(){
     const inner=document.createElement('div');
     inner.className='store-drawer-inner';
     const grid=document.createElement('div');
-    grid.className='store-grid';
+    grid.className='store-grid'+(cat==='Books'?' store-grid-books':'');
     if(items.length){
       items.forEach((p,i)=>grid.appendChild(productCardEl(p,i)));
     }else{
@@ -4230,7 +4864,7 @@ function renderStore(){
 }
 function openProductDetail(id,push){
   const p=CATALOG.find(x=>x.id===id||x.slug===id); if(!p)return;
-  if(!p.slug){p.slug=uniqueProductSlug(slugify(p.name),p.id);if(cmsGuardReady(true)){saveJSON('cms_catalog',CATALOG);cmsSet('catalog',CATALOG);}}
+  if(!p.slug){p.slug=uniqueProductSlug(slugify(p.name),p.id);saveJSON('cms_catalog',CATALOG);cmsSet('catalog',CATALOG);}
   const slugPath=p.slug;
   $('pdImg').style.cssText='width:100%;aspect-ratio:4/3;overflow:hidden;'+(p.img?'':'background:#8A8A87');
   $('pdImg').innerHTML=p.img?mediaTagHtml(p.img,p.name,'style="width:100%;height:100%;object-fit:cover;display:block"'):'';
@@ -4262,11 +4896,11 @@ function openProductDetail(id,push){
   const ogd=document.querySelector('meta[property="og:description"]'); if(ogd)ogd.setAttribute('content',pageDesc);
   const ogi=document.querySelector('meta[property="og:image"]'); if(ogi)ogi.setAttribute('content',pageImg);
   const ogtype=document.querySelector('meta[property="og:type"]'); if(ogtype)ogtype.setAttribute('content','product');
-  const ogp=document.querySelector('meta[property="product:price:amount"]'); if(ogp)ogp.setAttribute('content',(p.price/100).toString());
+  setMetaProp('product:price:amount',(p.price/100).toString()); setMetaProp('product:price:currency','INR'); setMetaProp('product:availability','in stock');
   const tt=document.querySelector('meta[name="twitter:title"]'); if(tt)tt.setAttribute('content',pageTitle);
   const td=document.querySelector('meta[name="twitter:description"]'); if(td)td.setAttribute('content',pageDesc);
   const ti=document.querySelector('meta[name="twitter:image"]'); if(ti)ti.setAttribute('content',pageImg);
-  const canon=document.querySelector('link[rel="canonical"]'); if(canon)canon.setAttribute('href','https://www.binder.co.in/store/'+slugPath);
+  const canon=canonLink(); if(canon)canon.setAttribute('href','https://www.binder.co.in/store/'+slugPath);
   setPageSchema([buildProductSchema(p,slugPath),buildBreadcrumbSchema([{name:'Home',url:'https://www.binder.co.in/'},{name:'Store',url:'https://www.binder.co.in/store'},{name:p.name,url:'https://www.binder.co.in/store/'+slugPath}])]);
 }
 function closeProductDetail(){
@@ -4296,6 +4930,7 @@ let CHECKOUT_CTX=null;
 function openStoreCheckout(){pruneInvalidCartItems();if(!S.cart.length)return toast('Cart is empty');if(!S.user){authGo('login');show('authModal');toast('Sign in to check out');return}
   closeCart();CHECKOUT_CTX={type:'store',addons:[],gift:null,couponCode:null,couponPercent:0};
   $('coSub').textContent=S.cart.reduce((a,c)=>a+c.qty,0)+' item(s)';
+  $('coFinishRow').style.display='none'; // Store items are already-printed, ready-made pieces — not a customisable print order
   $('coAddonsRow').style.display='none';
   $('coGiftRow').style.display='block'; resetGiftForm();
   resetCoupon();
@@ -4307,7 +4942,7 @@ function openStoreCheckout(){pruneInvalidCartItems();if(!S.cart.length)return to
 // CATALOG so the price and description here can never drift out of sync with the Store itself.
 const UPSELL_ADDON_IDS=['sleeve','giftbox'];
 function renderCheckoutAddons(){
-  const wrap=$('coAddonsList'); if(!wrap)return;
+  const wrap=document.getElementById('coAddonsList'); if(!wrap)return;
   const items=UPSELL_ADDON_IDS.map(id=>CATALOG.find(p=>p.id===id)).filter(Boolean);
   if(!items.length){$('coAddonsRow').style.display='none';return;}
   $('coAddonsRow').style.display='block';
@@ -4416,7 +5051,7 @@ function finalizeCheckoutRows(itemRowsHtml,subtotal){
 }
 function resetCoupon(){
   if(CHECKOUT_CTX){CHECKOUT_CTX.couponCode=null;CHECKOUT_CTX.couponPercent=0;CHECKOUT_CTX.discountAmount=0;}
-  if($('coCouponInput'))$('coCouponInput').value='';
+  if(document.getElementById('coCouponInput'))$('coCouponInput').value='';
   const msg=$('coCouponMsg'); if(msg)msg.style.display='none';
 }
 async function applyCoupon(ev){
@@ -4484,8 +5119,9 @@ function openCheckout(editorKey){
   const showQty=(editorKey==='photobook'||editorKey==='photobook12'||editorKey==='photobook18'||editorKey==='tradebook');
   $('coQtyRow').style.display=showQty?'block':'none';
   $('coQtyNudge').style.display=showQty?'block':'none';
+  $('coFinishRow').style.display='block';
   $('coBindingRow').style.display=(editorKey==='photobook12'||editorKey==='photobook18')?'block':'none';
-  if($('coQty'))$('coQty').value=1;
+  if(document.getElementById('coQty'))$('coQty').value=1;
   renderCheckoutAddons();
   $('coGiftRow').style.display='block'; resetGiftForm();
   resetCoupon();
@@ -4507,7 +5143,7 @@ const PAY_METHODS=[
 ];
 let PAY_METHOD='upi';
 function renderPayMethods(){
-  const wrap=$('payMethods');if(!wrap)return;
+  const wrap=document.getElementById('payMethods');if(!wrap)return;
   wrap.innerHTML=PAY_METHODS.map(m=>`<div class="paym ${PAY_METHOD===m.id?'on':''}" onclick="setPayMethod('${m.id}')">
     <span>${m.icon}</span><b>${m.name}</b><small>${m.sub}</small></div>`).join('');
 }
@@ -4717,116 +5353,197 @@ async function checkAdminGate(){
   $('adminGate').style.display=_isAdmin?'none':'flex';$('adminPanel').style.display=_isAdmin?'grid':'none';
   if(_isAdmin)adminTab('dashboard');
 }
-/* ================= SEO to-do list =================
-   A plain checklist, not a metrics dashboard — the previous version of this panel tried to show
-   composite "authority scores" and jargon (topical authority, content moat, network effects) that
-   didn't actually tell the person what to go DO. This version is just: here's what's already
-   handled technically (collapsed, out of the way), here's a prioritized to-do list seeded with
-   real gaps, and one simple place to log whether it's working (Search Console clicks/impressions).
-*/
-const SEO_TECH_LIST=[
-  'Every page has its own title, description, and keywords',
-  'Rich-result markup (schema) on products, articles, FAQs, and the three main service pages',
-  'Sitemap and robots.txt, kept current',
-  'www.binder.co.in enforced as the one canonical address (no split between www / non-www)',
-  'The homepage\'s main photo loads first and fast, not lazily — and is a third of the file size it used to be',
-  'Every other image on the site loads lazily so pages aren\'t weighed down',
-  'Editor / admin / dashboard pages kept out of Google entirely',
+/* ================= SEO · Content Moat panel =================
+   A durable competitive-advantage tracker, not a live rank checker. Real DA/PA/backlink numbers
+   need a paid Moz/Majestic/Ahrefs API — Mangools itself doesn't calculate its own version of these;
+   it licenses Moz's DA/PA and Majestic's CF/TF and displays them under one dashboard alongside its
+   own proprietary aggregate metrics (Link Profile Strength, Dominance Index / Share of Search).
+   Nothing free or embeddable exists for any of that, so those sections here are a clean manual log
+   with trend history instead of a fake live feed. Everything else — topical coverage, unique-data
+   assets, technical SEO, network scale — is computed for real, live, from Binder's own CMS content
+   and Supabase data. No invented numbers anywhere in this panel. */
+const SEOMOAT_TOPICS_DEFAULT=[
+  {key:'photobook',label:'Photobook Printing',keywords:['photobook','photo book','layflat','coffee table book','wedding album','12×12','12×18']},
+  {key:'tradebook',label:'Trade Books & Self-Publishing',keywords:['trade book','self-publish','self publish','isbn','manuscript','novel','author']},
+  {key:'artprints',label:'Art Prints',keywords:['art print','giclee','fine art','canvas print','archival print']},
+  {key:'scanning',label:'Scanning & Digitisation',keywords:['scan','digitis','negative','archival scan','600 dpi']},
+  {key:'gifting',label:'Gifting & Occasions',keywords:['gift','wedding','anniversary','new baby','memorial','retirement','tribute']},
 ];
-// Which topic has the least original content — used for exactly one to-do item below.
-// Not exposed as a whole editable panel; simple keyword sniff-test against real published posts.
-const SEO_TOPIC_CLUSTERS=[
-  {label:'Photobooks',keywords:['photobook','photo book','layflat','coffee table book']},
-  {label:'Trade Books / self-publishing',keywords:['trade book','self-publish','self publish','isbn','manuscript']},
-  {label:'Art Prints',keywords:['art print','giclee','fine art','canvas print']},
-  {label:'Scanning',keywords:['scan','digitis','negative']},
-  {label:'Gifting & occasions (wedding, baby, memorial)',keywords:['gift','wedding','anniversary','new baby','memorial']},
+function seomoatDefaults(){
+  return {
+    topics:JSON.parse(JSON.stringify(SEOMOAT_TOPICS_DEFAULT)),
+    authorityLog:[], backlinkLog:[], brandLog:[],
+    uniqueDataLog:[{id:uid(),date:new Date().toISOString().slice(0,10),label:'Books printed & published (lifetime)',value:'390,000+',note:'Homepage hero stat — keep this in sync if it changes.'}],
+    brandNote:'Found while researching this panel: your brand name "Binder" collides heavily with an unrelated, much larger, older company — BINDER GmbH (binder-world.com), a German lab-equipment and industrial-connector manufacturer with a long SEO history and many country subdomains. This dilutes branded search share: generic "binder" searches skew toward them, not you. Worth actively differentiating in outreach and citations — "Binder Delhi", "Binder photobooks", "binder.co.in" — rather than the bare word "Binder".'
+  };
+}
+let SEOMOAT=loadJSON('cms_seomoat',null)||seomoatDefaults();
+if(!Array.isArray(SEOMOAT.topics)||!SEOMOAT.topics.length)SEOMOAT.topics=JSON.parse(JSON.stringify(SEOMOAT_TOPICS_DEFAULT));
+if(!Array.isArray(SEOMOAT.authorityLog))SEOMOAT.authorityLog=[];
+if(!Array.isArray(SEOMOAT.backlinkLog))SEOMOAT.backlinkLog=[];
+if(!Array.isArray(SEOMOAT.brandLog))SEOMOAT.brandLog=[];
+if(!Array.isArray(SEOMOAT.uniqueDataLog))SEOMOAT.uniqueDataLog=[];
+if(typeof SEOMOAT.brandNote!=='string')SEOMOAT.brandNote=seomoatDefaults().brandNote;
+function saveSeoMoat(silent){
+  saveJSON('cms_seomoat',SEOMOAT);
+  cmsSet('seomoat',SEOMOAT).then(ok=>{if(!silent)toast(ok?'Saved ✓ — visible to all admins':'⚠ Saved on this device only — cloud sync failed');});
+}
+const SEOMOAT_TECH_CHECKLIST=[
+  {label:'Unique title + meta description on every page',done:true},
+  {label:'Meta keywords tag',done:true},
+  {label:'Canonical URL, kept in sync per page',done:true},
+  {label:'Open Graph + Twitter Card tags, synced per page (incl. og:url)',done:true},
+  {label:'Organization / LocalBusiness schema',done:true},
+  {label:'Product schema (Store)',done:true},
+  {label:'Article schema (Kagaz Journal posts)',done:true},
+  {label:'FAQPage schema (homepage)',done:true},
+  {label:'Service schema (Photobooks / Trade Books / Art Prints)',done:true},
+  {label:'BreadcrumbList schema (start pages, store, journal)',done:true},
+  {label:'XML sitemap + robots.txt',done:true},
+  {label:'noindex on editor / admin / dashboard routes',done:true},
 ];
-function seoWeakestTopic(){
-  const counts=SEO_TOPIC_CLUSTERS.map(t=>{
-    const kws=t.keywords;
-    const n=(POSTS||[]).filter(p=>{const hay=((p.title||'')+' '+(p.html||'')).toLowerCase();return kws.some(k=>hay.includes(k));}).length;
-    return {...t,n};
+// Real count: how many published Kagaz Journal posts mention each topic cluster's keywords, in the
+// title or body, and how many words that represents. This is the actual signal search engines use
+// to judge topical depth and breadth — not a guess or a vanity number.
+function seomoatTopicCoverage(){
+  return SEOMOAT.topics.map(t=>{
+    const kws=(t.keywords||[]).map(k=>k.toLowerCase()).filter(Boolean);
+    let posts=0,words=0;
+    (POSTS||[]).forEach(p=>{
+      const hay=((p.title||'')+' '+(p.html||'')).toLowerCase();
+      if(kws.some(k=>hay.includes(k))){posts++;words+=(p.html||'').replace(/<[^>]+>/g,' ').trim().split(/\s+/).filter(Boolean).length;}
+    });
+    return {...t,posts,words};
   });
-  counts.sort((a,b)=>a.n-b.n);
-  return counts[0];
 }
-function seoTodoDefaults(){
-  const weak=seoWeakestTopic();
-  return [
-    {id:uid(),done:false,title:'Set up Google Search Console',note:'Free, and the only real way to see actual search traffic. Once connected, submit binder.co.in/sitemap.xml under Sitemaps.'},
-    {id:uid(),done:false,title:'Optimise your Google Business Profile',note:'Use "Binder Delhi" or "Binder Photobooks" rather than just "Binder" — the bare name is dominated by an unrelated German lab-equipment company in search results.'},
-    {id:uid(),done:false,title:'Get your first 5 Google reviews',note:'Ask happy customers right after delivery. Reviews are one of the strongest trust signals a local business can have, and there are currently none.'},
-    {id:uid(),done:false,title:'Write a Kagaz Journal post about '+weak.label,note:'This is your thinnest content area right now ('+weak.n+' post'+(weak.n===1?'':'s')+') — go to Admin → Kagaz Journal Manager to add one.'},
-    {id:uid(),done:false,title:'Get 2–3 backlinks',note:'Start with local business directories and wedding-vendor listing sites — anywhere your business can be listed with a link back to binder.co.in.'},
-    {id:uid(),done:false,title:'Check your free Domain Authority score',note:'moz.com/domain-analysis — takes two minutes, worth rechecking every couple of months to see if it\'s trending up.'},
-  ];
+async function seomoatUniqueDataAuto(){
+  const out={orders:0,customers:0,clientNames:0,journalPosts:(POSTS||[]).length,galleryProjects:GALLERY.filter(g=>g.url).length,storeProducts:CATALOG.length};
+  try{const {count}=await sb.from('orders').select('*',{count:'exact',head:true});out.orders=count||0;}catch(e){}
+  try{const {count}=await sb.from('profiles').select('*',{count:'exact',head:true});out.customers=count||0;}catch(e){}
+  out.clientNames=(CLIENTS||[]).reduce((s,sec)=>s+((sec.names&&sec.names.length)||0),0);
+  return out;
 }
-let SEO_TODOS=loadJSON('cms_seo_todos',null)||seoTodoDefaults();
-let SEO_TRAFFIC=loadJSON('cms_seo_traffic',[]);
-function saveSeoTodos(){saveJSON('cms_seo_todos',SEO_TODOS);cmsSet('seo_todos',SEO_TODOS);}
-function saveSeoTraffic(){saveJSON('cms_seo_traffic',SEO_TRAFFIC);cmsSet('seo_traffic',SEO_TRAFFIC);}
-function toggleSeoTodo(id){const t=SEO_TODOS.find(x=>x.id===id);if(!t)return;t.done=!t.done;saveSeoTodos();renderSeoTodos();}
-function removeSeoTodo(id){SEO_TODOS=SEO_TODOS.filter(x=>x.id!==id);saveSeoTodos();renderSeoTodos();}
-function addSeoTodo(){
-  const title=($('seoTodoNew').value||'').trim();
-  if(!title)return toast('Type something first.');
-  SEO_TODOS.push({id:uid(),done:false,title,note:''});
-  $('seoTodoNew').value='';
-  saveSeoTodos();renderSeoTodos();
+function seomoatScore(coverage,uniq){
+  const topicPct=coverage.map(t=>Math.min(100,t.posts*25));
+  const topicalScore=Math.round(topicPct.reduce((a,b)=>a+b,0)/Math.max(1,topicPct.length));
+  const techScore=Math.round(SEOMOAT_TECH_CHECKLIST.filter(c=>c.done).length/SEOMOAT_TECH_CHECKLIST.length*100);
+  const scaleScore=Math.min(100,Math.round((Math.min(uniq.orders,500)/500*40)+(Math.min(uniq.clientNames,200)/200*30)+(Math.min(uniq.journalPosts,30)/30*30)));
+  const lastAuth=SEOMOAT.authorityLog.length?SEOMOAT.authorityLog[SEOMOAT.authorityLog.length-1]:null;
+  const authorityScore=(lastAuth&&lastAuth.da!=null)?Math.min(100,Math.round(lastAuth.da/40*100)):null; // DA 40 treated as a strong ceiling for a niche local business
+  const parts=[topicalScore,techScore,scaleScore]; if(authorityScore!=null)parts.push(authorityScore);
+  const overall=Math.round(parts.reduce((a,b)=>a+b,0)/parts.length);
+  return {overall,topicalScore,techScore,scaleScore,authorityScore};
 }
-function renderSeoTodos(){
-  const wrap=$('seoTodoList'); if(!wrap)return;
-  const sorted=[...SEO_TODOS].sort((a,b)=>a.done-b.done);
-  const doneCount=SEO_TODOS.filter(t=>t.done).length;
-  wrap.innerHTML=(sorted.length?sorted:[]).map(t=>`
-    <label style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer">
-      <input type="checkbox" ${t.done?'checked':''} onchange="toggleSeoTodo('${t.id}')" style="margin-top:3px;accent-color:var(--accent);flex:0 0 auto">
-      <span style="flex:1">
-        <span style="display:block;font-size:14px;${t.done?'color:var(--slate-l);text-decoration:line-through':''}">${esc(t.title)}</span>
-        ${t.note?`<span style="display:block;font-size:12px;color:var(--slate-l);margin-top:2px;line-height:1.5">${esc(t.note)}</span>`:''}
-      </span>
-      <button onclick="event.preventDefault();removeSeoTodo('${t.id}')" style="background:none;border:none;color:var(--slate-l);cursor:pointer;font-size:13px;flex:0 0 auto" title="Remove">×</button>
-    </label>`).join('')||'<p style="font-size:12.5px;color:var(--slate-l)">Nothing on the list — add something above.</p>';
-  const heading=document.querySelector('#ap-seomoat h3');
-  if(heading)heading.textContent='Your to-do list ('+doneCount+' of '+SEO_TODOS.length+' done)';
-}
-function seoSparkline(points){
-  if(!points||points.length<2)return '<span style="font-size:11px;color:var(--slate-l)">Log at least two months to see a trend line.</span>';
-  const w=280,h=56,pad=4,max=Math.max(...points),min=Math.min(...points),range=(max-min)||1;
+function seomoatSparkline(points,color){
+  if(!points||points.length<2)return '<span style="font-size:11px;color:var(--slate-l)">Log at least two checks to see a trend line.</span>';
+  const w=260,h=54,pad=4,max=Math.max(...points),min=Math.min(...points),range=(max-min)||1;
   const step=(w-pad*2)/(points.length-1);
   const pts=points.map((p,i)=>`${(pad+i*step).toFixed(1)},${(h-pad-((p-min)/range)*(h-pad*2)).toFixed(1)}`).join(' ');
-  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="#52B57D" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${color||'#52B57D'}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
-function addTrafficEntry(){
-  const clicks=parseInt($('seoClicksInput').value), impressions=parseInt($('seoImpressionsInput').value);
-  if(isNaN(clicks)&&isNaN(impressions))return toast('Enter clicks or impressions from Search Console first.');
-  SEO_TRAFFIC.push({id:uid(),date:new Date().toISOString().slice(0,10),clicks:isNaN(clicks)?null:clicks,impressions:isNaN(impressions)?null:impressions});
-  SEO_TRAFFIC.sort((a,b)=>a.date.localeCompare(b.date));
-  $('seoClicksInput').value='';$('seoImpressionsInput').value='';
-  saveSeoTraffic();renderSeoTraffic();
+function seomoatLogTable(entries,cols,onRemove){
+  if(!entries.length)return '<p style="font-size:12px;color:var(--slate-l)">No checks logged yet.</p>';
+  const rows=entries.slice().reverse().map(e=>`<tr>
+    <td style="padding:5px 8px;font-size:12px;color:var(--slate-l);white-space:nowrap">${esc(e.date)}</td>
+    ${cols.map(c=>`<td style="padding:5px 8px;font-size:12.5px">${esc(e[c.key]==null?'—':String(e[c.key]))}</td>`).join('')}
+    <td style="padding:5px 8px;font-size:12px;color:var(--slate-l)">${esc(e.note||e.source||'')}</td>
+    <td style="padding:5px 8px"><button onclick="${onRemove}('${e.id}')" style="background:none;border:none;color:var(--slate-l);cursor:pointer;font-size:12px" title="Remove">×</button></td>
+  </tr>`).join('');
+  return `<table style="width:100%;border-collapse:collapse"><thead><tr>
+    <th style="text-align:left;padding:5px 8px;font-size:10.5px;color:var(--slate-l);text-transform:uppercase;letter-spacing:.04em">Date</th>
+    ${cols.map(c=>`<th style="text-align:left;padding:5px 8px;font-size:10.5px;color:var(--slate-l);text-transform:uppercase;letter-spacing:.04em">${esc(c.label)}</th>`).join('')}
+    <th></th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
 }
-function removeTrafficEntry(id){SEO_TRAFFIC=SEO_TRAFFIC.filter(e=>e.id!==id);saveSeoTraffic();renderSeoTraffic();}
-function renderSeoTraffic(){
-  $('seoTrafficChart').innerHTML=seoSparkline(SEO_TRAFFIC.map(e=>e.clicks).filter(v=>v!=null));
-  const rows=SEO_TRAFFIC.slice().reverse().map(e=>`<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--line)">
-    <span style="color:var(--slate-l)">${esc(e.date)}</span><span>${e.clicks!=null?e.clicks+' clicks':'—'}</span><span>${e.impressions!=null?e.impressions+' impressions':'—'}</span>
-    <button onclick="removeTrafficEntry('${e.id}')" style="background:none;border:none;color:var(--slate-l);cursor:pointer;font-size:12px" title="Remove">×</button></div>`).join('');
-  $('seoTrafficLog').innerHTML=rows||'<p style="font-size:12px;color:var(--slate-l)">No months logged yet.</p>';
+function addAuthorityEntry(){
+  const da=parseFloat($('moatDaInput').value);
+  if(isNaN(da)){toast('Enter at least a DA value first — check it free at moz.com/domain-analysis.');return;}
+  const pa=parseFloat($('moatPaInput').value),cf=parseFloat($('moatCfInput').value),tf=parseFloat($('moatTfInput').value);
+  SEOMOAT.authorityLog.push({id:uid(),date:new Date().toISOString().slice(0,10),da,pa:isNaN(pa)?null:pa,cf:isNaN(cf)?null:cf,tf:isNaN(tf)?null:tf,note:($('moatAuthorityNote').value||'').trim()});
+  SEOMOAT.authorityLog.sort((a,b)=>a.date.localeCompare(b.date));
+  ['moatDaInput','moatPaInput','moatCfInput','moatTfInput','moatAuthorityNote'].forEach(id=>$(id).value='');
+  saveSeoMoat(); renderSeoMoat();
+}
+function removeAuthorityEntry(id){SEOMOAT.authorityLog=SEOMOAT.authorityLog.filter(e=>e.id!==id);saveSeoMoat();renderSeoMoat();}
+function addBacklinkEntry(){
+  const rd=parseInt($('moatRdInput').value),tb=parseInt($('moatTbInput').value);
+  if(isNaN(rd)&&isNaN(tb)){toast('Enter referring domains or total backlinks first.');return;}
+  SEOMOAT.backlinkLog.push({id:uid(),date:new Date().toISOString().slice(0,10),referringDomains:isNaN(rd)?null:rd,totalBacklinks:isNaN(tb)?null:tb,source:($('moatBlSource').value||'').trim(),note:($('moatBlNote').value||'').trim()});
+  SEOMOAT.backlinkLog.sort((a,b)=>a.date.localeCompare(b.date));
+  ['moatRdInput','moatTbInput','moatBlSource','moatBlNote'].forEach(id=>$(id).value='');
+  saveSeoMoat(); renderSeoMoat();
+}
+function removeBacklinkEntry(id){SEOMOAT.backlinkLog=SEOMOAT.backlinkLog.filter(e=>e.id!==id);saveSeoMoat();renderSeoMoat();}
+function addBrandEntry(){
+  const bs=parseInt($('moatBrandSearches').value);
+  if(isNaN(bs)){toast('Enter a branded-search number first — Google Search Console → Performance → query contains "binder".');return;}
+  SEOMOAT.brandLog.push({id:uid(),date:new Date().toISOString().slice(0,10),brandedSearches:bs,note:($('moatBrandNote').value||'').trim()});
+  SEOMOAT.brandLog.sort((a,b)=>a.date.localeCompare(b.date));
+  $('moatBrandSearches').value='';$('moatBrandNote').value='';
+  saveSeoMoat(); renderSeoMoat();
+}
+function removeBrandEntry(id){SEOMOAT.brandLog=SEOMOAT.brandLog.filter(e=>e.id!==id);saveSeoMoat();renderSeoMoat();}
+function saveBrandNote(){SEOMOAT.brandNote=$('moatBrandNoteText').value;saveSeoMoat(true);}
+function addUniqueDataEntry(){
+  const label=($('moatUdLabel').value||'').trim(),value=($('moatUdValue').value||'').trim();
+  if(!label||!value){toast('Add both a label and a value.');return;}
+  SEOMOAT.uniqueDataLog.push({id:uid(),date:new Date().toISOString().slice(0,10),label,value,note:($('moatUdNote').value||'').trim()});
+  $('moatUdLabel').value='';$('moatUdValue').value='';$('moatUdNote').value='';
+  saveSeoMoat(); renderSeoMoat();
+}
+function removeUniqueDataEntry(id){SEOMOAT.uniqueDataLog=SEOMOAT.uniqueDataLog.filter(e=>e.id!==id);saveSeoMoat();renderSeoMoat();}
+function updateTopicKeywords(key,value){
+  const t=SEOMOAT.topics.find(x=>x.key===key); if(!t)return;
+  t.keywords=value.split(',').map(s=>s.trim()).filter(Boolean);
+  saveSeoMoat(true); renderSeoMoat();
 }
 async function renderSeoMoat(){
-  $('seoTechList').innerHTML=SEO_TECH_LIST.map(l=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:13px"><span style="color:var(--accent)">✓</span>${esc(l)}</div>`).join('');
-  renderSeoTodos();
-  renderSeoTraffic();
-  const stats={orders:0,customers:0,journalPosts:(POSTS||[]).length,clientNames:(CLIENTS||[]).reduce((s,sec)=>s+((sec.names&&sec.names.length)||0),0)};
-  try{const {count}=await sb.from('orders').select('*',{count:'exact',head:true});stats.orders=count||0;}catch(e){}
-  try{const {count}=await sb.from('profiles').select('*',{count:'exact',head:true});stats.customers=count||0;}catch(e){}
-  const statsEl=$('seoStats');
-  if(statsEl)statsEl.innerHTML=`
-    <div class="stat"><b>${stats.orders.toLocaleString('en-IN')}</b><span>Orders</span></div>
-    <div class="stat"><b>${stats.customers.toLocaleString('en-IN')}</b><span>Customers</span></div>
-    <div class="stat"><b>${stats.journalPosts}</b><span>Journal posts</span></div>
-    <div class="stat"><b>${stats.clientNames.toLocaleString('en-IN')}</b><span>Clients listed</span></div>`;
+  const coverage=seomoatTopicCoverage();
+  const uniq=await seomoatUniqueDataAuto();
+  const score=seomoatScore(coverage,uniq);
+
+  $('moatScoreRow').innerHTML=`
+    <div class="stat"><b style="color:var(--accent)">${score.overall}</b><span>Content Moat Score</span></div>
+    <div class="stat"><b>${score.topicalScore}</b><span>Topical coverage</span></div>
+    <div class="stat"><b>${score.techScore}</b><span>Technical SEO</span></div>
+    <div class="stat"><b>${score.scaleScore}</b><span>Scale &amp; network</span></div>
+    <div class="stat"><b>${score.authorityScore==null?'—':score.authorityScore}</b><span>Authority (from DA)</span></div>`;
+
+  $('moatTopics').innerHTML=coverage.map(t=>{
+    const pct=Math.min(100,t.posts*25);
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+        <b style="font-size:13.5px">${esc(t.label)}</b>
+        <span style="font-size:12px;color:var(--slate-l)">${t.posts} post${t.posts===1?'':'s'} · ${t.words.toLocaleString('en-IN')} words</span>
+      </div>
+      <div style="height:6px;border-radius:4px;background:var(--line);overflow:hidden;margin-bottom:6px"><div style="height:100%;width:${pct}%;background:var(--accent)"></div></div>
+      <input class="field" style="font-size:11.5px;padding:5px 8px;margin:0" value="${esc((t.keywords||[]).join(', '))}" placeholder="Keywords, comma separated" onchange="updateTopicKeywords('${t.key}',this.value)">
+    </div>`;
+  }).join('');
+
+  $('moatUniqueAuto').innerHTML=`
+    <div class="stat"><b>${uniq.orders.toLocaleString('en-IN')}</b><span>Orders placed</span></div>
+    <div class="stat"><b>${uniq.customers.toLocaleString('en-IN')}</b><span>Customers</span></div>
+    <div class="stat"><b>${uniq.clientNames.toLocaleString('en-IN')}</b><span>Clients listed</span></div>
+    <div class="stat"><b>${uniq.journalPosts}</b><span>Journal posts</span></div>`;
+  $('moatUniqueLog').innerHTML=seomoatLogTable(SEOMOAT.uniqueDataLog,[{key:'label',label:'What'},{key:'value',label:'Value'}],'removeUniqueDataEntry');
+
+  $('moatBrandNoteWrap').innerHTML=`<textarea class="field" id="moatBrandNoteText" rows="3" style="font-size:12.5px" onchange="saveBrandNote()">${esc(SEOMOAT.brandNote)}</textarea>`;
+  $('moatBrandChart').innerHTML=seomoatSparkline(SEOMOAT.brandLog.map(e=>e.brandedSearches));
+  $('moatBrandLog').innerHTML=seomoatLogTable(SEOMOAT.brandLog,[{key:'brandedSearches',label:'Branded searches/mo'}],'removeBrandEntry');
+
+  $('moatScaleAuto').innerHTML=`
+    <div class="stat"><b>${uniq.journalPosts}</b><span>Journal posts</span></div>
+    <div class="stat"><b>${uniq.galleryProjects}</b><span>Gallery projects</span></div>
+    <div class="stat"><b>${uniq.storeProducts}</b><span>Store products</span></div>
+    <div class="stat"><b>${uniq.clientNames.toLocaleString('en-IN')}</b><span>Client network</span></div>`;
+  $('moatBacklinkChart').innerHTML=seomoatSparkline(SEOMOAT.backlinkLog.map(e=>e.referringDomains).filter(v=>v!=null));
+  $('moatBacklinkLog').innerHTML=seomoatLogTable(SEOMOAT.backlinkLog,[{key:'referringDomains',label:'Ref. domains'},{key:'totalBacklinks',label:'Total backlinks'}],'removeBacklinkEntry');
+
+  $('moatAuthorityChart').innerHTML=seomoatSparkline(SEOMOAT.authorityLog.map(e=>e.da));
+  $('moatAuthorityLog').innerHTML=seomoatLogTable(SEOMOAT.authorityLog,[{key:'da',label:'DA'},{key:'pa',label:'PA'},{key:'cf',label:'CF'},{key:'tf',label:'TF'}],'removeAuthorityEntry');
+
+  $('moatTechChecklist').innerHTML=SEOMOAT_TECH_CHECKLIST.map(c=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px">
+    <span style="color:${c.done?'var(--accent)':'var(--slate-l)'}">${c.done?'✓':'○'}</span>${esc(c.label)}</div>`).join('');
 }
 /* ================= Discount Coupons (admin-generated, percentage off) =================
    The `coupons` table has no public SELECT policy at all — the code, percentage, and admin note
@@ -4857,7 +5574,7 @@ async function createCoupon(){
   renderCouponRows();
 }
 async function renderCouponRows(){
-  const tb=$('couponRows'); if(!tb)return;
+  const tb=document.getElementById('couponRows'); if(!tb)return;
   tb.innerHTML='<tr><td colspan="7" style="padding:10px 8px;font-size:12.5px;color:var(--slate-l)">Loading…</td></tr>';
   const {data,error}=await sb.from('coupons').select('*').order('created_at',{ascending:false});
   if(error){tb.innerHTML=`<tr><td colspan="7" style="padding:10px 8px;font-size:12.5px;color:var(--slate-l)">⚠ Could not load coupons: ${esc(error.message)}</td></tr>`;return;}
@@ -4894,15 +5611,22 @@ async function deleteCoupon(id){
   renderCouponRows();
 }
 function adminTab(t){document.querySelectorAll('.admin-side button[data-ap]').forEach(b=>b.classList.toggle('on',b.dataset.ap===t));
-  ['dashboard','orders','pdf','fonts','content','gallery-edit','products','journal','customers','payments','seomoat','coupons'].forEach(x=>{const el=$('ap-'+x);if(el)el.style.display=x===t?'block':'none'});
+  ['dashboard','orders','pdf','fonts','content','gallery-edit','templates','products','journal','customers','payments','seomoat','coupons'].forEach(x=>{const el=$('ap-'+x);if(el)el.style.display=x===t?'block':'none'});
   if(t==='dashboard')renderDashboard(); if(t==='orders')renderOrderRows(); if(t==='pdf')renderPdfRows();
   if(t==='fonts')renderFontRows();
   if(t==='gallery-edit'){renderGalAdmin();migrateOversizedGalleryImages();} if(t==='products'){renderProductRows();migrateOversizedProductImages();}
+  if(t==='templates')renderCustomTemplatesAdmin();
   if(t==='content'){renderContentFields();loadSiteCfgIntoAdmin();renderClientsAdmin();renderPhotoServicesAdmin();migrateOversizedContentImages();migrateOversizedPhotoServiceImages();}
   if(t==='journal'){renderJournalAdmin();migrateOversizedHeroImages();}
   if(t==='customers')renderCustomerRows(); if(t==='payments')renderPaymentsForm();
   if(t==='seomoat')renderSeoMoat();
   if(t==='coupons')renderCouponRows();
+  // Binder Accounts & Projects (served from /accounts, same login as this admin)
+  const accOn=t==='accounts'||t==='projects'||t==='daybook',accEl=$('ap-accounts');
+  if(accEl){accEl.style.display=accOn?'block':'none';
+    if(accOn){const fr=$('accountsFrame'),view=t==='projects'?'board':t==='daybook'?'daybook':'dashboard';
+      if(!fr.getAttribute('src'))fr.setAttribute('src','/accounts?embed=1&v=2.5.0#'+view);
+      else{try{fr.contentWindow.location.hash=view}catch(e){fr.setAttribute('src','/accounts?embed=1&v=2.5.0#'+view)}}}}
 }
 async function renderDashboard(){$('dashOrders').textContent=S.orders.length;$('dashRevenue').textContent='₹'+S.orders.reduce((a,o)=>a+o.amount,0).toLocaleString('en-IN');
   $('dashProducts').textContent=CATALOG.length;
@@ -4996,12 +5720,6 @@ function exitAdminEditor(andReload){
   if(andReload) renderPdfRows();
 }
 
-function adminEditorPreview(){
-  const key = ACTIVE_EDITOR || (ADMIN_EDIT_ORDER?.product);
-  if(!key) return;
-  openPreview(key);
-}
-
 async function adminSaveAndRerender(){
   if(!ADMIN_EDIT_ORDER) return toast('No order being edited.');
   const btn = $('adminSaveRerenderBtn');
@@ -5091,7 +5809,7 @@ async function renderPdfRows(){
   const bookOrders=S.orders.filter(o=>o.pdfFiles||o.product);
   if(!bookOrders.length){tb.innerHTML='<tr><td colspan="6" style="color:#86868B;padding:24px">No orders queued.</td></tr>';return;}
   const ids=bookOrders.map(o=>o.id);
-  const {data:dbOrders}=await sb.from('orders').select('id,render_status,pdf_files,render_error,pdf_version,edit_history,customer_email').in('id',ids);
+  const {data:dbOrders}=await sb.from('orders').select('id,render_status,pdf_files,render_error,pdf_version,edit_history,customer_email,snapshot').in('id',ids);
   const dbMap=Object.fromEntries((dbOrders||[]).map(o=>[o.id,o]));
   tb.innerHTML=bookOrders.map(o=>{
     const db=dbMap[o.id]||{};
@@ -5110,7 +5828,13 @@ async function renderPdfRows(){
     return keys.map(file=>{
       const pdfUrl=pdfFiles[file]||PDF_BLOBS[o.id+'|'+file]||null;
       const dlBtn=pdfUrl?`<a class="btn btn-dark xs" href="${pdfUrl}" target="_blank" download="binder-${o.id}-${file}-v${db.pdf_version||1}.pdf">⬇ v${db.pdf_version||1}</a>`:'';
-      const renderBtn=`<button class="btn btn-ghost xs" onclick="reRenderOrder('${o.id}','${file}',this)" ${o.snapshot?'':'disabled title="No snapshot"'}>${pdfUrl?'Re-render':'Render'}</button>`;
+      const hasSnapshot=!!(o.snapshot||db.snapshot); // prefer local, but the DB copy (saved at checkout, same as every order) is just as valid — this is what lets an order be rendered from any admin session, not just the one that placed it
+      const renderBtn=`<button class="btn btn-ghost xs" onclick="reRenderOrder('${o.id}','${file}',this)" ${hasSnapshot?'':'disabled title="No snapshot"'}>${pdfUrl?'Re-render':'Render'}</button>`;
+      // Purely additive — only appears once a render service URL is configured in Admin →
+      // Content, and never replaces or disables the button above. Runs the identical rendering
+      // logic on a real server instead of this browser tab, via render-worker.js.
+      const serverRenderBtn=(SITE_CFG.renderServiceUrl&&hasSnapshot)
+        ?`<button class="btn btn-ghost xs" onclick="serverRenderOrder('${o.id}','${file}',this)" title="Render on the server instead of this browser tab">Render (server)</button>`:'';
       const editBtn=`<button class="btn btn-ghost xs" onclick="openAdminEditor('${o.id}')" title="Open in editor to make changes, then re-render"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" stroke="#52B57D" stroke-width="1.5" stroke-linejoin="round"/></svg> Edit Design</button>`;
       return `<tr>
         <td>${o.id}</td>
@@ -5119,7 +5843,7 @@ async function renderPdfRows(){
         <td>${esc(file)}</td>
         <td style="white-space:nowrap">${statusLabel}</td>
         <td style="white-space:nowrap;font-size:12px;color:var(--slate)">v${db.pdf_version||1}${(db.edit_history||[]).length>0?' ·  '+db.edit_history.length+' edit'+(db.edit_history.length>1?'s':''):''}</td>
-        <td style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 6px">${editBtn}${renderBtn}${dlBtn}</td>
+        <td style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 6px">${editBtn}${renderBtn}${serverRenderBtn}${dlBtn}</td>
       </tr>`;
     }).join('');
   }).join('');
@@ -5129,13 +5853,15 @@ async function reRenderOrder(orderId,fileKey,btn){
   btn.disabled=true;btn.textContent='Triggering…';
   const local=S.orders.find(o=>o.id===orderId);
   if(local){
-    await sb.from('orders').upsert({
+    const payload={
       id:local.id,customer_email:local.customer,customer_name:S.user?.name||null,
       customer_id:S.user?.id||null,title:local.title,product:local.product,
       qty:local.qty,amount:local.amount,status:local.status,
       pay_method:local.payMethod||null,payment_id:local.paymentId||null,
-      snapshot:local.snapshot,pdf_files:{},render_status:'pending'
-    },{onConflict:'id'}).then(({error})=>{if(error)console.warn('upsert:',error.message)});
+      pdf_files:{},render_status:'pending'
+    };
+    if(local.snapshot)payload.snapshot=local.snapshot; // only ever set this if we actually have one — never overwrite a good snapshot already sitting in Supabase with a missing local copy
+    await sb.from('orders').upsert(payload,{onConflict:'id'}).then(({error})=>{if(error)console.warn('upsert:',error.message)});
   }
   await sb.from('orders').update({render_status:'pending',render_error:null}).eq('id',orderId);
   try{
@@ -5148,6 +5874,45 @@ async function reRenderOrder(orderId,fileKey,btn){
     await sb.from('orders').update({render_status:'failed',render_error:e.message||String(e)}).eq('id',orderId);
   }
   btn.disabled=false;btn.textContent='Re-render';
+  renderPdfRows();
+}
+// Triggers a render on the separate backend render service (see render-service/README.md)
+// instead of doing it in this browser tab. Only ever shown/callable once a service URL is
+// configured in Admin → Content — see the serverRenderBtn conditional in renderPdfRows() above.
+// The service responds immediately once the job has started (not once it's finished, since a
+// large book can take a while to render) and does the actual work in the background, updating
+// the order's render_status in Supabase as it goes — so this polls that status for a bit to
+// give the admin a live "still rendering…" / "done" indication without needing a second visit.
+async function serverRenderOrder(orderId,fileKey,btn){
+  const url=(SITE_CFG.renderServiceUrl||'').trim(), secret=(SITE_CFG.renderServiceSecret||'').trim();
+  if(!url)return toast('No render service configured — set one in Admin → Content.');
+  btn.disabled=true; const origLabel=btn.textContent; btn.textContent='Starting…';
+  try{
+    const res=await fetch(url+'/render',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+secret},
+      body:JSON.stringify({orderId,fileKey})
+    });
+    if(!res.ok){
+      const body=await res.json().catch(()=>({}));
+      throw new Error(body.error||('HTTP '+res.status));
+    }
+    toast('Render started on the server — this can take a moment for a large book.');
+    btn.textContent='Rendering…';
+    // Poll for completion for up to ~2 minutes, checking every 4 seconds — long enough for a
+    // typical book, without polling forever if something's gone wrong (the order's render_error
+    // field will show why, next time the admin opens this page, either way).
+    for(let i=0;i<30;i++){
+      await new Promise(r=>setTimeout(r,4000));
+      const {data}=await sb.from('orders').select('render_status,render_error').eq('id',orderId).single();
+      if(!data)break;
+      if(data.render_status==='ready'){toast('✅ Server render complete');break;}
+      if(data.render_status==='failed'){toast('❌ Server render failed: '+(data.render_error||'unknown error'));break;}
+    }
+  }catch(e){
+    toast('⚠ Could not reach the render service: '+(e.message||e));
+  }
+  btn.disabled=false; btn.textContent=origLabel;
   renderPdfRows();
 }
 
@@ -5214,6 +5979,7 @@ async function uploadCmsImage(key,file){
     if(error)throw error;
     CONTENT[key]=url;
     setPreview(url,fileIsVideo);
+    URL.revokeObjectURL(localPreview);
     saveContent();
     applyContent();
     if(ACTIVE_START_KEY)renderStartPage(ACTIVE_START_KEY);
@@ -5224,7 +5990,7 @@ async function uploadCmsImage(key,file){
   }
 }
 function renderContentImageFields(){
-  const wrap=$('contentImageFields'); if(!wrap)return; wrap.innerHTML='';
+  const wrap=document.getElementById('contentImageFields'); if(!wrap)return; wrap.innerHTML='';
   Object.keys(CONTENT_IMAGE_LABELS).forEach(k=>{
     const row=document.createElement('div');
     row.style.cssText='display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px';
@@ -5414,13 +6180,15 @@ function rteImage(target){const inp=document.createElement('input');inp.type='fi
     // Insert a temporary placeholder immediately so the editor doesn't feel stuck, then swap
     // it for the real Storage URL once the upload finishes.
     const tempId='rte-img-'+uid();
-    document.execCommand('insertHTML',false,`<img id="${tempId}" src="${URL.createObjectURL(f)}" style="opacity:.5">`);
+    const localPreview=URL.createObjectURL(f);
+    document.execCommand('insertHTML',false,`<img id="${tempId}" src="${localPreview}" style="opacity:.5">`);
     try{
       const path=`site/rte-${uid()}`;
       const {error,url}=await uploadWebImage(path,f);
       if(error)throw error;
       const placed=document.getElementById(tempId);
       if(placed){placed.src=url;placed.style.opacity='';placed.removeAttribute('id');}
+      URL.revokeObjectURL(localPreview);
     }catch(e){
       console.warn('RTE image upload failed:',e.message||e);
       toast('⚠ Image upload failed — is the "cms-images" storage bucket created (public) in Supabase? '+(e.message||''));
@@ -5460,6 +6228,7 @@ async function uploadHeroImage(file){
     if(error)throw error;
     CONTENT.heroImageUrl=url;
     loadHeroImage(); if(hp)hp.src=url;
+    URL.revokeObjectURL(localPreview);
     saveContent();
   }catch(e){
     console.warn('Hero image upload failed:',e.message||e);
@@ -5473,8 +6242,28 @@ function loadHeroImage(){
   if(!CONTENT.heroImageUrl)return;
   const vid=$('heroVideo');
   if(isVideoUrl(CONTENT.heroImageUrl)){
-    if(vid){vid.src=CONTENT.heroImageUrl;vid.style.display='block';vid.play().catch(()=>{});}
-    img.style.display='none';
+    if(vid){
+      vid.src=CONTENT.heroImageUrl;vid.style.display='block';vid.play().catch(()=>{});
+      img.style.display='none';
+      // Rather than loop the video, play it once and land on a dedicated static end frame —
+      // this sidesteps browser looping quirks entirely, since there's nothing left to loop.
+      // Two independent triggers, not just one: 'ended' alone has already proven unreliable
+      // here (it's the same event that silently didn't fire earlier when `loop` was still set),
+      // so 'timeupdate' — which fires continuously and reliably throughout normal playback —
+      // is the primary detector, catching the end of the video a fraction of a second early;
+      // 'ended' stays as a backup for whenever it does fire correctly. showEndImage() is
+      // idempotent, so having both fire is harmless. Guarded so a second loadHeroImage() call
+      // (e.g. after a CMS sync) never attaches duplicate listeners.
+      if(!vid._endImageBound){
+        vid._endImageBound=true;
+        const showEndImage=()=>{
+          if(img.style.display==='block')return; // already showing it — avoid redundant work
+          vid.style.display='none'; img.src='/images/hero-end.jpg'; img.style.display='block';
+        };
+        vid.addEventListener('timeupdate',()=>{ if(vid.duration&&vid.currentTime>=vid.duration-0.25)showEndImage(); });
+        vid.addEventListener('ended',showEndImage);
+      }
+    }
   }else{
     if(vid)vid.style.display='none';
     img.src=CONTENT.heroImageUrl;img.style.display='block';
@@ -5495,6 +6284,7 @@ async function uploadScanHeroImage(file){
     CONTENT.scanHeroImageUrl=url;
     loadScanHeroImage();
     if(prev)prev.src=url;
+    URL.revokeObjectURL(localPreview);
     saveContent();
   }catch(e){
     console.warn('Scan hero image upload failed:',e.message||e);
@@ -5505,14 +6295,21 @@ async function uploadScanHeroImage(file){
     _scanHeroImgUploading=false;
   }
 }
+// The scanning hero video is large, so it is only downloaded when the Scanning page is actually
+// shown — the markup carries it in data-src with preload="none" (it sits in a hidden section on
+// every other page).
+function attachScanVideo(vid){
+  if(vid&&vid.dataset.src&&vid.getAttribute('src')!==vid.dataset.src){vid.preload='auto';vid.src=vid.dataset.src;}
+}
+function onScanningView(){ const s=document.getElementById('view-scanning'); return !!(s&&s.classList.contains('active')); }
 function loadScanHeroImage(){
   if(CONTENT.scanHeroImageUrl&&$('scanHeroImage')){
     const vid=$('scanHeroVideo');
     if(isVideoUrl(CONTENT.scanHeroImageUrl)){
-      if(vid){vid.src=CONTENT.scanHeroImageUrl;vid.style.display='block';vid.currentTime=0;vid.play().catch(()=>{});}
+      if(vid){vid.dataset.src=CONTENT.scanHeroImageUrl;delete vid.dataset.imageMode;vid.style.display='block';if(onScanningView()){attachScanVideo(vid);vid.currentTime=0;vid.play().catch(()=>{});}}
       $('scanHeroImage').style.display='none';
     }else{
-      if(vid)vid.style.display='none';
+      if(vid){vid.style.display='none';vid.dataset.imageMode='1';delete vid.dataset.src;vid.removeAttribute('src');}
       $('scanHeroImage').src=CONTENT.scanHeroImageUrl;$('scanHeroImage').style.display='block';
     }
     $('scanHeroPlaceholder').style.display='none';
@@ -5535,6 +6332,7 @@ async function uploadStoreHeroImage(file){
     CONTENT.storeHeroImageUrl=url;
     loadStoreHeroImage();
     if(prev){prev.src=isVideoUrl(url)?'':url;prev.style.display=isVideoUrl(url)?'none':'block';}
+    URL.revokeObjectURL(localPreview);
     saveContent();
   }catch(e){
     console.warn('Store hero image upload failed:',e.message||e);
@@ -5622,11 +6420,13 @@ async function onProductImageUpload(file){
   if(!file)return;
   const prev=$('pfImgPreview');
   // Instant local preview while the real upload happens in the background.
-  prev.src=URL.createObjectURL(file); prev.style.display='block';
+  const localPreview=URL.createObjectURL(file);
+  prev.src=localPreview; prev.style.display='block';
   _productImgUploading=true; toast('Uploading image…');
   try{
     const url=await uploadProductImageToStorage(file);
     _pendingProductImg=url; prev.src=url;
+    URL.revokeObjectURL(localPreview);
     toast('Image uploaded ✓');
   }catch(e){
     console.warn('Product image upload failed:',e.message||e);
@@ -6048,19 +6848,21 @@ async function migrateLegacyContentImages(){
   if(changed){
     console.warn('Migrated legacy base64 images out of site content — re-saving.');
     saveContent(); applyContent();
-    if($('rte-publish'))$('rte-publish').innerHTML=CONTENT.publishBody;
-    if($('rte-isbn'))$('rte-isbn').innerHTML=CONTENT.isbnBody;
+    if(document.getElementById('rte-publish'))$('rte-publish').innerHTML=CONTENT.publishBody;
+    if(document.getElementById('rte-isbn'))$('rte-isbn').innerHTML=CONTENT.isbnBody;
   }
 }
 async function onPostHeroUpload(file){
   if(!file)return;
   const p=$('bpHeroPreview');
   // Instant local preview while the real upload happens in the background.
-  p.src=URL.createObjectURL(file); p.style.display='block';
+  const localPreview=URL.createObjectURL(file);
+  p.src=localPreview; p.style.display='block';
   _postHeroUploading=true; toast('Uploading image…');
   try{
     const url=await uploadPostHeroToStorage(file);
     _pendingPostHero=url; p.src=url;
+    URL.revokeObjectURL(localPreview);
     toast('Image uploaded ✓');
   }catch(e){
     console.warn('Post hero upload failed:',e.message||e);
@@ -6082,7 +6884,7 @@ async function runAiCheck(kind){
     const arr=JSON.parse(txt);$('aiCheckResult').innerHTML=(kind==='seo'?'<b>SEO suggestions:</b><br>':'<b>Grammar notes:</b><br>')+(arr.length?arr.map(esc).join('<br>'):'Looks good.');
   }catch(e){$('aiCheckResult').textContent='AI check needs a live connection.';}
 }
-async function publishPost(){if(!cmsGuardReady())return;if(_postHeroUploading)return toast('Still uploading the hero image — try again in a second');const title=$('bpTitle').value.trim();if(!title)return toast('Give your post a title');
+async function publishPost(){if(_postHeroUploading)return toast('Still uploading the hero image — try again in a second');const title=$('bpTitle').value.trim();if(!title)return toast('Give your post a title');
   const bodyEl=$('rte-post'); let body=sanitizeRteHtml(bodyEl.innerHTML);
   if(!bodyEl.innerText.trim()||bodyEl.innerText.trim()==='Start writing…')return toast('Write some content first');
   if(body.includes('data:image/')){toast('Uploading pasted images…');body=await convertBodyImagesToStorage(body);}
@@ -6114,11 +6916,11 @@ function editPost(id){const p=POSTS.find(x=>x.id===id);if(!p)return;
   $('jpEditorHeading').textContent='Edit post';$('jpPublishBtn').textContent='Update post';
   $('jpCancelEdit').style.display='inline-flex';
   $('rte-post').scrollIntoView({behavior:'smooth',block:'center'});}
-function deletePost(id){if(!cmsGuardReady())return;if(!confirm('Delete this post permanently?'))return;
+function deletePost(id){if(!confirm('Delete this post permanently?'))return;
   POSTS=POSTS.filter(p=>p.id!==id);saveJSON('cms_posts',POSTS);cmsSet('posts',POSTS);
   if(_editingPostId===id)resetPostEditor();
   renderJournalAdmin();toast('Post deleted');}
-function renderJournalAdmin(){const wrap=$('jpPostRows');if(!wrap)return;wrap.innerHTML='';
+function renderJournalAdmin(){const wrap=document.getElementById('jpPostRows');if(!wrap)return;wrap.innerHTML='';
   if(!POSTS.length){wrap.innerHTML='<p style="font-size:13px;color:#86868B">No posts yet.</p>';return}
   POSTS.forEach(p=>{const row=document.createElement('div');row.className='jp-row';
     const thumb=p.hero?`<img src="${p.hero}" style="width:52px;height:38px;object-fit:cover;border-radius:6px;flex:0 0 auto">`
@@ -6176,32 +6978,28 @@ if(!Array.isArray(GALLERY)||!GALLERY.length){GALLERY=GALLERY_DEFAULT;}
 GALLERY.forEach(im=>{if(!Array.isArray(im.images))im.images=[];}); // migrate older single-image entries
 function saveGallery(){
   saveJSON('cms_gallery',GALLERY);
-  if(cmsGuardReady(true))cmsSet('gallery',GALLERY).then(ok=>{toast(ok?'Gallery saved ✓ — visible to all visitors':'⚠ Saved on this device only — cloud sync failed');});
+  cmsSet('gallery',GALLERY).then(ok=>{toast(ok?'Gallery saved ✓ — visible to all visitors':'⚠ Saved on this device only — cloud sync failed');});
   renderGallery();
 }
 function addGalleryImage(){
-  if(!cmsGuardReady())return;
   GALLERY.push({id:uid(),url:'',caption:''});
   saveGallery(); renderGalAdmin();
 }
 function setFeaturedGalleryImage(id){
-  if(!cmsGuardReady())return;
   GALLERY.forEach(im=>{im.featured=(im.id===id);});
   saveGallery(); renderGalAdmin();
 }
 function removeGalleryImage(id){
-  if(!cmsGuardReady())return;
   GALLERY=GALLERY.filter(im=>im.id!==id);
   saveGallery(); renderGalAdmin();
 }
 function updateGalleryCaption(id,value){
   const img=GALLERY.find(im=>im.id===id); if(!img)return;
   img.caption=value;
-  saveJSON('cms_gallery',GALLERY); if(cmsGuardReady(true))cmsSet('gallery',GALLERY);
+  saveJSON('cms_gallery',GALLERY); cmsSet('gallery',GALLERY);
 }
 async function uploadGalleryImage(id,file){
   if(!file)return;
-  if(!cmsGuardReady())return;
   const img=GALLERY.find(im=>im.id===id); if(!img)return;
   toast('Uploading image…');
   try{
@@ -6220,7 +7018,6 @@ async function uploadGalleryImage(id,file){
 // the thumbnail and browse the full set in the lightbox — see renderGallery() / openPhotoLightbox().
 async function addProjectPhotos(id,files){
   if(!files||!files.length)return;
-  if(!cmsGuardReady())return;
   const project=GALLERY.find(im=>im.id===id); if(!project)return;
   if(!Array.isArray(project.images))project.images=[];
   toast('Uploading '+files.length+' photo'+(files.length===1?'':'s')+'…');
@@ -6240,7 +7037,6 @@ async function addProjectPhotos(id,files){
   saveGallery(); renderGalAdmin();
 }
 function removeProjectPhoto(projectId,photoId){
-  if(!cmsGuardReady())return;
   const project=GALLERY.find(im=>im.id===projectId); if(!project)return;
   project.images=(project.images||[]).filter(im=>im.id!==photoId);
   saveGallery(); renderGalAdmin();
@@ -6249,7 +7045,7 @@ function updateProjectPhotoCaption(projectId,photoId,value){
   const project=GALLERY.find(im=>im.id===projectId); if(!project)return;
   const photo=(project.images||[]).find(im=>im.id===photoId); if(!photo)return;
   photo.caption=value;
-  saveJSON('cms_gallery',GALLERY); if(cmsGuardReady(true))cmsSet('gallery',GALLERY);
+  saveJSON('cms_gallery',GALLERY); cmsSet('gallery',GALLERY);
 }
 function toggleProjectPhotosPanel(id){
   const el=$('galProjectPanel-'+id); if(!el)return;
@@ -6305,7 +7101,7 @@ function renderGallery(){
   }
 }
 function renderGalAdmin(){
-  const wrap=$('galAdminRows'); if(!wrap)return; wrap.innerHTML='';
+  const wrap=document.getElementById('galAdminRows'); if(!wrap)return; wrap.innerHTML='';
   GALLERY.forEach(img=>{
     const photoCount=(img.images||[]).length;
     const tile=document.createElement('div');
@@ -6387,16 +7183,14 @@ let _openPhotoDrawers=new Set(PHOTO_SERVICES.map(s=>s.key));
 let CLIENTS=loadJSON('cms_clients', loadJSON('binder_clients',CLIENTS_DEFAULT));
 function savePhotoServices(){
   saveJSON('cms_photo_services',PHOTO_SERVICES);
-  if(cmsGuardReady(true))cmsSet('photo_services',PHOTO_SERVICES).then(ok=>{toast(ok?'Photography Services saved ✓ — visible to all visitors':'⚠ Saved on this device only — cloud sync failed');});
+  cmsSet('photo_services',PHOTO_SERVICES).then(ok=>{toast(ok?'Photography Services saved ✓ — visible to all visitors':'⚠ Saved on this device only — cloud sync failed');});
   renderPhotoServices();
 }
 function addPhotoServiceImage(si){
-  if(!cmsGuardReady())return;
   PHOTO_SERVICES[si].images.push({id:uid(),url:'',caption:''});
   savePhotoServices(); renderPhotoServicesAdmin();
 }
 function removePhotoServiceImage(si,ii){
-  if(!cmsGuardReady())return;
   PHOTO_SERVICES[si].images.splice(ii,1);
   savePhotoServices(); renderPhotoServicesAdmin();
 }
@@ -6407,7 +7201,6 @@ function updatePhotoServiceCaption(si,ii,value){
 }
 async function uploadPhotoServiceImage(si,ii,file){
   if(!file)return;
-  if(!cmsGuardReady())return;
   const img=PHOTO_SERVICES[si].images[ii]; if(!img)return;
   toast('Uploading image…');
   try{
@@ -6422,7 +7215,7 @@ async function uploadPhotoServiceImage(si,ii,file){
   }
 }
 function renderPhotoServicesAdmin(){
-  const wrap=$('photoServicesAdminRows'); if(!wrap)return; wrap.innerHTML='';
+  const wrap=document.getElementById('photoServicesAdminRows'); if(!wrap)return; wrap.innerHTML='';
   PHOTO_SERVICES.forEach((section,si)=>{
     const card=document.createElement('div');
     card.style.cssText='border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px';
@@ -6611,7 +7404,7 @@ function removeClientName(sectionIndex,nameIndex){
   saveClients(); renderClientsAdmin();
 }
 function renderClientsAdmin(){
-  const wrap=$('clientsAdminRows'); if(!wrap)return; wrap.innerHTML='';
+  const wrap=document.getElementById('clientsAdminRows'); if(!wrap)return; wrap.innerHTML='';
   CLIENTS.forEach((section,si)=>{
     const card=document.createElement('div');
     card.style.cssText='border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px';
@@ -6681,7 +7474,7 @@ function renderBlog(){const g=$('blogGrid');g.innerHTML='';
   c.innerHTML=`<div class="cv" style="position:relative">${p.hero?mediaTagHtml(p.hero,p.title,'style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"'):''}</div><div class="bd"><time style="font-size:12px;color:#86868B">${p.date}</time><h3>${esc(p.title)}</h3></div>`;
   c.onclick=()=>openPost(p);g.appendChild(c);});}
 function openPost(p,push){
-  if(!p.slug){p.slug=uniqueSlug(slugify(p.title),p.id);if(cmsGuardReady(true)){saveJSON('cms_posts',POSTS);cmsSet('posts',POSTS);}}
+  if(!p.slug){p.slug=uniqueSlug(slugify(p.title),p.id);saveJSON('cms_posts',POSTS);cmsSet('posts',POSTS);}
   const slugPath=p.slug;
   if(p.hero&&isVideoUrl(p.hero)){
     $('postHeroVideo').src=p.hero;$('postHeroVideo').style.display='block';$('postHeroVideo').play().catch(()=>{});
@@ -6709,7 +7502,7 @@ function openPost(p,push){
   const tt=document.querySelector('meta[name="twitter:title"]'); if(tt)tt.setAttribute('content',pageTitle);
   const td=document.querySelector('meta[name="twitter:description"]'); if(td)td.setAttribute('content',excerpt);
   const ti=document.querySelector('meta[name="twitter:image"]'); if(ti)ti.setAttribute('content',heroImg);
-  const canon=document.querySelector('link[rel="canonical"]'); if(canon)canon.setAttribute('href','https://www.binder.co.in/journal/'+slugPath);
+  const canon=canonLink(); if(canon)canon.setAttribute('href','https://www.binder.co.in/journal/'+slugPath);
   setPageSchema([buildPostSchema(p,slugPath),buildBreadcrumbSchema([{name:'Home',url:'https://www.binder.co.in/'},{name:'Kagaz Journal',url:'https://www.binder.co.in/journal'},{name:p.title,url:'https://www.binder.co.in/journal/'+slugPath}])]);
 }
 
@@ -6868,21 +7661,62 @@ cmsLoadAll().then((fetched)=>{
   const sbGallery=fetched.gallery;
   if(sbGallery&&Array.isArray(sbGallery)){GALLERY=sbGallery;GALLERY.forEach(im=>{if(!Array.isArray(im.images))im.images=[];});renderGallery();}
 
+  const sbCustomTemplates=fetched.custom_templates;
+  if(sbCustomTemplates&&Array.isArray(sbCustomTemplates)&&sbCustomTemplates.length){
+    CUSTOM_TEMPLATES=sbCustomTemplates; renderTemplatesPageV2();
+    if(document.getElementById('ap-templates')&&$('ap-templates').style.display!=='none')renderCustomTemplatesAdmin();
+  }
+
   const sbSiteCfg=fetched.site_cfg;
   if(sbSiteCfg){Object.assign(SITE_CFG,sbSiteCfg);if(SITE_CFG.accentColor)applySiteColor('accent',SITE_CFG.accentColor);applySiteCfgToPublicSite();}
 
   const sbFaq=fetched.faq;
   if(sbFaq&&Array.isArray(sbFaq)&&sbFaq.length){FAQ=sbFaq;renderFaq();if($('view-home').classList.contains('active'))setPageSchema(buildFaqSchema());}
 
-  const sbSeoTodos=fetched.seo_todos;
-  if(sbSeoTodos&&Array.isArray(sbSeoTodos))SEO_TODOS=sbSeoTodos;
-  const sbSeoTraffic=fetched.seo_traffic;
-  if(sbSeoTraffic&&Array.isArray(sbSeoTraffic))SEO_TRAFFIC=sbSeoTraffic;
-  if((sbSeoTodos||sbSeoTraffic)&&$('ap-seomoat')&&$('ap-seomoat').style.display!=='none')renderSeoMoat();
-
-  // Every live variable above now reflects the latest confirmed Supabase state (or, if the fetch
-  // failed, we've at least waited for that attempt to finish) — safe from here on for
-  // publish/add/upload actions to mutate-and-save without risking a stale overwrite. See the
-  // "vanishing images" note above cmsLoadAll's declaration.
-  CMS_INITIAL_SYNC_DONE=true;
+  const sbSeomoat=fetched.seomoat;
+  if(sbSeomoat){
+    SEOMOAT={...seomoatDefaults(),...sbSeomoat};
+    if(!Array.isArray(SEOMOAT.topics)||!SEOMOAT.topics.length)SEOMOAT.topics=JSON.parse(JSON.stringify(SEOMOAT_TOPICS_DEFAULT));
+    if(document.getElementById('ap-seomoat')&&$('ap-seomoat').style.display!=='none')renderSeoMoat();
+  }
 });
+
+// Click outside the page (the grey stage background) to hide every editing guide/marking —
+// bleed line, safe-margin line, low-DPI badges — so it's easy to see exactly what the finished
+// page will look like; click back onto the page (or a photo/shape/text on it) to bring them
+// back. Applies to every editor — the 4 book editors and all 3 Art Print variants — and, since
+// Admin → Templates → Edit layout opens these same editors, to template editing too, with no
+// separate wiring needed there. Wired once, here, rather than per-render, since .stage-scroll is
+// a static element in the page's own HTML (only its contents get rebuilt on every ed.renderAll()).
+function wireStageScroll(){document.querySelectorAll('.stage-scroll').forEach(stageScroll=>{
+  if(stageScroll.dataset.wired)return; stageScroll.dataset.wired='1';
+  const edStage=stageScroll.closest('.ed-stage'); if(!edStage)return;
+  stageScroll.addEventListener('click',e=>{
+    const insideCanvas=e.target.closest('.spread,.book-page,.artboard');
+    edStage.classList.toggle('markings-hidden',!insideCanvas);
+  });
+});}
+// Wiring for elements inside the private UI. Runs at boot if it is already mounted (/admin,
+// /dashboard, /editor/…), otherwise the moment mountPrivate() inserts it.
+function afterPrivateMount(){
+  wireStageScroll(); wireManuscriptInputs(); buildRteToolbars();
+  try{applyContent();}catch(e){console.warn(e)}
+  try{applySiteCfgToPublicSite();}catch(e){console.warn(e)}
+}
+// Keep the homepage headline on a single line on every screen: CSS sizes it for the default
+// headline; if a longer one is set in Admin → Content Manager, shrink it until it fits.
+function fitHeroHeading(){
+  const h=document.querySelector('.hero h1'); if(!h||!h.offsetParent)return;
+  h.style.fontSize='';
+  let fs=parseFloat(getComputedStyle(h).fontSize), guard=0;
+  while(h.scrollWidth>h.clientWidth+1&&fs>14&&guard++<60){fs-=1;h.style.fontSize=fs+'px';}
+}
+(()=>{const h=document.querySelector('.hero h1'); if(!h)return;
+  let raf=0; const queue=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(fitHeroHeading);};
+  window.addEventListener('resize',queue);
+  new MutationObserver(queue).observe(h,{childList:true,characterData:true,subtree:true});
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(queue);
+  queue();
+})();
+APP_BOOTED=true;
+if(PRIVATE_MOUNTED)afterPrivateMount();

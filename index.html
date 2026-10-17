@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1D1D1F">
+<meta name="google-site-verification" content="tXxpF4ySYw9YzBu_J8uyE0AzafewGq98CVD9Nai3vik" />
 <title>Binder — Custom Photobook & Book Printing, Delhi, India</title>
 <meta name="description" content="Binder is a Delhi-based publisher and printer — design custom photobooks, self-publish trade books with free ISBN help, and order archival art prints.">
-<meta name="keywords" content="photobook printing India, custom photo book maker, self publish book India, free ISBN registration India, layflat photo album, trade book printing Delhi, art print printing India, photobook printing Delhi">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://www.binder.co.in/">
 <!-- Open Graph -->
@@ -17,9 +17,6 @@
 <meta property="og:url" content="https://www.binder.co.in/">
 <meta property="og:image" content="https://www.binder.co.in/images/img-hero.jpg">
 <meta property="og:locale" content="en_IN">
-<meta property="product:price:amount" content="" id="ogProductPrice">
-<meta property="product:price:currency" content="INR">
-<meta property="product:availability" content="in stock">
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Binder — Custom Photobook & Book Printing, Delhi, India">
@@ -29,8 +26,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://sooqtzedurtjiisjdmbz.supabase.co">
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap" rel="stylesheet"></noscript>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js" defer></script>
 <script type="application/ld+json" id="ldBusiness">
 {
   "@context": "https://schema.org",
@@ -38,6 +37,7 @@
   "@id": "https://www.binder.co.in/#business",
   "name": "Binder",
   "image": "https://www.binder.co.in/images/logo.png",
+  "logo": "https://www.binder.co.in/images/logo.png",
   "description": "Binder is a Delhi-based printer and publishing studio offering photobook printing, trade book (novel) printing, art print production, and free ISBN guidance for self-published authors.",
   "url": "https://www.binder.co.in/",
   "telephone": "+91-7011305116",
@@ -56,7 +56,7 @@
 }
 </script>
 <script type="application/ld+json" id="ldPage"></script>
-<link rel="stylesheet" href="/styles.css?v=20260823a">
+<link rel="stylesheet" href="/styles.css?v=20260925d">
 </head>
 <body>
 <!-- ============ NAV ============ -->
@@ -67,17 +67,18 @@
   </a>
   <div class="nav-menu" id="navMenu">
     <div class="nav-links">
-      <a onclick="go('home')">Home</a>
-      <a onclick="goStart('photobook')">Photobooks</a>
-      <a onclick="go('gallery')">Gallery</a>
-      <a onclick="goStart('tradebook')">Trade Books</a>
-      <a onclick="goStart('artprints')">Art Prints</a>
-      <a onclick="go('pricing')">Pricing</a>
-      <a onclick="go('scanning')">Scanning</a>
-      <a onclick="go('photography')">Photography Services</a>
-      <a onclick="go('store')">Store</a>
-      <a onclick="go('journal')">Kagaz Journal</a>
-      <a onclick="go('clients')">Clients</a>
+      <a href="/" onclick="go('home');return false;">Home</a>
+      <a href="/photobooks" onclick="goStart('photobook');return false;">Photobooks</a>
+      <a href="/gallery" onclick="go('gallery');return false;">Gallery</a>
+      <a href="/templates" onclick="go('templates');return false;">Ready-to-go Templates</a>
+      <a href="/trade-books" onclick="goStart('tradebook');return false;">Trade Books</a>
+      <a href="/art-prints" onclick="goStart('artprints');return false;">Art Prints</a>
+      <a href="/pricing" onclick="go('pricing');return false;">Pricing</a>
+      <a href="/scanning" onclick="go('scanning');return false;">Scanning</a>
+      <a href="/photography" onclick="go('photography');return false;">Photography Services</a>
+      <a href="/store" onclick="go('store');return false;">Store</a>
+      <a href="/journal" onclick="go('journal');return false;">Kagaz Journal</a>
+      <a href="/clients" onclick="go('clients');return false;">Clients</a>
     </div>
   </div>
   <div class="nav-actions">
@@ -86,16 +87,16 @@
       <div class="user-menu-dropdown" id="userMenuDropdown"></div>
     </div>
     <a onclick="openCart()" title="Cart" class="nav-cart"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 2h2.5l2.5 8.5H15l1.5-6H5.5" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="15" r="1.2" fill="#52B57D"/><circle cx="13" cy="15" r="1.2" fill="#52B57D"/></svg><span id="cartCount" style="display:none;position:absolute;top:-7px;right:-10px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:900px;align-items:center;justify-content:center;padding:0 4px;line-height:16px;text-align:center">0</span></a>
-    <a onclick="go('admin')" id="navAdminLink" class="nav-admin-link">Admin</a>
+    <a href="/admin" rel="nofollow" onclick="go('admin');return false;" id="navAdminLink" class="nav-admin-link">Admin</a>
   </div>
 </nav>
 
 <!-- ============ HOME ============ -->
 <section class="view active" id="view-home">
   <div class="hero">
-    <img id="heroLogo" src="/images/hero-mark.png" alt="Binder" style="height:58px;margin:6px auto 20px;display:block;opacity:.92">
+    <img id="heroLogo" src="/images/hero-mark.png" alt="Binder" style="height:58px;margin:6px auto 20px;display:block;opacity:.92" loading="lazy" decoding="async">
     <span class="tag" style="color:rgba(0,0,0,.6)">Photobooks · Trade Books · Art Prints</span>
-    <h1 data-c="heroHeading">It's your moment, live it.</h1>
+    <h1 data-c="heroHeading">It's your moment, save it.</h1>
     <p data-c="heroBody">Publish professional grade photobooks, novel-kind books, and art prints.</p>
     <div class="hero-cta">
       <button class="btn btn-accent" onclick="goStart('photobook')">Publish a Photobook →</button>
@@ -105,14 +106,14 @@
   </div>
   <div class="hero-image-wrap">
     <p style="text-align:center;font-size:15px;font-weight:700;letter-spacing:.02em;color:var(--accent);margin:0 0 14px">390,000+ books printed and published</p>
-    <video id="heroVideo" muted loop playsinline preload="auto" style="display:none"></video>
+    <video id="heroVideo" muted playsinline preload="auto" style="display:none"></video>
     <img id="heroImage" src="/images/img-hero.jpg" alt="Binder photobooks, trade books, and art prints" loading="eager" fetchpriority="high">
   </div>
 
   <div class="tri-grid">
-    <div class="tri-card"><video data-c-img-video="tradebookTileImageUrl" class="tri-card-img" muted loop playsinline preload="auto" style="display:none"></video><img data-c-img="tradebookTileImageUrl" src="/images/img-3.jpg" alt="Trade Book" class="tri-card-img"><h3 data-c="tradebookTileTitle">Trade Book</h3><p data-c="tradebookTileDesc">5.5″ × 8″ novel-format books. Monochrome imagery, vector text, classic serif typography.</p><button class="btn btn-ghost sm" onclick="goStart('tradebook')">Learn more →</button></div>
-    <div class="tri-card"><video data-c-img-video="photobookTileImageUrl" class="tri-card-img" muted loop playsinline preload="auto" style="display:none"></video><img data-c-img="photobookTileImageUrl" src="/images/img-4.jpg" alt="Photobook" class="tri-card-img"><h3 data-c="photobookTileTitle">Photobook</h3><p data-c="photobookTileDesc">8.5″ × 8.5″ layflat books. Free-form layout, AI auto-arrange, rich text with any Google Font.</p><button class="btn btn-ghost sm" onclick="goStart('photobook')">Learn more →</button></div>
-    <div class="tri-card"><video data-c-img-video="artprintsTileImageUrl" class="tri-card-img" muted loop playsinline preload="auto" style="display:none"></video><img data-c-img="artprintsTileImageUrl" src="/images/img-5.jpg" alt="Art Prints" class="tri-card-img"><h3 data-c="artprintsTileTitle">Art Prints</h3><p data-c="artprintsTileDesc">6″ × 4″ gallery prints. Four museum-style prints on archival grade paper.</p><button class="btn btn-ghost sm" onclick="goStart('artprints')">Learn more →</button></div>
+    <div class="tri-card"><video data-c-img-video="tradebookTileImageUrl" class="tri-card-img" muted loop playsinline preload="auto" style="display:none"></video><img data-c-img="tradebookTileImageUrl" src="/images/img-3.jpg" alt="Trade Book" class="tri-card-img" loading="lazy" decoding="async"><h3 data-c="tradebookTileTitle">Trade Book</h3><p data-c="tradebookTileDesc">5.5″ × 8″ novel-format books. Monochrome imagery, vector text, classic serif typography.</p><button class="btn btn-ghost sm" onclick="goStart('tradebook')">Learn more →</button></div>
+    <div class="tri-card"><video data-c-img-video="photobookTileImageUrl" class="tri-card-img" muted loop playsinline preload="auto" style="display:none"></video><img data-c-img="photobookTileImageUrl" src="/images/img-4.jpg" alt="Photobook" class="tri-card-img" loading="lazy" decoding="async"><h3 data-c="photobookTileTitle">Photobook</h3><p data-c="photobookTileDesc">8.5″ × 8.5″ layflat books. Free-form layout, AI auto-arrange, rich text with any Google Font.</p><button class="btn btn-ghost sm" onclick="goStart('photobook')">Learn more →</button></div>
+    <div class="tri-card"><video data-c-img-video="artprintsTileImageUrl" class="tri-card-img" muted loop playsinline preload="auto" style="display:none"></video><img data-c-img="artprintsTileImageUrl" src="/images/img-5.jpg" alt="Art Prints" class="tri-card-img" loading="lazy" decoding="async"><h3 data-c="artprintsTileTitle">Art Prints</h3><p data-c="artprintsTileDesc">6″ × 4″ gallery prints. Four museum-style prints on archival grade paper.</p><button class="btn btn-ghost sm" onclick="goStart('artprints')">Learn more →</button></div>
   </div>
 
   <!-- ── FAQ ──────────────────────────────────────── -->
@@ -145,6 +146,41 @@
   <div id="clientsGrid"></div>
 </div></section>
 
+<!-- ============ SITEMAP (human-readable page — the machine-readable /sitemap.xml is a separate static file for crawlers) ============ -->
+<section class="view" id="view-sitemap"><div class="page-wrap">
+  <span class="tag">Sitemap</span>
+  <h1>Every page on Binder</h1>
+  <div class="sitemap-groups">
+    <div class="sitemap-group">
+      <h3>Publish a Book</h3>
+      <a href="/photobooks" onclick="goStart('photobook');return false;">Photobooks</a>
+      <a href="/trade-books" onclick="goStart('tradebook');return false;">Trade Books</a>
+      <a href="/art-prints" onclick="goStart('artprints');return false;">Art Prints</a>
+      <a href="/pricing" onclick="go('pricing');return false;">Pricing</a>
+      <a href="/isbn" onclick="go('isbn');return false;">Publish | Free ISBN</a>
+    </div>
+    <div class="sitemap-group">
+      <h3>Services</h3>
+      <a href="/scanning" onclick="go('scanning');return false;">Scanning Services</a>
+      <a href="/photography" onclick="go('photography');return false;">Photography Services</a>
+    </div>
+    <div class="sitemap-group">
+      <h3>Shop &amp; Read</h3>
+      <a href="/store" onclick="go('store');return false;">Store</a>
+      <a href="/journal" onclick="go('journal');return false;">Kagaz Journal</a>
+      <a href="/gallery" onclick="go('gallery');return false;">Gallery</a>
+      <a href="/templates" onclick="go('templates');return false;">Ready-to-go Templates</a>
+    </div>
+    <div class="sitemap-group">
+      <h3>Company</h3>
+      <a href="/clients" onclick="go('clients');return false;">Clients</a>
+      <a href="/contact" onclick="go('contact');return false;">Contact</a>
+      <a href="/" onclick="go('home');return false;">Home</a>
+    </div>
+  </div>
+  <p class="lead" style="margin-top:36px">For search engines, that's <a href="/sitemap.xml" style="color:var(--accent);text-decoration:underline">sitemap.xml</a>.</p>
+</div></section>
+
 <!-- ============ PHOTOGRAPHY SERVICES ============ -->
 <section class="view" id="view-photography"><div class="page-wrap">
   <span class="tag">Photography</span>
@@ -152,7 +188,7 @@
   <p class="lead" data-c="photographyIntro">Specialist photography across four disciplines — browse a category to see the work.</p>
   <div class="ps-lead-wrap" id="psLeadWrap" style="display:none">
     <video id="psLeadVideo" class="ps-lead-img" muted loop playsinline preload="auto" style="display:none"></video>
-    <img id="psLeadImage" class="ps-lead-img" src="" alt="Featured photography work">
+    <img id="psLeadImage" class="ps-lead-img" alt="Featured photography work" loading="lazy" decoding="async">
     <div class="ps-lead-caption">
       <span>Featured</span>
       <h2 data-c="photographyLeadCaption">Recent work across architecture, editorial, and corporate photography</h2>
@@ -169,6 +205,14 @@
   <div id="galGrid" style="margin-top:36px"></div>
 </div></section>
 
+<!-- ============ TEMPLATES ============ -->
+<section class="view" id="view-templates"><div class="page-wrap">
+  <span class="tag">Ready-to-go Templates</span>
+  <h1>Start from a ready-made size</h1>
+  <p class="lead">Blank starting points, sized exactly for each of our formats — cover, back cover, and pages ready to go. Drop in your photos and design from there.</p>
+  <div class="tpl-grid" id="tplGridV2" style="margin-top:36px"></div>
+</div></section>
+
 <!-- ============ STORE ============ -->
 <section class="view" id="view-store"><div class="page-wrap" style="padding-top:0">
 
@@ -182,7 +226,7 @@
 
 <div class="overlay-bg" id="cartOverlay" onclick="closeCart()"></div>
 <aside class="cart-drawer" id="cartDrawer">
-  <div class="cart-head"><h3 style="font-size:19px">Your cart</h3><button class="icon-btn" onclick="closeCart()"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
+  <div class="cart-head"><h3 style="font-size:19px">Your cart</h3><button class="icon-btn" onclick="closeCart()" aria-label="Close cart"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
   <div class="cart-items" id="cartItems"></div>
   <div id="cartFoot" style="padding:18px 22px;border-top:1px solid var(--line)"></div>
 </aside>
@@ -196,9 +240,9 @@
   <div class="blog-grid" id="blogGrid"></div>
 </div></section>
 <section class="view" id="view-post"><div class="page-wrap">
-  <a onclick="go('journal')" style="color:var(--accent);font-size:13px;font-weight:600;cursor:pointer">← All posts</a>
+  <a href="/journal" onclick="go('journal');return false;" style="color:var(--accent);font-size:13px;font-weight:600;cursor:pointer">← All posts</a>
   <video id="postHeroVideo" muted loop playsinline preload="auto" style="width:100%;margin:18px 0;aspect-ratio:16/7;object-fit:cover;background:var(--cream);display:none"></video>
-  <img id="postHero" style="width:100%;margin:18px 0;aspect-ratio:16/7;object-fit:cover;background:var(--cream)" loading="eager">
+  <img alt="" id="postHero" style="width:100%;margin:18px 0;aspect-ratio:16/7;object-fit:cover;background:var(--cream)" loading="eager">
   <h1 id="postTitle" style="margin-top:0"></h1>
   <time id="postDate" style="color:var(--slate-l);font-size:13px;display:block;margin:-10px 0 24px"></time>
   <div class="post-body" id="postBody"></div>
@@ -216,126 +260,13 @@
   </div>
 </div></section>
 
-<!-- ============ MY DASHBOARD ============ -->
-<section class="view" id="view-dashboard"><div class="page-wrap" style="max-width:1180px">
-  <div class="dash-head">
-    <div><span class="tag">My Dashboard</span><h1 id="dashGreeting">Hi</h1></div>
-    <div class="dash-avatar" id="dashAvatar">B</div>
-  </div>
-
-  <div class="dash-shell">
-    <nav class="dash-nav" id="dashNav">
-      <a data-panel="overview" class="active" onclick="dashGo('overview')">Overview</a>
-      <a data-panel="orders" onclick="dashGo('orders')">Orders</a>
-      <a data-panel="projects" onclick="dashGo('projects')">Projects</a>
-      <a data-panel="account" onclick="dashGo('account')">Account</a>
-    </nav>
-
-    <div class="dash-content">
-
-      <!-- OVERVIEW -->
-      <div class="dash-panel active" id="dashPanel-overview">
-        <div class="stat-row">
-          <div class="stat"><b id="dashMyOrders">0</b><span>Orders placed</span></div>
-          <div class="stat"><b id="dashMySpend">₹0</b><span>Total spend</span></div>
-          <div class="stat"><b id="dashMyProjects">0</b><span>Saved projects</span></div>
-          <div class="stat"><b id="dashMemberSince">—</b><span>Member since</span></div>
-        </div>
-        <div class="dash-overview-grid">
-          <div>
-            <div class="dash-section-head"><h4>Recent orders</h4><a onclick="dashGo('orders')">View all →</a></div>
-            <div id="dashRecentOrders"></div>
-          </div>
-          <div>
-            <div class="dash-section-head"><h4>Recent projects</h4><a onclick="dashGo('projects')">View all →</a></div>
-            <div id="dashRecentProjects"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ORDERS -->
-      <div class="dash-panel" id="dashPanel-orders">
-        <div class="dash-section-head"><h4>Order history</h4></div>
-        <div id="dashOrdersList"></div>
-      </div>
-
-      <!-- PROJECTS -->
-      <div class="dash-panel" id="dashPanel-projects">
-        <div class="dash-section-head"><h4>Your projects</h4><button class="btn btn-ghost sm" onclick="go('home')">+ Start new</button></div>
-        <div id="dashProjectRows" class="dash-projects-grid"></div>
-      </div>
-
-      <!-- ACCOUNT -->
-      <div class="dash-panel" id="dashPanel-account">
-        <div class="dash-section-head"><h4>Account details</h4></div>
-        <div class="dash-account-card">
-          <p style="font-size:16px;font-weight:600;margin-bottom:2px" id="dashName"></p>
-          <p style="font-size:13px;color:var(--slate);margin-bottom:20px" id="dashEmail"></p>
-
-          <div class="acct-section-label">Personal information</div>
-          <div class="acct-field-row">
-            <div><label class="acct-label">Full name</label><input class="field" id="acctName" placeholder="Your full name"></div>
-            <div><label class="acct-label">Phone</label><input class="field" id="acctPhone" type="tel" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
-          </div>
-
-          <div class="acct-section-label" style="margin-top:20px">Delivery address</div>
-          <div><label class="acct-label">Address line 1</label><input class="field" id="acctAddr1" placeholder="Flat / House No., Building, Street"></div>
-          <div style="margin-top:8px"><label class="acct-label">Address line 2 <span style="color:var(--slate-l);font-weight:400">(optional)</span></label><input class="field" id="acctAddr2" placeholder="Colony, Area, Landmark"></div>
-          <div class="acct-field-row" style="margin-top:8px">
-            <div><label class="acct-label">City</label><input class="field" id="acctCity" placeholder="City"></div>
-            <div><label class="acct-label">PIN code</label><input class="field" id="acctPin" maxlength="6" inputmode="numeric" placeholder="6-digit PIN"></div>
-          </div>
-          <div style="margin-top:8px"><label class="acct-label">State</label>
-            <select class="field" id="acctState">
-              <option value="">Select state</option>
-              <option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option>
-              <option>Bihar</option><option>Chhattisgarh</option><option>Goa</option>
-              <option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option>
-              <option>Jharkhand</option><option>Karnataka</option><option>Kerala</option>
-              <option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option>
-              <option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option>
-              <option>Odisha</option><option>Punjab</option><option>Rajasthan</option>
-              <option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option>
-              <option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option>
-              <option>West Bengal</option>
-              <option disabled>— Union Territories —</option>
-              <option>Andaman and Nicobar Islands</option><option>Chandigarh</option>
-              <option>Dadra and Nagar Haveli and Daman and Diu</option>
-              <option>Delhi</option><option>Jammu and Kashmir</option>
-              <option>Ladakh</option><option>Lakshadweep</option><option>Puducherry</option>
-            </select>
-          </div>
-
-          <div class="acct-section-label" style="margin-top:20px">GST information <span style="color:var(--slate-l);font-weight:400;font-size:11px;text-transform:none;letter-spacing:0">(optional — for GST invoice)</span></div>
-          <div class="acct-field-row">
-            <div><label class="acct-label">GSTIN</label><input class="field" id="acctGstin" maxlength="15" style="text-transform:uppercase" placeholder="22AAAAA0000A1Z5"></div>
-            <div><label class="acct-label">Business name</label><input class="field" id="acctBizName" placeholder="Registered business name"></div>
-          </div>
-
-          <button class="btn btn-accent sm" style="margin-top:20px" onclick="saveAccountInfo()">Save details</button>
-
-          <div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--line)">
-            <div class="acct-section-label">Change password</div>
-            <input class="field" id="cpNew" type="password" placeholder="New password (min. 6 characters)" style="max-width:340px;margin-top:8px">
-            <button class="btn btn-ghost sm" onclick="doChangePassword()">Update password</button>
-          </div>
-          <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--line)">
-            <button class="btn btn-ghost sm" onclick="doLogout()">Log out</button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div></section>
-
 <!-- ============ FREE ISBN ============ -->
 <section class="view" id="view-isbn"><div class="page-wrap">
   <span class="tag">Free ISBN</span>
   <h1 data-c="isbnTitle">Free ISBN | 5 easy steps</h1>
   <div style="overflow:hidden;margin:24px 0 34px;max-width:70ch">
     <video data-c-img-video="isbnImageUrl" muted loop playsinline preload="auto" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:none"></video>
-    <img data-c-img="isbnImageUrl" src="/images/img-6.jpg" alt="Trade book back cover with ISBN barcode" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block">
+    <img data-c-img="isbnImageUrl" src="/images/img-6.jpg" alt="Trade book back cover with ISBN barcode" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block" loading="lazy" decoding="async">
   </div>
   <div data-c="isbnBody" data-c-html="1" style="font-size:17px;line-height:1.75;color:var(--text);max-width:70ch"></div>
   <a href="https://isbn.gov.in/" target="_blank" rel="noopener" class="btn btn-accent" style="margin-top:28px">Go to isbn.gov.in →</a>
@@ -478,7 +409,7 @@
     <p style="font-size:15px;color:var(--text);line-height:1.6;margin:0">Order 10 or more copies of the same book and every copy drops to the bulk rate automatically — no code needed. That's <b>50% off</b> the per-copy price on 8.5″×8.5″ Photobooks, <b>30% off</b> on 12″×12″ Photobooks, and <b>40% off</b> on Trade Books, applied the moment you set quantity to 10+ at checkout. Extra-page charges still apply per copy at the same per-page rate.</p>
   </div>
 
-  <p style="font-size:13px;color:var(--slate-l);margin-top:26px">Need more than 50 copies, or a custom trim size? <a onclick="go('contact')" style="color:var(--accent);cursor:pointer">Contact us</a> for a bulk quote.</p>
+  <p style="font-size:13px;color:var(--slate-l);margin-top:26px">Need more than 50 copies, or a custom trim size? <a href="/contact" onclick="go('contact');return false;" style="color:var(--accent);cursor:pointer">Contact us</a> for a bulk quote.</p>
 </div></section>
 
 <!-- ============ SCANNING SERVICES ============ -->
@@ -489,17 +420,17 @@
     <video
       id="scanHeroVideo"
       class="scan-hero-img"
-      src="/images/scanning-hero.mp4"
+      data-src="/images/scanning-hero.mp4"
       autoplay
       muted
       playsinline
-      preload="auto"
+      preload="none"
       style="width:100%;height:100%;object-fit:cover;display:block"
     ></video>
-    <img id="scanHeroStill" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover">
-    <img id="scanHeroImage" src="" alt="Binder Scanning Services" class="scan-hero-img" loading="eager" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="display:none">
+    <img id="scanHeroStill" alt="" style="display:none;width:100%;height:100%;object-fit:cover" loading="lazy" decoding="async">
+    <img id="scanHeroImage" alt="Binder Scanning Services" class="scan-hero-img" loading="eager" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" style="display:none">
     <div class="scan-hero-placeholder" id="scanHeroPlaceholder" style="display:none">
-      <span>Hero image — upload via Admin → Content Manager → Scanning Services</span>
+      <span></span>
     </div>
     <div class="scan-hero-overlay">
       <span class="tag" style="color:#fff;border-color:rgba(255,255,255,.4)">Scanning Services</span>
@@ -571,6 +502,168 @@
   </div>
 </div></section>
 
+<div class="modal-bg" id="photoLightboxModal" onclick="if(event.target===this)closePhotoLightbox()">
+  <button class="modal-close" onclick="closePhotoLightbox()" aria-label="Close" style="position:fixed;top:24px;right:24px;background:rgba(255,255,255,.9)"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  <div id="lightboxNav" style="display:none;position:fixed;inset:0;align-items:center;justify-content:space-between;padding:0 18px;pointer-events:none">
+    <button onclick="lightboxNav(-1)" aria-label="Previous photo" style="pointer-events:auto;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.9);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#1D1D1F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button onclick="lightboxNav(1)" aria-label="Next photo" style="pointer-events:auto;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.9);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 3l5 5-5 5" stroke="#1D1D1F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;max-width:min(90vw,1100px)">
+    <video id="photoLightboxVideo" controls playsinline style="max-width:100%;max-height:82vh;width:auto;height:auto;display:none;box-shadow:0 30px 80px rgba(0,0,0,.4)"></video>
+    <img id="photoLightboxImg" alt="" style="max-width:100%;max-height:82vh;width:auto;height:auto;display:block;box-shadow:0 30px 80px rgba(0,0,0,.4)" loading="lazy" decoding="async">
+    <p id="photoLightboxCaption" style="color:#fff;font-size:14px;margin-top:16px;text-align:center;display:none"></p>
+    <p id="lightboxCounter" style="color:rgba(255,255,255,.6);font-size:12px;margin-top:6px;text-align:center"></p>
+  </div>
+</div>
+
+<div class="modal-bg" id="productDetailModal" onclick="if(event.target===this)closeProductDetail()"><div class="modal">
+  <button class="modal-close" onclick="closeProductDetail()" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  <div id="pdImg"></div>
+  <span id="pdBadge" class="tag" style="margin-top:14px;display:none"></span>
+  <h3 id="pdName" style="margin-top:10px">Product</h3>
+  <p id="pdBlurb" style="color:var(--slate-l);font-size:14px;margin-top:4px"></p>
+  <p id="pdDetails" style="font-size:13.5px;line-height:1.6;color:var(--text);margin-top:12px"></p>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px">
+    <b id="pdPrice" style="font-size:19px"></b>
+    <button id="pdAddBtn" class="btn btn-accent" onclick="">Add to cart</button>
+  </div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept="image/*,.heic,.heif,.tif,.tiff" multiple style="display:none">
+
+<!-- Shared footer — lives outside every page section so one instance can appear on all of them.
+     Shown/hidden in lockstep with .site-nav (see go() and openEditor()/exitEditor() in script.js)
+     so it shows on every normal page but never inside an editor. -->
+<footer class="footer" id="siteFooter">
+  <div class="footer-links">
+    <a href="/scanning" onclick="go('scanning');return false;">Scanning Services</a>
+    <a href="/contact" onclick="go('contact');return false;">Contact</a>
+    <a href="/pricing" onclick="go('pricing');return false;">Pricing</a>
+    <a href="/isbn" onclick="go('isbn');return false;">Publish | Free ISBN</a>
+    <a href="/clients" onclick="go('clients');return false;">Clients</a>
+    <a href="/sitemap" onclick="go('sitemap');return false;">Sitemap</a>
+  </div>
+  <div class="footer-social" id="footerSocial" style="display:none"></div>
+  <div class="footer-copy" id="footerCopy">© 2026 Binder · A291/1, Okhla Phase I, Delhi – 110020 · info@binder.co.in</div>
+</footer>
+
+<!-- Private app UI (account, checkout, editors, admin). Kept in an inert <template> so it is not
+     part of the public page that search engines index; script.js mounts it on first use. -->
+<template id="tpl-private">
+<!-- ============ MY DASHBOARD ============ -->
+<section class="view" id="view-dashboard"><div class="page-wrap" style="max-width:1180px">
+  <div class="dash-head">
+    <div><span class="tag">My Dashboard</span><h1 id="dashGreeting">Hi</h1></div>
+    <div class="dash-avatar" id="dashAvatar">B</div>
+  </div>
+
+  <div class="dash-shell">
+    <nav class="dash-nav" id="dashNav">
+      <a data-panel="overview" class="active" onclick="dashGo('overview')">Overview</a>
+      <a data-panel="orders" onclick="dashGo('orders')">Orders</a>
+      <a data-panel="projects" onclick="dashGo('projects')">Projects</a>
+      <a data-panel="account" onclick="dashGo('account')">Account</a>
+    </nav>
+
+    <div class="dash-content">
+
+      <!-- OVERVIEW -->
+      <div class="dash-panel active" id="dashPanel-overview">
+        <div class="stat-row">
+          <div class="stat"><b id="dashMyOrders">0</b><span>Orders placed</span></div>
+          <div class="stat"><b id="dashMySpend">₹0</b><span>Total spend</span></div>
+          <div class="stat"><b id="dashMyProjects">0</b><span>Saved projects</span></div>
+          <div class="stat"><b id="dashMemberSince">—</b><span>Member since</span></div>
+        </div>
+        <div class="dash-overview-grid">
+          <div>
+            <div class="dash-section-head"><h4>Recent orders</h4><a onclick="dashGo('orders')">View all →</a></div>
+            <div id="dashRecentOrders"></div>
+          </div>
+          <div>
+            <div class="dash-section-head"><h4>Recent projects</h4><a onclick="dashGo('projects')">View all →</a></div>
+            <div id="dashRecentProjects"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="dash-panel" id="dashPanel-orders">
+        <div class="dash-section-head"><h4>Order history</h4></div>
+        <div id="dashOrdersList"></div>
+      </div>
+
+      <!-- PROJECTS -->
+      <div class="dash-panel" id="dashPanel-projects">
+        <div class="dash-section-head"><h4>Your projects</h4><button class="btn btn-ghost sm" onclick="go('home')">+ Start new</button></div>
+        <div id="dashProjectRows" class="dash-projects-grid"></div>
+      </div>
+
+      <!-- ACCOUNT -->
+      <div class="dash-panel" id="dashPanel-account">
+        <div class="dash-section-head"><h4>Account details</h4></div>
+        <div class="dash-account-card">
+          <p style="font-size:16px;font-weight:600;margin-bottom:2px" id="dashName"></p>
+          <p style="font-size:13px;color:var(--slate);margin-bottom:20px" id="dashEmail"></p>
+
+          <div class="acct-section-label">Personal information</div>
+          <div class="acct-field-row">
+            <div><label class="acct-label">Full name</label><input class="field" id="acctName" placeholder="Your full name"></div>
+            <div><label class="acct-label">Phone</label><input class="field" id="acctPhone" type="tel" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
+          </div>
+
+          <div class="acct-section-label" style="margin-top:20px">Delivery address</div>
+          <div><label class="acct-label">Address line 1</label><input class="field" id="acctAddr1" placeholder="Flat / House No., Building, Street"></div>
+          <div style="margin-top:8px"><label class="acct-label">Address line 2 <span style="color:var(--slate-l);font-weight:400">(optional)</span></label><input class="field" id="acctAddr2" placeholder="Colony, Area, Landmark"></div>
+          <div class="acct-field-row" style="margin-top:8px">
+            <div><label class="acct-label">City</label><input class="field" id="acctCity" placeholder="City"></div>
+            <div><label class="acct-label">PIN code</label><input class="field" id="acctPin" maxlength="6" inputmode="numeric" placeholder="6-digit PIN"></div>
+          </div>
+          <div style="margin-top:8px"><label class="acct-label">State</label>
+            <select class="field" id="acctState">
+              <option value="">Select state</option>
+              <option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option>
+              <option>Bihar</option><option>Chhattisgarh</option><option>Goa</option>
+              <option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option>
+              <option>Jharkhand</option><option>Karnataka</option><option>Kerala</option>
+              <option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option>
+              <option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option>
+              <option>Odisha</option><option>Punjab</option><option>Rajasthan</option>
+              <option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option>
+              <option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option>
+              <option>West Bengal</option>
+              <option disabled>— Union Territories —</option>
+              <option>Andaman and Nicobar Islands</option><option>Chandigarh</option>
+              <option>Dadra and Nagar Haveli and Daman and Diu</option>
+              <option>Delhi</option><option>Jammu and Kashmir</option>
+              <option>Ladakh</option><option>Lakshadweep</option><option>Puducherry</option>
+            </select>
+          </div>
+
+          <div class="acct-section-label" style="margin-top:20px">GST information <span style="color:var(--slate-l);font-weight:400;font-size:11px;text-transform:none;letter-spacing:0">(optional — for GST invoice)</span></div>
+          <div class="acct-field-row">
+            <div><label class="acct-label">GSTIN</label><input class="field" id="acctGstin" maxlength="15" style="text-transform:uppercase" placeholder="22AAAAA0000A1Z5"></div>
+            <div><label class="acct-label">Business name</label><input class="field" id="acctBizName" placeholder="Registered business name"></div>
+          </div>
+
+          <button class="btn btn-accent sm" style="margin-top:20px" onclick="saveAccountInfo()">Save details</button>
+
+          <div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--line)">
+            <div class="acct-section-label">Change password</div>
+            <input class="field" id="cpNew" type="password" placeholder="New password (min. 6 characters)" style="max-width:340px;margin-top:8px">
+            <button class="btn btn-ghost sm" onclick="doChangePassword()">Update password</button>
+          </div>
+          <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--line)">
+            <button class="btn btn-ghost sm" onclick="doLogout()">Log out</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div></section>
+
 <!-- ============ ADMIN ============ -->
 <section class="view" id="view-admin">
   <div id="adminGate" class="admin-gate">
@@ -591,15 +684,19 @@
       <button data-ap="fonts" onclick="adminTab('fonts')">Font Manager</button>
       <button data-ap="content" onclick="adminTab('content')">Content Manager</button>
       <button data-ap="gallery-edit" onclick="adminTab('gallery-edit')">Gallery</button>
+      <button data-ap="templates" onclick="adminTab('templates')">Templates</button>
       <button data-ap="products" onclick="adminTab('products')">Store Products</button>
       <button data-ap="journal" onclick="adminTab('journal')">Kagaz Journal Manager</button>
       <button data-ap="customers" onclick="adminTab('customers')">Customers</button>
       <button data-ap="payments" onclick="adminTab('payments')">Payments</button>
-      <button data-ap="seomoat" onclick="adminTab('seomoat')">SEO</button>
+      <button data-ap="seomoat" onclick="adminTab('seomoat')">SEO · Content Moat</button>
       <button data-ap="coupons" onclick="adminTab('coupons')">Coupons</button>
+      <button data-ap="accounts" onclick="adminTab('accounts')">Accounts</button>
+      <button data-ap="daybook" onclick="adminTab('daybook')">Day Book</button><button data-ap="projects" onclick="adminTab('projects')">Projects</button>
       <button style="margin-top:20px;color:#E8A" onclick="doAdminLogout()">Log out</button>
     </aside>
     <main class="admin-main">
+      <div id="ap-accounts" style="display:none;margin:-36px -4vw -36px"><iframe id="accountsFrame" title="Binder Accounts" allow="clipboard-write" style="display:block;width:100%;height:calc(100vh - 56px);min-height:600px;border:0;background:#fff"></iframe></div>
       <div id="cmsSyncBanner" style="display:none;background:#FDECEA;border:1px solid #F5C6C4;color:#8A2A22;border-radius:10px;padding:14px 18px;margin-bottom:22px;font-size:13.5px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <span id="cmsSyncBannerText" style="flex:1;min-width:200px"></span>
         <button id="cmsSyncBannerCopy" class="btn btn-ghost sm" style="display:none" onclick="copyCmsSyncError()">Copy error</button>
@@ -634,7 +731,6 @@
               <div style="font-weight:700;font-size:16px" id="adminEditorTitle"></div>
               <div style="font-size:12px;color:var(--slate-l)" id="adminEditorMeta"></div>
             </div>
-            <button class="btn btn-ghost sm" onclick="adminEditorPreview()">Preview</button>
             <button class="btn btn-accent sm" id="adminSaveRerenderBtn" onclick="adminSaveAndRerender()">Save &amp; Re-render →</button>
           </div>
           <div id="adminEditorNote" style="background:#EAF3FF;border:1px solid #C5DCF8;border-radius:10px;padding:12px 16px;font-size:13px;color:#1A4A7A;margin-bottom:16px">
@@ -669,17 +765,17 @@
 
         <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:0 0 12px">Homepage — Hero Image</h4>
         <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:20px">
-          <img id="heroPreviewAdmin" style="height:80px;border-radius:10px;object-fit:cover;display:none;border:1px solid var(--line)">
+          <img alt="" id="heroPreviewAdmin" style="height:80px;border-radius:10px;object-fit:cover;display:none;border:1px solid var(--line)" loading="lazy" decoding="async">
           <div>
             <input type="file" accept="image/*,video/*" id="heroUploadInput" style="display:none" onchange="uploadHeroImage(this.files[0])">
             <button class="btn btn-ghost sm" onclick="$('heroUploadInput').click()">Upload homepage hero image</button>
-            <p style="font-size:12px;color:var(--slate-l);margin-top:6px">This is the large image on the homepage, next to "It's your moment, live it." Recommended: 1600×1600px.</p>
+            <p style="font-size:12px;color:var(--slate-l);margin-top:6px">This is the large image on the homepage, next to "It's your moment, save it." Recommended: 1600×1600px.</p>
           </div>
         </div>
 
         <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:26px 0 12px">Scanning Services — Hero Image</h4>
         <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:20px">
-          <img id="scanHeroPreviewAdmin" style="height:80px;border-radius:10px;object-fit:cover;display:none;border:1px solid var(--line)">
+          <img alt="" id="scanHeroPreviewAdmin" style="height:80px;border-radius:10px;object-fit:cover;display:none;border:1px solid var(--line)" loading="lazy" decoding="async">
           <div>
             <input type="file" accept="image/*,video/*" id="scanHeroUploadInput" style="display:none" onchange="uploadScanHeroImage(this.files[0])">
             <button class="btn btn-ghost sm" onclick="$('scanHeroUploadInput').click()">Upload scanning hero image</button>
@@ -740,6 +836,15 @@
           <textarea class="field" id="cfgAddress" rows="2" placeholder="New Delhi, India" oninput="saveSiteCfg()"></textarea>
         </div>
 
+        <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:26px 0 12px">Render Service (server-side PDF rendering)</h4>
+        <p style="font-size:12.5px;color:var(--slate-l);margin-bottom:12px">Optional — connects Admin → PDF Manager to a separate backend service that renders order PDFs without needing a browser tab open. See render-service/README.md for how to deploy one. Leave blank to keep using the existing in-browser Render button only.</p>
+        <div style="margin-bottom:16px">
+          <label style="font-size:12.5px;color:var(--slate);display:block;margin-bottom:4px">Render Service URL</label>
+          <input class="field" id="cfgRenderServiceUrl" placeholder="https://binder-render-service.onrender.com" oninput="saveSiteCfg()">
+          <label style="font-size:12.5px;color:var(--slate);display:block;margin:10px 0 4px">Render Service Secret</label>
+          <input class="field" id="cfgRenderServiceSecret" type="password" placeholder="Same RENDER_SECRET value set on the service" oninput="saveSiteCfg()">
+        </div>
+
         <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);margin:26px 0 12px">Publish With Us page</h4>
         <div class="rte-tools" data-rte-for="publish"></div>
         <div class="rte" id="rte-publish" contenteditable="true"></div>
@@ -766,6 +871,18 @@
         <p style="font-size:12.5px;color:var(--slate-l);margin-bottom:20px">Photos of finished photobooks shown on the public Gallery page. Click a tile to upload or replace a photo, click the star to make it the large featured banner at the top of the page (the first photo is used by default if none is starred).</p>
         <div id="galAdminRows" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:20px"></div>
       </div>
+      <div id="ap-templates" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:10px">
+          <h2 style="margin:0">Templates</h2>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="newTplNameInput" class="field" style="width:auto;min-width:180px;margin-bottom:0" placeholder="Template name (optional)">
+            <select id="newTplEditorSelect" class="field" style="width:auto;min-width:220px;margin-bottom:0"></select>
+            <button class="btn btn-accent sm" onclick="addCustomTemplateFromAdmin()">+ Add template</button>
+          </div>
+        </div>
+        <p style="font-size:12.5px;color:var(--slate-l);margin-bottom:20px">Each template is blank and sized exactly for one product. Give it a name (or leave blank to use the size's default name), pick the size, and click <b>+ Add template</b>. Click <b>Edit layout</b> to design it in the real editor (cover, pages, back cover), upload reusable graphics under <b>Assets</b> — they'll show up as a "Clip Art" tool inside the editor while you're building this template — and edit the card's title/description/thumbnail any time below.</p>
+        <div id="customTemplatesAdminRows" style="display:flex;flex-direction:column;gap:16px"></div>
+      </div>
       <div id="ap-products" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h2 style="margin:0">Store Products</h2><div style="display:flex;gap:8px"><button class="btn btn-ghost sm" onclick="openListArrange('products')">✦ AI Arrange</button><button class="btn btn-accent sm" onclick="openProductForm()">+ Add product</button></div></div>
         <div id="productRows"></div>
@@ -777,7 +894,7 @@
         <input type="file" accept="image/*,video/*" id="bpHeroUpload" style="display:none" onchange="onPostHeroUpload(this.files[0])">
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
           <button class="btn btn-ghost xs" onclick="$('bpHeroUpload').click()">Upload hero image</button>
-          <img id="bpHeroPreview" style="height:44px;border-radius:8px;display:none">
+          <img alt="" id="bpHeroPreview" style="height:44px;border-radius:8px;display:none" loading="lazy" decoding="async">
         </div>
         <div class="rte-tools" data-rte-for="post"></div>
         <div class="rte" id="rte-post" contenteditable="true"><p>Start writing…</p></div>
@@ -817,32 +934,66 @@
         <div id="payVerifyWarn" class="quality-warn" style="margin-top:14px;display:none">⚠ This key is <b>live</b> — real cards are charged. Checkout now calls the Supabase Edge Functions to create a server-locked order and verify the payment signature. If those functions aren't deployed yet, checkout still works but silently falls back to unverified mode (each order below shows a "Verified" or "Unverified" tag so you can tell which happened) — deploy them per the README to close the gap for every order.</div>
       </div>
       <div id="ap-seomoat" style="display:none">
-        <h2>SEO</h2>
-        <p style="color:var(--slate);font-size:13.5px;max-width:65ch;line-height:1.7;margin-bottom:22px">A to-do list, not a dashboard. Check things off as you actually do them — a few are pre-filled based on real gaps in the site right now, and you can add your own anytime.</p>
+        <h2>SEO · Content Moat</h2>
+        <p style="color:var(--slate);font-size:13.5px;max-width:72ch;line-height:1.7;margin-bottom:24px">A durable-advantage tracker, not a live rank checker — no free or embeddable API exists for real Domain/Page Authority or backlink counts (Mangools itself doesn't calculate its own — it licenses Moz's DA/PA and Majestic's CF/TF under one dashboard). Log those periodically below to track the trend. Everything else here — topical coverage, unique data assets, technical SEO, and network scale — is computed for real, live, from this site's own content and orders. No invented numbers.</p>
 
-        <div class="stat-row" id="seoStats" style="margin-bottom:22px"></div>
+        <div class="stat-row" id="moatScoreRow" style="margin-bottom:30px"></div>
 
-        <details style="margin-bottom:26px;border:1px solid var(--line);border-radius:12px;padding:14px 16px">
-          <summary style="cursor:pointer;font-size:13.5px;font-weight:600;color:var(--accent-d)">✓ Technical basics — already handled, nothing to do here</summary>
-          <div id="seoTechList" style="margin-top:12px"></div>
-        </details>
+        <h3 style="margin:0 0 4px">Topical Authority</h3>
+        <p style="color:var(--slate-l);font-size:12.5px;line-height:1.5;margin-bottom:12px">How much real, original content exists per subject — counted live from published Kagaz Journal posts matching each topic's keywords. This is the actual signal search engines use to judge topical depth, not a proxy.</p>
+        <div id="moatTopics" style="margin-bottom:26px"></div>
 
-        <h3 style="margin:0 0 4px">Your to-do list</h3>
-        <div id="seoTodoList" style="margin:12px 0 10px"></div>
-        <div style="display:flex;gap:8px">
-          <input class="field" id="seoTodoNew" placeholder="Add your own to-do…" style="margin:0;flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addSeoTodo();}">
-          <button class="btn btn-ghost sm" onclick="addSeoTodo()" style="flex:0 0 auto">+ Add</button>
+        <h3 style="margin:0 0 4px">Unique Data Insights</h3>
+        <p style="color:var(--slate-l);font-size:12.5px;line-height:1.5;margin-bottom:12px">Proprietary numbers only Binder has — the strongest kind of authority signal, because no competitor can copy real business data.</p>
+        <div class="stat-row" id="moatUniqueAuto" style="margin-bottom:14px"></div>
+        <div id="moatUniqueLog" style="margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:26px">
+          <input class="field" id="moatUdLabel" placeholder="e.g. Years in business" style="max-width:220px;margin:0">
+          <input class="field" id="moatUdValue" placeholder="e.g. 12" style="max-width:120px;margin:0">
+          <input class="field" id="moatUdNote" placeholder="Note (optional)" style="max-width:260px;margin:0">
+          <button class="btn btn-ghost sm" onclick="addUniqueDataEntry()">+ Log a data point</button>
         </div>
 
-        <h3 style="margin:30px 0 4px">Monthly traffic (optional)</h3>
-        <p style="color:var(--slate-l);font-size:12.5px;line-height:1.5;margin-bottom:10px">From Google Search Console → Performance (total clicks &amp; impressions for the last full month). Log it here once a month to see whether things are actually working — this is the one number that really matters.</p>
-        <div id="seoTrafficChart" style="margin-bottom:10px"></div>
-        <div id="seoTrafficLog" style="margin-bottom:10px"></div>
+        <h3 style="margin:0 0 4px">Brand Strength</h3>
+        <p style="color:var(--slate-l);font-size:12.5px;line-height:1.5;margin-bottom:10px">How often people search for "Binder" by name, and how distinct that name is in the market.</p>
+        <div id="moatBrandNoteWrap" style="margin-bottom:14px"></div>
+        <div id="moatBrandChart" style="margin-bottom:10px"></div>
+        <div id="moatBrandLog" style="margin-bottom:10px"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-          <input class="field" id="seoClicksInput" type="number" placeholder="Clicks" style="max-width:120px;margin:0">
-          <input class="field" id="seoImpressionsInput" type="number" placeholder="Impressions" style="max-width:140px;margin:0">
-          <button class="btn btn-accent sm" onclick="addTrafficEntry()">+ Log this month</button>
+          <input class="field" id="moatBrandSearches" type="number" placeholder="Branded searches / mo" style="max-width:180px;margin:0">
+          <input class="field" id="moatBrandNote" placeholder="Source / note" style="max-width:260px;margin:0">
+          <button class="btn btn-ghost sm" onclick="addBrandEntry()">+ Log branded search volume</button>
         </div>
+        <p style="color:var(--slate-l);font-size:11.5px;margin:8px 0 26px">Find this in Google Search Console → Performance → filter query contains "binder".</p>
+
+        <h3 style="margin:0 0 4px">Network Effects &amp; Scale</h3>
+        <p style="color:var(--slate-l);font-size:12.5px;line-height:1.5;margin-bottom:12px">Real reach and referral surface area — every additional client, post, and product widens the net.</p>
+        <div class="stat-row" id="moatScaleAuto" style="margin-bottom:14px"></div>
+        <div id="moatBacklinkChart" style="margin-bottom:10px"></div>
+        <div id="moatBacklinkLog" style="margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:26px">
+          <input class="field" id="moatRdInput" type="number" placeholder="Referring domains" style="max-width:160px;margin:0">
+          <input class="field" id="moatTbInput" type="number" placeholder="Total backlinks" style="max-width:160px;margin:0">
+          <input class="field" id="moatBlSource" placeholder="Source (e.g. Moz, Ahrefs)" style="max-width:180px;margin:0">
+          <input class="field" id="moatBlNote" placeholder="Note (optional)" style="max-width:220px;margin:0">
+          <button class="btn btn-ghost sm" onclick="addBacklinkEntry()">+ Log backlink check</button>
+        </div>
+
+        <h3 style="margin:0 0 4px">Authority Snapshot (DA · PA · CF · TF)</h3>
+        <p style="color:var(--slate-l);font-size:12.5px;line-height:1.5;margin-bottom:12px">Domain/Page Authority are Moz metrics; Citation/Trust Flow are Majestic's — this is exactly what Mangools licenses and displays under one dashboard, not a separate methodology of its own. Free checkers: <a href="https://moz.com/domain-analysis" target="_blank" rel="nofollow noopener noreferrer">moz.com/domain-analysis</a> · <a href="https://mangools.com/siteprofiler" target="_blank" rel="nofollow noopener noreferrer">Mangools SiteProfiler</a>.</p>
+        <div id="moatAuthorityChart" style="margin-bottom:10px"></div>
+        <div id="moatAuthorityLog" style="margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:26px">
+          <input class="field" id="moatDaInput" type="number" placeholder="DA" style="max-width:80px;margin:0">
+          <input class="field" id="moatPaInput" type="number" placeholder="PA" style="max-width:80px;margin:0">
+          <input class="field" id="moatCfInput" type="number" placeholder="CF" style="max-width:80px;margin:0">
+          <input class="field" id="moatTfInput" type="number" placeholder="TF" style="max-width:80px;margin:0">
+          <input class="field" id="moatAuthorityNote" placeholder="Note (optional)" style="max-width:220px;margin:0">
+          <button class="btn btn-accent sm" onclick="addAuthorityEntry()">+ Log authority check</button>
+        </div>
+
+        <h3 style="margin:0 0 4px">Technical SEO Checklist</h3>
+        <div id="moatTechChecklist" style="margin-bottom:10px"></div>
       </div>
       <div id="ap-coupons" style="display:none">
         <h2>Discount Coupons</h2>
@@ -890,7 +1041,7 @@
     <option value="Photographs & Fine Art">Photographs & Fine Art</option>
   </select>
   <input class="field" id="pfBadge" placeholder="Badge (optional)">
-  <img id="pfImgPreview" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:none;margin-bottom:8px">
+  <img alt="" id="pfImgPreview" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:none;margin-bottom:8px" loading="lazy" decoding="async">
   <input class="field" id="pfImgUrl" placeholder="Image URL (optional — or upload below)">
   <input type="file" accept="image/*,video/*" id="pfImgUpload" style="display:none" onchange="onProductImageUpload(this.files[0])">
   <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
@@ -900,40 +1051,6 @@
   <div style="display:flex;gap:10px">
     <button class="btn btn-accent" style="flex:1;justify-content:center" onclick="saveProductForm()">Save product</button>
     <button class="btn btn-ghost" onclick="hide('productFormModal')">Cancel</button>
-  </div>
-</div></div>
-
-<div class="modal-bg" id="photoLightboxModal" onclick="if(event.target===this)closePhotoLightbox()">
-  <button class="modal-close" onclick="closePhotoLightbox()" aria-label="Close" style="position:fixed;top:24px;right:24px;background:rgba(255,255,255,.9)"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
-  <div id="lightboxNav" style="display:none;position:fixed;inset:0;align-items:center;justify-content:space-between;padding:0 18px;pointer-events:none">
-    <button onclick="lightboxNav(-1)" aria-label="Previous photo" style="pointer-events:auto;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.9);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#1D1D1F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <button onclick="lightboxNav(1)" aria-label="Next photo" style="pointer-events:auto;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.9);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 3l5 5-5 5" stroke="#1D1D1F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-  </div>
-  <div style="display:flex;flex-direction:column;align-items:center;max-width:min(90vw,1100px)">
-    <video id="photoLightboxVideo" controls playsinline style="max-width:100%;max-height:82vh;width:auto;height:auto;display:none;box-shadow:0 30px 80px rgba(0,0,0,.4)"></video>
-    <img id="photoLightboxImg" src="" alt="" style="max-width:100%;max-height:82vh;width:auto;height:auto;display:block;box-shadow:0 30px 80px rgba(0,0,0,.4)">
-    <p id="photoLightboxCaption" style="color:#fff;font-size:14px;margin-top:16px;text-align:center;display:none"></p>
-    <p id="lightboxCounter" style="color:rgba(255,255,255,.6);font-size:12px;margin-top:6px;text-align:center"></p>
-  </div>
-</div>
-
-<div class="modal-bg" id="templatePickerModal" onclick="if(event.target===this)hide('templatePickerModal')"><div class="modal" style="max-width:520px">
-  <button class="modal-close" onclick="hide('templatePickerModal')" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
-  <h3 style="margin-bottom:6px">Starter Templates</h3>
-  <p style="font-size:12.5px;color:var(--slate-l);margin-bottom:18px">Load a ready-made layout to start from instead of a blank book. This replaces your current pages.</p>
-  <div id="templatePickerList"></div>
-</div></div>
-
-<div class="modal-bg" id="productDetailModal" onclick="if(event.target===this)closeProductDetail()"><div class="modal">
-  <button class="modal-close" onclick="closeProductDetail()" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
-  <div id="pdImg"></div>
-  <span id="pdBadge" class="tag" style="margin-top:14px;display:none"></span>
-  <h3 id="pdName" style="margin-top:10px">Product</h3>
-  <p id="pdBlurb" style="color:var(--slate-l);font-size:14px;margin-top:4px"></p>
-  <p id="pdDetails" style="font-size:13.5px;line-height:1.6;color:var(--text);margin-top:12px"></p>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px">
-    <b id="pdPrice" style="font-size:19px"></b>
-    <button id="pdAddBtn" class="btn btn-accent" onclick="">Add to cart</button>
   </div>
 </div></div>
 
@@ -1068,36 +1185,17 @@
   <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:10px" onclick="hide('checkoutModal')">Keep shopping</button>
 </div></div>
 
-<div class="toast" id="toast"></div>
-<input type="file" id="fileInput" accept="image/*,.heic,.heif,.tif,.tiff" multiple style="display:none">
-
-<!-- Shared footer — lives outside every page section so one instance can appear on all of them.
-     Shown/hidden in lockstep with .site-nav (see go() and openEditor()/exitEditor() in script.js)
-     so it shows on every normal page but never inside an editor. -->
-<footer class="footer" id="siteFooter">
-  <div class="footer-links">
-    <a onclick="go('scanning')">Scanning Services</a>
-    <a onclick="go('contact')">Contact</a>
-    <a onclick="go('pricing')">Pricing</a>
-    <a onclick="go('isbn')">Publish | Free ISBN</a>
-    <a onclick="go('clients')">Clients</a>
-  </div>
-  <div class="footer-social" id="footerSocial" style="display:none"></div>
-  <div class="footer-copy" id="footerCopy">© 2026 Binder · A291/1, Okhla Phase I, Delhi – 110020 · info@binder.co.in</div>
-</footer>
-
 <!-- ============ PHOTOBOOK EDITOR ============ -->
-<div class="ed-root" id="editor-photobook">
+<div class="ed-root ed-dark" id="editor-photobook">
   <div class="ed-top">
-    <button class="icon-btn" onclick="navHome()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <a onclick="navHome()" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85"></a>
+    <button class="icon-btn" onclick="navHome()" aria-label="Back to home"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <a href="/" onclick="navHome();return false;" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85" loading="lazy" decoding="async"></a>
     <input class="title" id="pb-title" value="Untitled Photobook">
-    <button class="icon-btn" id="pb-undoBtn" onclick="EDS.photobook.undo()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6H9.5a3.5 3.5 0 0 1 0 7H6" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M3 6L6 3M3 6l3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <button class="icon-btn" id="pb-redoBtn" onclick="EDS.photobook.redo()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 6H6.5a3.5 3.5 0 0 0 0 7H10" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M13 6L10 3m3 3-3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn" id="pb-undoBtn" onclick="EDS.photobook.undo()" aria-label="Undo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6H9.5a3.5 3.5 0 0 1 0 7H6" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M3 6L6 3M3 6l3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn" id="pb-redoBtn" onclick="EDS.photobook.redo()" aria-label="Redo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 6H6.5a3.5 3.5 0 0 0 0 7H10" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M13 6L10 3m3 3-3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <button class="icon-btn" id="pb-gridBtn" title="Toggle layout grid" onclick="EDS.photobook.toggleGrid()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/></svg></button>
     <button class="icon-btn" id="pb-pnBtn" title="Toggle auto page numbers" onclick="EDS.photobook.togglePageNums()" style="font-size:10px;font-weight:700;font-family:serif;letter-spacing:-.02em">Pn</button>
-    <button class="btn btn-ghost sm" title="Load a starter template" onclick="openTemplatePicker('photobook')">Templates</button>
-    <button class="icon-btn ed-theme-btn" title="Switch to dark mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn ed-theme-btn" title="Switch to light mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <div id="pb-priceTag" style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;margin-left:4px;margin-right:2px">
       <span id="pb-priceMain" style="font-size:13px;font-weight:600;color:var(--text)">₹2,200/copy</span>
       <span id="pb-priceSub" style="font-size:10.5px;color:var(--slate-l)">20 pages · base price</span>
@@ -1106,14 +1204,15 @@
     <span style="font-size:12px;color:var(--slate-l)" id="pb-saveState"></span>
     <button class="btn btn-ghost sm" onclick="openMyDashboard()">My Dashboard</button>
     <button class="btn btn-ghost sm" onclick="saveCurrentProject()">Save</button>
-    <button class="btn btn-ghost sm" onclick="openPreview('photobook')">Preview</button>
     <button class="btn btn-accent sm" onclick="openCheckout('photobook')">Order print →</button>
   </div>
   <div class="ed-body">
     <div class="ed-rail" id="pb-rail">
+      <button data-tool="adjust" onclick="EDS.photobook.setTool('adjust')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 4h12M2 8h12M2 12h12" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="4" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="10" cy="8" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="6" cy="12" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/></svg></span>Photo Edit</button>
       <button data-tool="photos" class="on" onclick="EDS.photobook.setTool('photos')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="#52B57D" stroke-width="1.6"/><circle cx="5.5" cy="7" r="1.5" fill="#52B57D"/><path d="M1.5 11l3.5-3 3 2.5 2-2 4 3.5" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Photos</button>
+      <button data-tool="uploads" style="display:none" onclick="EDS.photobook.setTool('uploads')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 11V2M4.5 5.5L8 2l3.5 3.5" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Clip Art</button>
       <button data-tool="shapes" onclick="EDS.photobook.setTool('shapes')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="6" height="6" rx="1" stroke="#52B57D" stroke-width="1.6"/><circle cx="11.5" cy="4.5" r="2.5" stroke="#52B57D" stroke-width="1.6"/><path d="M2 14.5l4-7 4 7H2z" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="9.5" y="9.5" width="5" height="5" rx="0.5" stroke="#52B57D" stroke-width="1.5"/></svg></span>Shapes</button>
-      <button data-tool="adjust" onclick="EDS.photobook.setTool('adjust')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 4h12M2 8h12M2 12h12" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="4" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="10" cy="8" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="6" cy="12" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/></svg></span>Adjust</button>
+      
       <button data-tool="text" onclick="EDS.photobook.setTool('text')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3h10M8 3v10M5 13h6" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/></svg></span>Text</button>
       <button data-tool="layers" onclick="EDS.photobook.setTool('layers')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2L14 5.5 8 9 2 5.5 8 2z" stroke="#52B57D" stroke-width="1.5" stroke-linejoin="round"/><path d="M2 9l6 3.5L14 9" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Layers</button>
       <button data-tool="cover" onclick="EDS.photobook.setTool('cover')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="12" height="12" rx="1.5" stroke="#52B57D" stroke-width="1.6"/><path d="M7.5 2v12" stroke="#52B57D" stroke-width="1.2" stroke-dasharray="2 1.5"/><path d="M5 5h1.5M5 7.5h1.5M5 10h1.5" stroke="#52B57D" stroke-width="1.3" stroke-linecap="round"/><rect x="9" y="4.5" width="3" height="4" rx="0.5" stroke="#52B57D" stroke-width="1.3"/></svg></span>Cover</button>
@@ -1127,33 +1226,33 @@
 </div>
 
 <!-- ============ PHOTOBOOK EDITOR (12x12) ============ -->
-<div class="ed-root" id="editor-photobook12">
+<div class="ed-root ed-dark" id="editor-photobook12">
   <div class="ed-top">
-    <button class="icon-btn" onclick="navHome()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <a onclick="navHome()" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85"></a>
+    <button class="icon-btn" onclick="navHome()" aria-label="Back to home"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <a href="/" onclick="navHome();return false;" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85" loading="lazy" decoding="async"></a>
     <input class="title" id="pb12-title" value="Untitled Photobook (12×12)">
-    <button class="icon-btn" id="pb12-undoBtn" onclick="EDS.photobook12.undo()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6H9.5a3.5 3.5 0 0 1 0 7H6" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M3 6L6 3M3 6l3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <button class="icon-btn" id="pb12-redoBtn" onclick="EDS.photobook12.redo()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 6H6.5a3.5 3.5 0 0 0 0 7H10" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M13 6L10 3m3 3-3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn" id="pb12-undoBtn" onclick="EDS.photobook12.undo()" aria-label="Undo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6H9.5a3.5 3.5 0 0 1 0 7H6" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M3 6L6 3M3 6l3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn" id="pb12-redoBtn" onclick="EDS.photobook12.redo()" aria-label="Redo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 6H6.5a3.5 3.5 0 0 0 0 7H10" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M13 6L10 3m3 3-3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <button class="icon-btn" id="pb12-gridBtn" title="Toggle layout grid" onclick="EDS.photobook12.toggleGrid()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/></svg></button>
     <button class="icon-btn" id="pb12-pnBtn" title="Toggle auto page numbers" onclick="EDS.photobook12.togglePageNums()" style="font-size:10px;font-weight:700;font-family:serif;letter-spacing:-.02em">Pn</button>
-    <button class="btn btn-ghost sm" title="Load a starter template" onclick="openTemplatePicker('photobook12')">Templates</button>
-    <button class="icon-btn ed-theme-btn" title="Switch to dark mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn ed-theme-btn" title="Switch to light mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <div id="pb12-priceTag" style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;margin-left:4px;margin-right:2px">
-      <span id="pb12-priceMain" style="font-size:13px;font-weight:600;color:var(--text)">₹2,200/copy</span>
+      <span id="pb12-priceMain" style="font-size:13px;font-weight:600;color:var(--text)">₹4,200/copy</span>
       <span id="pb12-priceSub" style="font-size:10.5px;color:var(--slate-l)">20 pages · base price</span>
     </div>
     <span class="spacer"></span>
     <span style="font-size:12px;color:var(--slate-l)" id="pb12-saveState"></span>
     <button class="btn btn-ghost sm" onclick="openMyDashboard()">My Dashboard</button>
     <button class="btn btn-ghost sm" onclick="saveCurrentProject()">Save</button>
-    <button class="btn btn-ghost sm" onclick="openPreview('photobook12')">Preview</button>
     <button class="btn btn-accent sm" onclick="openCheckout('photobook12')">Order print →</button>
   </div>
   <div class="ed-body">
     <div class="ed-rail" id="pb12-rail">
+      <button data-tool="adjust" onclick="EDS.photobook12.setTool('adjust')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 4h12M2 8h12M2 12h12" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="4" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="10" cy="8" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="6" cy="12" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/></svg></span>Photo Edit</button>
       <button data-tool="photos" class="on" onclick="EDS.photobook12.setTool('photos')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="#52B57D" stroke-width="1.6"/><circle cx="5.5" cy="7" r="1.5" fill="#52B57D"/><path d="M1.5 11l3.5-3 3 2.5 2-2 4 3.5" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Photos</button>
+      <button data-tool="uploads" style="display:none" onclick="EDS.photobook12.setTool('uploads')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 11V2M4.5 5.5L8 2l3.5 3.5" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Clip Art</button>
       <button data-tool="shapes" onclick="EDS.photobook12.setTool('shapes')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="6" height="6" rx="1" stroke="#52B57D" stroke-width="1.6"/><circle cx="11.5" cy="4.5" r="2.5" stroke="#52B57D" stroke-width="1.6"/><path d="M2 14.5l4-7 4 7H2z" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="9.5" y="9.5" width="5" height="5" rx="0.5" stroke="#52B57D" stroke-width="1.5"/></svg></span>Shapes</button>
-      <button data-tool="adjust" onclick="EDS.photobook12.setTool('adjust')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 4h12M2 8h12M2 12h12" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="4" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="10" cy="8" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="6" cy="12" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/></svg></span>Adjust</button>
+      
       <button data-tool="text" onclick="EDS.photobook12.setTool('text')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3h10M8 3v10M5 13h6" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/></svg></span>Text</button>
       <button data-tool="layers" onclick="EDS.photobook12.setTool('layers')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2L14 5.5 8 9 2 5.5 8 2z" stroke="#52B57D" stroke-width="1.5" stroke-linejoin="round"/><path d="M2 9l6 3.5L14 9" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Layers</button>
       <button data-tool="cover" onclick="EDS.photobook12.setTool('cover')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="12" height="12" rx="1.5" stroke="#52B57D" stroke-width="1.6"/><path d="M7.5 2v12" stroke="#52B57D" stroke-width="1.2" stroke-dasharray="2 1.5"/><path d="M5 5h1.5M5 7.5h1.5M5 10h1.5" stroke="#52B57D" stroke-width="1.3" stroke-linecap="round"/><rect x="9" y="4.5" width="3" height="4" rx="0.5" stroke="#52B57D" stroke-width="1.3"/></svg></span>Cover</button>
@@ -1167,18 +1266,17 @@
 </div>
 
 <!-- ============ PHOTOBOOK EDITOR (12x18, portrait/landscape) ============ -->
-<div class="ed-root" id="editor-photobook18">
+<div class="ed-root ed-dark" id="editor-photobook18">
   <div class="ed-top">
-    <button class="icon-btn" onclick="navHome()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <a onclick="navHome()" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85"></a>
+    <button class="icon-btn" onclick="navHome()" aria-label="Back to home"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <a href="/" onclick="navHome();return false;" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85" loading="lazy" decoding="async"></a>
     <input class="title" id="pb18-title" value="Untitled Photobook (12×18)">
-    <button class="icon-btn" id="pb18-undoBtn" onclick="EDS.photobook18.undo()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6H9.5a3.5 3.5 0 0 1 0 7H6" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M3 6L6 3M3 6l3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <button class="icon-btn" id="pb18-redoBtn" onclick="EDS.photobook18.redo()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 6H6.5a3.5 3.5 0 0 0 0 7H10" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M13 6L10 3m3 3-3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn" id="pb18-undoBtn" onclick="EDS.photobook18.undo()" aria-label="Undo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6H9.5a3.5 3.5 0 0 1 0 7H6" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M3 6L6 3M3 6l3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn" id="pb18-redoBtn" onclick="EDS.photobook18.redo()" aria-label="Redo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 6H6.5a3.5 3.5 0 0 0 0 7H10" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M13 6L10 3m3 3-3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <button class="icon-btn" id="pb18-gridBtn" title="Toggle layout grid" onclick="EDS.photobook18.toggleGrid()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/></svg></button>
     <button class="icon-btn" id="pb18-pnBtn" title="Toggle auto page numbers" onclick="EDS.photobook18.togglePageNums()" style="font-size:10px;font-weight:700;font-family:serif;letter-spacing:-.02em">Pn</button>
     <button class="icon-btn" id="pb18-orientBtn" title="Currently portrait — switch to landscape" onclick="EDS.photobook18.toggleOrientation()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4.5" y="1.5" width="7" height="13" rx="1.3" stroke="#52B57D" stroke-width="1.6"/><path d="M2 9.5l-1 1 1 1M14 9.5l1 1-1 1M1 10.5h2M13 10.5h2" stroke="#52B57D" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <button class="btn btn-ghost sm" title="Load a starter template" onclick="openTemplatePicker('photobook18')">Templates</button>
-    <button class="icon-btn ed-theme-btn" title="Switch to dark mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn ed-theme-btn" title="Switch to light mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <div id="pb18-priceTag" style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;margin-left:4px;margin-right:2px">
       <span id="pb18-priceMain" style="font-size:13px;font-weight:600;color:var(--text)">₹6,300/copy</span>
       <span id="pb18-priceSub" style="font-size:10.5px;color:var(--slate-l)">20 pages · base price</span>
@@ -1187,14 +1285,15 @@
     <span style="font-size:12px;color:var(--slate-l)" id="pb18-saveState"></span>
     <button class="btn btn-ghost sm" onclick="openMyDashboard()">My Dashboard</button>
     <button class="btn btn-ghost sm" onclick="saveCurrentProject()">Save</button>
-    <button class="btn btn-ghost sm" onclick="openPreview('photobook18')">Preview</button>
     <button class="btn btn-accent sm" onclick="openCheckout('photobook18')">Order print →</button>
   </div>
   <div class="ed-body">
     <div class="ed-rail" id="pb18-rail">
+      <button data-tool="adjust" onclick="EDS.photobook18.setTool('adjust')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 4h12M2 8h12M2 12h12" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="4" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="10" cy="8" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="6" cy="12" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/></svg></span>Photo Edit</button>
       <button data-tool="photos" class="on" onclick="EDS.photobook18.setTool('photos')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="#52B57D" stroke-width="1.6"/><circle cx="5.5" cy="7" r="1.5" fill="#52B57D"/><path d="M1.5 11l3.5-3 3 2.5 2-2 4 3.5" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Photos</button>
+      <button data-tool="uploads" style="display:none" onclick="EDS.photobook18.setTool('uploads')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 11V2M4.5 5.5L8 2l3.5 3.5" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Clip Art</button>
       <button data-tool="shapes" onclick="EDS.photobook18.setTool('shapes')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="6" height="6" rx="1" stroke="#52B57D" stroke-width="1.6"/><circle cx="11.5" cy="4.5" r="2.5" stroke="#52B57D" stroke-width="1.6"/><path d="M2 14.5l4-7 4 7H2z" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="9.5" y="9.5" width="5" height="5" rx="0.5" stroke="#52B57D" stroke-width="1.5"/></svg></span>Shapes</button>
-      <button data-tool="adjust" onclick="EDS.photobook18.setTool('adjust')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 4h12M2 8h12M2 12h12" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="4" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="10" cy="8" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="6" cy="12" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/></svg></span>Adjust</button>
+      
       <button data-tool="text" onclick="EDS.photobook18.setTool('text')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3h10M8 3v10M5 13h6" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/></svg></span>Text</button>
       <button data-tool="layers" onclick="EDS.photobook18.setTool('layers')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2L14 5.5 8 9 2 5.5 8 2z" stroke="#52B57D" stroke-width="1.5" stroke-linejoin="round"/><path d="M2 9l6 3.5L14 9" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Layers</button>
       <button data-tool="cover" onclick="EDS.photobook18.setTool('cover')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="12" height="12" rx="1.5" stroke="#52B57D" stroke-width="1.6"/><path d="M7.5 2v12" stroke="#52B57D" stroke-width="1.2" stroke-dasharray="2 1.5"/><path d="M5 5h1.5M5 7.5h1.5M5 10h1.5" stroke="#52B57D" stroke-width="1.3" stroke-linecap="round"/><rect x="9" y="4.5" width="3" height="4" rx="0.5" stroke="#52B57D" stroke-width="1.3"/></svg></span>Cover</button>
@@ -1208,28 +1307,29 @@
 </div>
 
 <!-- ============ TRADE BOOK EDITOR ============ -->
-<div class="ed-root" id="editor-tradebook">
+<div class="ed-root ed-dark" id="editor-tradebook">
   <div class="ed-top">
-    <button class="icon-btn" onclick="navHome()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <a onclick="navHome()" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85"></a>
+    <button class="icon-btn" onclick="navHome()" aria-label="Back to home"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <a href="/" onclick="navHome();return false;" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85" loading="lazy" decoding="async"></a>
     <input class="title" id="tb-title" value="Untitled Trade Book">
-    <button class="icon-btn" id="tb-undoBtn" onclick="EDS.tradebook.undo()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6H9.5a3.5 3.5 0 0 1 0 7H6" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M3 6L6 3M3 6l3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <button class="icon-btn" id="tb-redoBtn" onclick="EDS.tradebook.redo()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 6H6.5a3.5 3.5 0 0 0 0 7H10" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M13 6L10 3m3 3-3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn" id="tb-undoBtn" onclick="EDS.tradebook.undo()" aria-label="Undo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6H9.5a3.5 3.5 0 0 1 0 7H6" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M3 6L6 3M3 6l3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn" id="tb-redoBtn" onclick="EDS.tradebook.redo()" aria-label="Redo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 6H6.5a3.5 3.5 0 0 0 0 7H10" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M13 6L10 3m3 3-3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <button class="icon-btn" id="tb-gridBtn" title="Toggle layout grid" onclick="EDS.tradebook.toggleGrid()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/></svg></button>
     <button class="icon-btn" id="tb-pnBtn" title="Toggle auto page numbers" onclick="EDS.tradebook.togglePageNums()" style="font-size:10px;font-weight:700;font-family:serif;letter-spacing:-.02em">Pn</button>
-    <button class="icon-btn ed-theme-btn" title="Switch to dark mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn ed-theme-btn" title="Switch to light mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <span class="spacer"></span>
     <span style="font-size:12px;color:var(--slate-l)" id="tb-saveState"></span>
     <button class="btn btn-ghost sm" onclick="openMyDashboard()">My Dashboard</button>
     <button class="btn btn-ghost sm" onclick="saveCurrentProject()">Save</button>
-    <button class="btn btn-ghost sm" onclick="openPreview('tradebook')">Preview</button>
     <button class="btn btn-accent sm" onclick="openCheckout('tradebook')">Order print →</button>
   </div>
   <div class="ed-body">
     <div class="ed-rail" id="tb-rail">
+      <button data-tool="adjust" onclick="EDS.tradebook.setTool('adjust')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 4h12M2 8h12M2 12h12" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="4" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="10" cy="8" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="6" cy="12" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/></svg></span>Photo Edit</button>
       <button data-tool="photos" class="on" onclick="EDS.tradebook.setTool('photos')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="#52B57D" stroke-width="1.6"/><circle cx="5.5" cy="7" r="1.5" fill="#52B57D"/><path d="M1.5 11l3.5-3 3 2.5 2-2 4 3.5" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Photos</button>
+      <button data-tool="uploads" style="display:none" onclick="EDS.tradebook.setTool('uploads')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 11V2M4.5 5.5L8 2l3.5 3.5" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Clip Art</button>
       <button data-tool="manuscript" onclick="EDS.tradebook.setTool('manuscript')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="1.5" width="10" height="13" rx="1.5" stroke="#52B57D" stroke-width="1.6"/><path d="M6 5h4M6 7.5h4M6 10h2.5" stroke="#52B57D" stroke-width="1.4" stroke-linecap="round"/></svg></span>Manuscript</button>
-      <button data-tool="adjust" onclick="EDS.tradebook.setTool('adjust')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 4h12M2 8h12M2 12h12" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="4" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="10" cy="8" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="6" cy="12" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/></svg></span>Adjust</button>
+      
       <button data-tool="text" onclick="EDS.tradebook.setTool('text')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3h10M8 3v10M5 13h6" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/></svg></span>Text</button>
       <button data-tool="layers" onclick="EDS.tradebook.setTool('layers')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2L14 5.5 8 9 2 5.5 8 2z" stroke="#52B57D" stroke-width="1.5" stroke-linejoin="round"/><path d="M2 9l6 3.5L14 9" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Layers</button>
       <button data-tool="cover" onclick="EDS.tradebook.setTool('cover')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="12" height="12" rx="1.5" stroke="#52B57D" stroke-width="1.6"/><path d="M7.5 2v12" stroke="#52B57D" stroke-width="1.2" stroke-dasharray="2 1.5"/><path d="M5 5h1.5M5 7.5h1.5M5 10h1.5" stroke="#52B57D" stroke-width="1.3" stroke-linecap="round"/><rect x="9" y="4.5" width="3" height="4" rx="0.5" stroke="#52B57D" stroke-width="1.3"/></svg></span>Cover</button>
@@ -1243,12 +1343,12 @@
 </div>
 
 <!-- ============ ART PRINTS EDITOR ============ -->
-<div class="ed-root" id="editor-artprints">
+<div class="ed-root ed-dark" id="editor-artprints">
   <div class="ed-top">
-    <button class="icon-btn" onclick="navHome()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <a onclick="navHome()" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85"></a>
+    <button class="icon-btn" onclick="navHome()" aria-label="Back to home"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <a href="/" onclick="navHome();return false;" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85" loading="lazy" decoding="async"></a>
     <input class="title" id="ap-title" value="Untitled Art Print Set">
-    <button class="icon-btn ed-theme-btn" title="Switch to dark mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn ed-theme-btn" title="Switch to light mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <div id="ap-priceTag" style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;margin-left:4px;margin-right:2px">
       <span id="ap-priceMain" style="font-size:13px;font-weight:600;color:var(--text)">₹800</span>
       <span id="ap-priceSub" style="font-size:10.5px;color:var(--slate-l)">set of 4 · 6″×4″</span>
@@ -1256,7 +1356,6 @@
     <span class="spacer"></span>
     <button class="btn btn-ghost sm" onclick="openMyDashboard()">My Dashboard</button>
     <button class="btn btn-ghost sm" onclick="saveCurrentProject()">Save</button>
-    <button class="btn btn-ghost sm" onclick="openPreview('artprints')">Preview</button>
     <button class="btn btn-accent sm" onclick="openCheckout('artprints')">Order print →</button>
   </div>
   <div class="ed-body">
@@ -1271,12 +1370,12 @@
 </div>
 
 <!-- ============ SINGLE ART PRINT (12x18) ============ -->
-<div class="ed-root" id="editor-artprint12x18">
+<div class="ed-root ed-dark" id="editor-artprint12x18">
   <div class="ed-top">
-    <button class="icon-btn" onclick="navHome()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <a onclick="navHome()" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85"></a>
+    <button class="icon-btn" onclick="navHome()" aria-label="Back to home"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <a href="/" onclick="navHome();return false;" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85" loading="lazy" decoding="async"></a>
     <input class="title" id="ap12x18-title" value="Untitled 12×18 Art Print">
-    <button class="icon-btn ed-theme-btn" title="Switch to dark mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn ed-theme-btn" title="Switch to light mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <div id="ap12x18-priceTag" style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;margin-left:4px;margin-right:2px">
       <span id="ap12x18-priceMain" style="font-size:13px;font-weight:600;color:var(--text)">₹2,800</span>
       <span id="ap12x18-priceSub" style="font-size:10.5px;color:var(--slate-l)">12″×18″ print</span>
@@ -1284,7 +1383,6 @@
     <span class="spacer"></span>
     <button class="btn btn-ghost sm" onclick="openMyDashboard()">My Dashboard</button>
     <button class="btn btn-ghost sm" onclick="saveCurrentProject()">Save</button>
-    <button class="btn btn-ghost sm" onclick="openPreview('artprint12x18')">Preview</button>
     <button class="btn btn-accent sm" onclick="openCheckout('artprint12x18')">Order print →</button>
   </div>
   <div class="ed-body">
@@ -1299,12 +1397,12 @@
 </div>
 
 <!-- ============ SINGLE ART PRINT (16x20) ============ -->
-<div class="ed-root" id="editor-artprint16x20">
+<div class="ed-root ed-dark" id="editor-artprint16x20">
   <div class="ed-top">
-    <button class="icon-btn" onclick="navHome()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <a onclick="navHome()" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85"></a>
+    <button class="icon-btn" onclick="navHome()" aria-label="Back to home"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <a href="/" onclick="navHome();return false;" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85" loading="lazy" decoding="async"></a>
     <input class="title" id="ap16x20-title" value="Untitled 16×20 Art Print">
-    <button class="icon-btn ed-theme-btn" title="Switch to dark mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn ed-theme-btn" title="Switch to light mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <div id="ap16x20-priceTag" style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;margin-left:4px;margin-right:2px">
       <span id="ap16x20-priceMain" style="font-size:13px;font-weight:600;color:var(--text)">₹4,200</span>
       <span id="ap16x20-priceSub" style="font-size:10.5px;color:var(--slate-l)">16″×20″ print</span>
@@ -1312,7 +1410,6 @@
     <span class="spacer"></span>
     <button class="btn btn-ghost sm" onclick="openMyDashboard()">My Dashboard</button>
     <button class="btn btn-ghost sm" onclick="saveCurrentProject()">Save</button>
-    <button class="btn btn-ghost sm" onclick="openPreview('artprint16x20')">Preview</button>
     <button class="btn btn-accent sm" onclick="openCheckout('artprint16x20')">Order print →</button>
   </div>
   <div class="ed-body">
@@ -1379,15 +1476,8 @@
   <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:10px" onclick="hide('listArrangeModal')">Cancel</button>
 </div></div>
 
-<div class="modal-bg" id="previewModal" onclick="if(event.target===this)hide('previewModal')"><div class="modal" style="max-width:760px;background:var(--ink);color:#fff">
-  <div style="display:flex;justify-content:space-between;margin-bottom:18px"><h3 style="color:#fff">Preview</h3><button class="btn btn-accent xs" onclick="hide('previewModal')">Close ✕</button></div>
-  <div id="pvStage" style="display:flex;justify-content:center"></div>
-  <div style="display:flex;justify-content:center;gap:12px;margin-top:18px">
-    <button class="btn btn-accent sm pv-navbtn" onclick="pvNav(-1)">← Prev</button>
-    <span id="pvLabel" style="color:#9AA0A6;font-size:13px;align-self:center"></span>
-    <button class="btn btn-accent sm pv-navbtn" onclick="pvNav(1)">Next →</button>
-  </div>
-</div></div>
+</template>
+
 <script src="/script.js?v=20261017b" defer></script>
 </body>
 </html>
