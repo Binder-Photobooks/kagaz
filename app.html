@@ -683,6 +683,7 @@
       <button data-ap="content" onclick="adminTab('content')">Content Manager</button>
       <button data-ap="gallery-edit" onclick="adminTab('gallery-edit')">Gallery</button>
       <button data-ap="templates" onclick="adminTab('templates')">Templates</button>
+      <button data-ap="pages" onclick="adminTab('pages')">Pages</button>
       <button data-ap="products" onclick="adminTab('products')">Store Products</button>
       <button data-ap="journal" onclick="adminTab('journal')">Kagaz Journal Manager</button>
       <button data-ap="customers" onclick="adminTab('customers')">Customers</button>
@@ -881,6 +882,12 @@
         <p style="font-size:12.5px;color:var(--slate-l);margin-bottom:20px">Each template is blank and sized exactly for one product. Give it a name (or leave blank to use the size's default name), pick the size, and click <b>+ Add template</b>. Click <b>Edit layout</b> to design it in the real editor (cover, pages, back cover), upload reusable graphics under <b>Assets</b> — they'll show up as a "Clip Art" tool inside the editor while you're building this template — and edit the card's title/description/thumbnail any time below.</p>
         <div id="customTemplatesAdminRows" style="display:flex;flex-direction:column;gap:16px"></div>
       </div>
+      <div id="ap-pages" style="display:none">
+        <h2 style="margin-bottom:6px">Pages</h2>
+        <p style="font-size:12.5px;color:var(--slate-l);margin-bottom:18px">Edit the text and images of the Photobooks, Trade Books and Art Prints pages. Changes save as you go and show to every visitor. Leave a field empty to use the original wording.</p>
+        <div id="pageEditTabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px"></div>
+        <div id="pageEditForm"></div>
+      </div>
       <div id="ap-products" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h2 style="margin:0">Store Products</h2><div style="display:flex;gap:8px"><button class="btn btn-ghost sm" onclick="openListArrange('products')">✦ AI Arrange</button><button class="btn btn-accent sm" onclick="openProductForm()">+ Add product</button></div></div>
         <div id="productRows"></div>
@@ -1045,6 +1052,13 @@
   <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
     <button class="btn btn-ghost xs" onclick="$('pfImgUpload').click()">Upload image</button>
     <span style="font-size:12px;color:var(--slate-l)">or paste a URL above</span>
+  </div>
+  <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--slate-l);font-weight:700;margin:6px 0 8px">More images (gallery)</div>
+  <div id="pfGallery" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
+  <input type="file" accept="image/*" multiple id="pfGalleryUpload" style="display:none" onchange="onProductGalleryUpload(this.files)">
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+    <button class="btn btn-ghost xs" onclick="$('pfGalleryUpload').click()">+ Add images</button>
+    <span style="font-size:12px;color:var(--slate-l)">Pick several at once. The first image above is the cover.</span>
   </div>
   <div style="display:flex;gap:10px">
     <button class="btn btn-accent" style="flex:1;justify-content:center" onclick="saveProductForm()">Save product</button>
@@ -1476,6 +1490,6 @@
 
 </template>
 
-<script src="/script.js?v=20261017b" defer></script>
+<script src="/script.js?v=20261022a" defer></script>
 </body>
 </html>

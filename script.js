@@ -152,7 +152,7 @@ function buildProductSchema(p,slugPath){
   return {
     "@context":"https://schema.org","@type":"Product",
     "name":p.name,
-    "image":p.img||DEFAULT_OG_IMAGE,
+    "image":(productGallery(p).filter(u=>!isVideoUrl(u)).length?productGallery(p).filter(u=>!isVideoUrl(u)):[DEFAULT_OG_IMAGE]),
     "description":p.blurb||p.details||('Order '+p.name+' from Binder, a premium printer in Delhi.'),
     "sku":p.id,
     "brand":{"@type":"Brand","name":"Binder"},
@@ -219,7 +219,7 @@ const START_PAGES={
     label:'Trade Book',h1:'Trade Book Printing & Self-Publishing',heroImg:'/images/img-3.jpg',heroImgKey:'tradebookTileImageUrl',contentKey:'startTradebookIntro',needKey:'startTradebookNeed',stepsKey:'startTradebookSteps',
   },
   artprints:{
-    label:'Art Prints',h1:'Archival Art Print Printing',heroImg:'/images/img-5.jpg',heroImgKey:'artprintsTileImageUrl',contentKey:'startArtprintsIntro',needKey:'startArtprintsNeed',stepsKey:'startArtprintsSteps',
+    label:'Art Prints',h1:'Archival Art Prints',heroImg:'/images/img-5.jpg',heroImgKey:'artprintsTileImageUrl',contentKey:'startArtprintsIntro',needKey:'startArtprintsNeed',stepsKey:'startArtprintsSteps',
   }
 };
 let ACTIVE_START_KEY=null;
@@ -241,8 +241,9 @@ function goStart(key,push){
   $('view-start').classList.add('active'); window.scrollTo(0,0);
   renderStartPage(key);
   const robots=document.querySelector('meta[name="robots"]'); if(robots)robots.setAttribute('content','index, follow');
-  const seo=START_SEO[key];
-  if(seo){
+  const seo=Object.assign({},START_SEO[key]);
+  { const pe_=PAGE_EDITS[key]||{}; if(pe_.seoTitle)seo.title=pe_.seoTitle; if(pe_.seoDesc)seo.desc=pe_.seoDesc; }
+  if(seo&&seo.title){
     document.title=seo.title;
     const desc=document.querySelector('meta[name="description"]'); if(desc)desc.setAttribute('content',seo.desc);
     updateSeoKeywords(seo.keywords);
@@ -272,6 +273,36 @@ function parseStepsList(text){
     return i===-1?[line,'']:[line.slice(0,i).trim(),line.slice(i+1).trim()];
   });
 }
+/* Everything on the three "Start creating" pages is editable in Admin → Pages: headline, labels,
+   the format cards, the checklist/steps (stored in CONTENT, as before), the hero image, extra
+   text+image blocks, and the page's SEO title/description. Edits are stored in the CMS under
+   'page_edits'; anything left empty falls back to the original wording below. */
+const START_CARD_DEFAULTS={
+  photobook:{heading:'Choose a size',cards:[
+    {k:'photobook',title:'8.5″ × 8.5″',desc:'Our original layflat photobook. From ₹2,200/copy, 20 pages included.',btn:'Start 8.5″×8.5″ →'},
+    {k:'photobook12',title:'12″ × 12″',desc:'A larger format for bigger, bolder spreads. From ₹4,200/copy, 20 pages included. Hardbound or softbound, same price.',btn:'Start 12″×12″ →'},
+    {k:'photobook18',title:'12″ × 18″',desc:'Our largest format, for a real coffee-table statement piece. Switch between portrait and landscape right in the editor. From ₹6,300/copy, 20 pages included. Hardbound or softbound, same price.',btn:'Start 12″×18″ →'}]},
+  artprints:{heading:'Choose a format',boxed:true,cards:[
+    {k:'artprints',title:'Set of 4',desc:'Four 6″×4″ prints on one order. ₹200/print — ₹800 for the set.',btn:'Start set of 4 →'},
+    {k:'artprint12x18',title:'12″ × 18″',desc:'One large single print. ₹2,800. Rotate to 18″×12″ landscape any time in the editor.',btn:'Start 12″×18″ →'},
+    {k:'artprint16x20',title:'16″ × 20″',desc:'Our largest single print. ₹4,200. Rotate to 20″×16″ landscape any time in the editor.',btn:'Start 16″×20″ →'}]},
+};
+let PAGE_EDITS=loadJSON('cms_page_edits',null)||{};
+function savePageEdits(){
+  saveJSON('cms_page_edits',PAGE_EDITS);
+  cmsSet('page_edits',PAGE_EDITS).then(ok=>{toast(ok?'Saved ✓ — visible to all visitors':'⚠ Saved on this device only — cloud sync failed');});
+  if(ACTIVE_START_KEY&&document.getElementById('view-start')&&$('view-start').classList.contains('active'))renderStartPage(ACTIVE_START_KEY);
+}
+function peField(key,field,def){const v=(PAGE_EDITS[key]||{})[field]; return (v===undefined||v===null||String(v).trim()==='')?def:v;}
+function peBlocksHtml(blocks){
+  return (blocks||[]).map(b=>{
+    const paras=(b.text||'').split(/\n{2,}/).map(t=>t.trim()).filter(Boolean).map(t=>`<p style="font-size:15px;line-height:1.65;color:var(--slate);margin:0 0 12px">${esc(t).replace(/\n/g,'<br>')}</p>`).join('');
+    const img=b.img?`<div style="flex:1 1 320px;min-width:240px;max-width:${b.layout==='top'?'800px':'460px'}"><img src="${esc(b.img)}" alt="${esc(b.heading||'')}" style="width:100%;display:block;object-fit:cover"></div>`:'';
+    const txt=`<div style="flex:1 1 320px;min-width:240px">${b.heading?`<h3 style="font-size:22px;margin:0 0 12px">${esc(b.heading)}</h3>`:''}${paras}</div>`;
+    const dir=b.layout==='top'?'column':(b.layout==='right'?'row-reverse':'row');
+    return `<section style="margin:0 0 44px;display:flex;flex-direction:${dir};gap:28px;align-items:${b.layout==='top'?'stretch':'center'};flex-wrap:wrap;max-width:960px">${img}${txt}</section>`;
+  }).join('');
+}
 function renderStartPage(key){
   const info=START_PAGES[key]; if(!info)return;
   const wrap=$('startPageContent');
@@ -279,6 +310,8 @@ function renderStartPage(key){
   const needList=parseNeedList(CONTENT[info.needKey]);
   const stepsList=parseStepsList(CONTENT[info.stepsKey]);
   const intro=CONTENT[info.contentKey]||'';
+  const E=PAGE_EDITS[key]||{};
+  const defs=START_CARD_DEFAULTS[key];
   const heroBlock=key==='photobook'
     ? `<div class="start-video-hero-wrap">${isVideoUrl(heroSrc)
         ? `<video src="${esc(heroSrc)}" autoplay muted playsinline preload="auto"></video>`
@@ -286,71 +319,43 @@ function renderStartPage(key){
     : `<div style="overflow:hidden;margin:28px 0 40px;max-width:800px">
         <img src="${esc(heroSrc)}" alt="${esc(info.label)}" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block">
       </div>`;
+  const h4=t=>`<h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);font-weight:700;margin-bottom:14px">${esc(t)}</h4>`;
+  const pricingLink=`<a onclick="go('pricing')" style="color:var(--accent);cursor:pointer;font-size:14px;font-weight:600">${esc(peField(key,'pricingLabel','See full pricing →'))}</a>`;
+  let tail;
+  if(defs){
+    const cards=defs.cards.map((c,i)=>{const o=(E.cards&&E.cards[i])||{};return {k:c.k,title:o.title||c.title,desc:o.desc||c.desc,btn:o.btn||c.btn};});
+    const boxed=defs.boxed?'border:1px solid var(--line);border-radius:14px;padding:26px;':'padding:4px 0 0;';
+    tail=`${h4(peField(key,'cardsHeading',defs.heading))}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(${defs.boxed?220:240}px,1fr));gap:20px;margin-bottom:32px;max-width:${defs.boxed?940:960}px">
+      ${cards.map(c=>`<div style="${boxed}display:flex;flex-direction:column">
+        <h3 style="font-size:19px;margin-bottom:6px">${esc(c.title)}</h3>
+        <p style="font-size:14px;color:var(--slate);line-height:1.5;margin-bottom:20px">${esc(c.desc)}</p>
+        <button class="btn btn-accent sm" style="margin-top:auto" onclick="openEditor('${c.k}')">${esc(c.btn)}</button>
+      </div>`).join('')}
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">${pricingLink}</div>`;
+  }else{
+    tail=`<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-accent" onclick="openEditor('${key}')">${esc(peField(key,'ctaLabel','Start creating your '+info.label.toLowerCase()+' →'))}</button>
+      ${pricingLink}
+    </div>`;
+  }
   wrap.innerHTML=`
-    <span class="tag">Start creating</span>
-    <h1>${esc(info.h1||info.label)}</h1>
+    <span class="tag">${esc(peField(key,'tag','Start creating'))}</span>
+    <h1>${esc(peField(key,'h1',info.h1||info.label))}</h1>
     <p class="lead">${esc(intro)}</p>
     ${heroBlock}
-    <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);font-weight:700;margin-bottom:14px">What you'll need before you start</h4>
+    ${h4(peField(key,'needHeading',"What you'll need before you start"))}
     <ul style="list-style:none;margin-bottom:40px;max-width:640px">
       ${needList.map(n=>`<li style="display:flex;gap:12px;padding:9px 0;font-size:15px;line-height:1.55;border-bottom:1px solid var(--line)"><span style="color:var(--accent);flex:0 0 auto">✓</span><span>${esc(n)}</span></li>`).join('')}
     </ul>
 
-    <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);font-weight:700;margin-bottom:14px">How it works</h4>
+    ${h4(peField(key,'stepsHeading','How it works'))}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:22px;margin-bottom:44px">
       ${stepsList.map(([t,d],i)=>`<div><div style="font-family:var(--disp);font-size:13px;font-weight:700;color:var(--accent);margin-bottom:8px">0${i+1}</div><h3 style="font-size:16px;margin-bottom:6px">${esc(t)}</h3><p style="font-size:14px;color:var(--slate);line-height:1.55;margin:0">${esc(d)}</p></div>`).join('')}
     </div>
-
-    ${key==='photobook'?`
-    <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);font-weight:700;margin-bottom:14px">Choose a size</h4>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-bottom:32px;max-width:960px">
-      <div style="padding:4px 0 0;display:flex;flex-direction:column">
-        <h3 style="font-size:19px;margin-bottom:6px">8.5″ × 8.5″</h3>
-        <p style="font-size:14px;color:var(--slate);line-height:1.5;margin-bottom:20px">Our original layflat photobook. From ₹2,200/copy, 20 pages included.</p>
-        <button class="btn btn-accent sm" style="margin-top:auto" onclick="openEditor('photobook')">Start 8.5″×8.5″ →</button>
-      </div>
-      <div style="padding:4px 0 0;display:flex;flex-direction:column">
-        <h3 style="font-size:19px;margin-bottom:6px">12″ × 12″</h3>
-        <p style="font-size:14px;color:var(--slate);line-height:1.5;margin-bottom:20px">A larger format for bigger, bolder spreads. From ₹4,200/copy, 20 pages included. Hardbound or softbound, same price.</p>
-        <button class="btn btn-accent sm" style="margin-top:auto" onclick="openEditor('photobook12')">Start 12″×12″ →</button>
-      </div>
-      <div style="padding:4px 0 0;display:flex;flex-direction:column">
-        <h3 style="font-size:19px;margin-bottom:6px">12″ × 18″</h3>
-        <p style="font-size:14px;color:var(--slate);line-height:1.5;margin-bottom:20px">Our largest format, for a real coffee-table statement piece. Switch between portrait and landscape right in the editor. From ₹6,300/copy, 20 pages included. Hardbound or softbound, same price.</p>
-        <button class="btn btn-accent sm" style="margin-top:auto" onclick="openEditor('photobook18')">Start 12″×18″ →</button>
-      </div>
-    </div>
-    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
-      <a onclick="go('pricing')" style="color:var(--accent);cursor:pointer;font-size:14px;font-weight:600">See full pricing →</a>
-    </div>
-    `:key==='artprints'?`
-    <h4 style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate-l);font-weight:700;margin-bottom:14px">Choose a format</h4>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:32px;max-width:940px">
-      <div style="border:1px solid var(--line);border-radius:14px;padding:26px;display:flex;flex-direction:column">
-        <h3 style="font-size:19px;margin-bottom:6px">Set of 4</h3>
-        <p style="font-size:14px;color:var(--slate);line-height:1.5;margin-bottom:20px">Four 6″×4″ prints on one order. ₹200/print — ₹800 for the set.</p>
-        <button class="btn btn-accent sm" style="margin-top:auto" onclick="openEditor('artprints')">Start set of 4 →</button>
-      </div>
-      <div style="border:1px solid var(--line);border-radius:14px;padding:26px;display:flex;flex-direction:column">
-        <h3 style="font-size:19px;margin-bottom:6px">12″ × 18″</h3>
-        <p style="font-size:14px;color:var(--slate);line-height:1.5;margin-bottom:20px">One large single print. ₹2,800. Rotate to 18″×12″ landscape any time in the editor.</p>
-        <button class="btn btn-accent sm" style="margin-top:auto" onclick="openEditor('artprint12x18')">Start 12″×18″ →</button>
-      </div>
-      <div style="border:1px solid var(--line);border-radius:14px;padding:26px;display:flex;flex-direction:column">
-        <h3 style="font-size:19px;margin-bottom:6px">16″ × 20″</h3>
-        <p style="font-size:14px;color:var(--slate);line-height:1.5;margin-bottom:20px">Our largest single print. ₹4,200. Rotate to 20″×16″ landscape any time in the editor.</p>
-        <button class="btn btn-accent sm" style="margin-top:auto" onclick="openEditor('artprint16x20')">Start 16″×20″ →</button>
-      </div>
-    </div>
-    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
-      <a onclick="go('pricing')" style="color:var(--accent);cursor:pointer;font-size:14px;font-weight:600">See full pricing →</a>
-    </div>
-    `:`
-    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
-      <button class="btn btn-accent" onclick="openEditor('${key}')">Start creating your ${esc(info.label.toLowerCase())} →</button>
-      <a onclick="go('pricing')" style="color:var(--accent);cursor:pointer;font-size:14px;font-weight:600">See full pricing →</a>
-    </div>
-    `}
+    ${peBlocksHtml(E.blocks)}
+    ${tail}
   `;
   document.title=info.label+' — Binder';
   const desc=document.querySelector('meta[name="description"]'); if(desc)desc.setAttribute('content',intro.slice(0,155));
@@ -657,18 +662,18 @@ function templatePageCountV2(t){ return (t.pages||[]).length; }
 /* ---------- Public /templates page ---------- */
 function renderTemplatesPageV2(){
   const wrap=$('tplGridV2'); if(!wrap)return;
-  const builtinCards=BUILTIN_TEMPLATES.map(t=>`
+  const builtinCards=BUILTIN_TEMPLATES.filter(t=>!builtinView(t).hidden).map(t=>{const v=builtinView(t);return `
     <div class="tpl-card">
-      <div class="tpl-card-thumb"><img src="${esc(t.thumbUrl)}" alt="${esc(t.label)}" loading="lazy" style="width:100%;height:100%;object-fit:cover"></div>
+      <div class="tpl-card-thumb"><img src="${esc(v.thumbUrl)}" alt="${esc(v.label)}" loading="lazy" style="width:100%;height:100%;object-fit:cover"></div>
       <div class="tpl-card-body">
-        <h3>${esc(t.label)}</h3>
-        <p>${esc(t.description)}</p>
-        <div class="tpl-card-meta">40 pages + cover</div>
+        <h3>${esc(v.label)}</h3>
+        <p>${esc(v.description)}</p>
+        <div class="tpl-card-meta">${t.pageCount} pages + cover · ${t.sizes.length} sizes</div>
       </div>
       <div class="tpl-card-foot">
-        <button class="btn btn-accent sm" onclick="startBuiltinTemplate('${t.id}')">Use this template</button>
+        <button class="btn btn-accent sm" onclick="chooseBuiltinTemplateSize('${t.id}')">Use this template</button>
       </div>
-    </div>`).join('');
+    </div>`;}).join('');
   wrap.innerHTML=CUSTOM_TEMPLATES.map(t=>{
     const meta=templateEditorMeta(t.editorKey);
     const thumbHtml=t.thumbUrl
@@ -711,7 +716,7 @@ function startCustomTemplate(templateId){
   const meta=templateEditorMeta(t.editorKey);
   if(meta.kind==='book'){
     const ed=EDS[t.editorKey]; if(!ed)return toast('Editor not available.');
-    if(editorHasContent(ed.doc)&&!confirm('Load the "'+t.label+'" template? This replaces the current, unsaved '+ed.pageCount()+'-page project in this editor. This can\'t be undone once you navigate away.'))return;
+    if(editorHasContent(ed.doc)&&!confirm('Load the "'+t.label+' — '+sz.label+'" template? This replaces the current, unsaved '+ed.pageCount()+'-page project in this editor. This can\'t be undone once you navigate away.'))return;
     ed.doc.cover=JSON.parse(JSON.stringify(t.cover||blankPage()));
     ed.doc.pages=JSON.parse(JSON.stringify((t.pages&&t.pages.length)?t.pages:[blankPage()]));
     ed.doc.backCover=JSON.parse(JSON.stringify(t.backCover||blankPage()));
@@ -1098,30 +1103,248 @@ function buildNightSkyPages(ed){
   return P;
 }
 
-const NS_DESC='An astrophotography book: 40 pages plus a dark-blue cover with a hand-plotted Orion and a back cover with an About the Photographer panel. Opens with a publisher\'s page, then four sections — Moon & Planets, Milky Way & Night Landscapes, Deep Sky, and Techniques — with capture-data pages, a glossary and observing notes. Every [bracketed] line is yours to replace.';
-const BUILTIN_TEMPLATES=[
-  {id:'builtin-night-sky-12',label:'The Night Sky — 12″×12″',editorKey:'photobook12',description:NS_DESC,thumbUrl:'images/nightsky-cover.jpg'},
-  {id:'builtin-night-sky-85',label:'The Night Sky — 8.5″×8.5″',editorKey:'photobook',description:NS_DESC,thumbUrl:'images/nightsky-cover.jpg'},
-  {id:'builtin-night-sky-18',label:'The Night Sky — 12″×18″',editorKey:'photobook18',description:NS_DESC,thumbUrl:'images/nightsky-cover.jpg'},
+const NS_DESC='A 40-page astrophotography book with a dark-blue constellation cover, a publisher\'s page, capture-data pages, glossary and an About the Photographer back cover. Every [bracketed] line is yours to replace.';
+const ALLURE_CAPS=[["The Rickshaw", "Ting-ting! The rickshaw rolls past tall old houses in the city of Kolkata. Who is riding today?"], ["Howrah Bridge", "A giant steel bridge stretches across the river, and little boats sail underneath it."], ["The White Palace", "This palace has a big round dome and lots of pointy arches. Can you count them?"], ["Dhak and Drums", "At Durga Puja the drums go dhak-dhak-dhak! White kash flowers sway all around."], ["The Little Train", "Chuk-chuk-chuk! A steam train puffs past the nodding kash flowers."], ["The Village Pond", "Ducks paddle and lotuses bloom beside a cosy hut under the coconut palms."], ["The Bullock Cart", "Slow and steady, the bullock pulls the cart through the green paddy fields."], ["The River Boat", "A country boat with a big sail drifts down the river while fish swim below."], ["The Silver Hilsa", "Shimmer, shimmer! The hilsa fish loves the river, especially in the rainy season."], ["The Clay Temple", "Carved clay and curvy roofs make this old temple look like a house from a storybook."], ["School Under the Tree", "In Shantiniketan, children learn outdoors, sitting in the shade of a great big tree."], ["The Chhatim Tree", "Birds have built a nest in the old tree. How many eggs can you see?"], ["The Dance", "Hand in hand, the villagers dance in a ring to the beat of the drum."], ["The Singing Baul", "With his ektara, the wandering Baul sings songs about the sky, the river and the heart."], ["Alpona", "Families paint patterns like this on the floor for festivals. Start colouring from the middle!"], ["The Quilt Bird", "Grandmothers stitch birds and flowers onto soft kantha quilts. Colour every stitch!"], ["The Verandah House", "A house with a wide verandah is the perfect place for an afternoon nap."], ["The Village Fair", "Up, up goes the big wheel at the mela! Kites and balloons float by."], ["The Sweet Shop", "Mishti, mishti! Pots and plates of sweets line the shelves of the sweet shop."], ["The Little Detective", "Look closely through the magnifying glass. Whose footprints are these?"], ["The Tiger Who Loved Music", "This friendly tiger plays the tabla. Tha-ka-dhin-na, tha-ka-dhin-na!"], ["The Flying Machine", "A little inventor's balloon has gears, a propeller, and a very long journey ahead."], ["Into the Sundarbans", "A tiger peeks out from the mangrove forest, where the trees stand on tiptoe roots."], ["The Toy Train", "The little mountain train winds past tea gardens and snowy peaks."], ["The Mountain Monastery", "Prayer flags flutter in the cold wind while a yak rests below the monastery."], ["The Moonlit Palace", "Under the night sky, the Taj Mahal shines like a pearl."], ["The Desert Fort", "A sleepy camel waits outside an old fort in Rajasthan."], ["The Royal Elephant", "Dressed for the parade, the elephant wears flowers and a golden cloth."], ["The Dancing Peacock", "When the rain clouds come, the peacock spreads his shimmering tail."], ["The Gentle Rhino", "In the tall grass of Kaziranga, a one-horned rhino rests with a friend on its back."], ["The Backwaters", "A houseboat floats slowly through the quiet backwaters of Kerala."], ["The Mask", "Bright painted faces tell old stories in the dances of Kerala."], ["The Dancer", "Bells jingle on her ankles as the dancer strikes a pose. Can you strike one too?"], ["The Stone Wheel", "This giant stone wheel belongs to a chariot carved long, long ago."], ["The Rangoli", "A rangoli of flowers and little lamps decorates the doorstep to welcome guests."], ["Holi", "Splish, splash! Friends squirt water and laugh together on Holi."], ["Diwali", "Lamps glow, lanterns hang and fireworks sparkle on the festival of lights."], ["The Mango Tree", "Parrots love mango season, and so do we! How many mangoes can you count?"], ["Good Night, India", "The moon smiles down as the little elephant falls asleep. Sweet dreams."]];
+
+const ALLURE_DESC='A colouring book for children under five: 39 large black line drawings — rickshaws and river boats, tigers and temples, Shantiniketan and storybook Bengal — each with a short caption, plus a dedication page. Add your child\'s name on the cover.';
+function allureAssets(ed){
+  const base=location.origin+'/images/colouring/';
+  for(let i=0;i<=39;i++){
+    const id='allure-'+String(i).padStart(2,'0');
+    if(!ed.photos.find(p=>p.id===id))ed.photos.push({id,name:'Colouring page '+i,url:base+id+'.png',w:3600,h:3600,isAsset:true});
+  }
+}
+function lbT(html,x,y,w,size,o){
+  o=o||{};
+  const t=tplText('<p>'+html+'</p>',x,y,w,+size.toFixed(2),{align:o.align||'center',bold:!!o.bold,italic:!!o.italic,lineHeight:o.lh||1.35,color:'#000000'});
+  t.font='Nunito'; t.ls=0; t.paraSpacing=0; t.cmyk=hex2cmyk('#000000');
+  return t;
+}
+function lbImg(photo,x,y,w,h){return {id:uid(),photo,x,y,w,h,rot:0,b:100,c:100,sat:100,fit:'contain'};}
+function lbPage(){const p=tplPage();p.bg='#FFFFFF';p.bgCmyk=[0,0,0,0];return p;}
+/* One page = a square picture plus a flow of text blocks. Portrait/square pages put the picture on
+   top and the text underneath; wide pages (12×18 landscape) put the picture left, text right.
+   All sizes derive from the live page size, so every book size keeps the same proportions. */
+function allureLayout(ed,imgId,blocks,o){
+  o=o||{};
+  const W=ed.cfg.pageInW,H=ed.cfg.pageInH, land=W>H*1.15;
+  const u=(land?H:W)/8.5, fs=Math.min(1,H/W), pxIn=W/420;
+  const p=lbPage(), px=v=>v/W*100, py=v=>v/H*100;
+  const artFrac=o.art||1;                 // 1 = full-size picture, <1 = smaller (cover/back/dedication)
+  let ax,ay,a,tx,tw,ty;
+  if(!land){
+    a=Math.min((o.a||6.0)*u*artFrac,H-2.6*u); ax=(W-a)/2; ay=(o.ay===undefined?0.5:o.ay)*u; tx=0.6*u; tw=W-1.2*u; ty=ay+a+0.22*u;
+  }else{
+    a=H-1.2*u; if(o.a)a=Math.min(a,o.a*u*1.5*artFrac); ax=0.6*u; ay=(H-a)/2; tx=ax+a+0.5*u; tw=W-0.6*u-tx; ty=null;
+  }
+  p.images.push(lbImg(imgId,px(ax),py(ay),px(a),py(a)));
+  // flow text
+  const items=blocks.map(b=>{
+    const size=b.size*fs, wpx=tw/pxIn, cpl=Math.max(8,wpx/(size*0.52));
+    const lines=Math.max(1,Math.ceil(b.text.replace(/<[^>]+>/g,'').length/cpl));
+    return {b,size,h:lines*size*(b.lh||1.35)*pxIn+(b.gap||0)*u};
+  });
+  const total=items.reduce((s,i)=>s+i.h,0);
+  let y=land?Math.max(0.5*u,(H-total)/2):ty;
+  items.forEach(it=>{
+    p.texts.push(lbT(it.b.text,px(tx),py(y),px(tw),it.size,{align:land&&!o.center?'left':'center',bold:it.b.bold,italic:it.b.italic,lh:it.b.lh}));
+    y+=it.h;
+  });
+  return p;
+}
+function buildAllureCover(ed){
+  return allureLayout(ed,'allure-28',[
+    {text:'Little Did I Know',size:32,bold:true,lh:1.1,gap:.08},
+    {text:'A colouring book of India',size:12,italic:true,gap:.22},
+    {text:'This colouring book belongs to',size:10,gap:.02},
+    {text:'[Child\'s Name]',size:21,bold:true},
+  ],{a:4.7,ay:0.5});
+}
+function buildAllureBack(ed){
+  return allureLayout(ed,'allure-00',[
+    {text:'Little Did I Know',size:22,bold:true,gap:.1},
+    {text:'A colouring book of India for little hands',size:12,italic:true,gap:.3},
+    {text:'Colour slowly, colour boldly. There are no wrong colours, only new ones!',size:11.5,gap:.45},
+    {text:'[Author or publisher name]',size:11},
+  ],{a:3.4,ay:0.9,art:1});
+}
+function buildAllurePages(ed){
+  const pages=[allureLayout(ed,'allure-00',[
+    {text:'This book is for',size:14,italic:true,gap:.12},
+    {text:'[Name of the person it is dedicated to]',size:26,bold:true,lh:1.2,gap:.25},
+    {text:'with all my love',size:12,italic:true},
+  ],{a:3.4,ay:0.9})];
+  ALLURE_CAPS.forEach((c,i)=>{
+    pages.push(allureLayout(ed,'allure-'+String(i+1).padStart(2,'0'),[
+      {text:c[0],size:19,bold:true,lh:1.15,gap:.08},
+      {text:c[1],size:13},
+    ],{a:5.7}));
+  });
+  return pages;
+}
+const BUILTIN_SIZES=[
+  {editorKey:'photobook',label:'8.5″ × 8.5″',note:'Square · compact'},
+  {editorKey:'photobook12',label:'12″ × 12″',note:'Square · large'},
+  {editorKey:'photobook18',label:'12″ × 18″',note:'Landscape · panoramic'},
 ];
-function startBuiltinTemplate(id){
+const BUILTIN_TEMPLATES=[
+  {id:'builtin-night-sky',label:'The Night Sky',description:NS_DESC,thumbUrl:'images/nightsky-cover.jpg',pageCount:40,sizes:BUILTIN_SIZES,
+   fonts:['Cormorant Garamond','Josefin Sans','Lora'],bookTitle:'The Night Sky',hint:'replace the [bracketed] text with your own',
+   prep:ed=>nsSetCtx(ed),
+   build:ed=>{nsSetCtx(ed);return {cover:buildNightSkyCover(ed),pages:buildNightSkyPages(ed),back:buildNightSkyBack(ed)};}},
+  {id:'builtin-allure-india',label:'The Allure of India',description:ALLURE_DESC,thumbUrl:'images/colouring/allure-thumb.jpg',pageCount:40,sizes:BUILTIN_SIZES,
+   fonts:['Nunito'],bookTitle:'Little Did I Know',hint:'type your child\'s name on the cover',
+   prep:ed=>allureAssets(ed),
+   build:ed=>{allureAssets(ed);return {cover:buildAllureCover(ed),pages:buildAllurePages(ed),back:buildAllureBack(ed)};}},
+];
+/* Admin edits to the built-in templates (card title/description/thumbnail, visibility, and a saved
+   layout per book size) live in the CMS under 'builtin_templates'. With no entry, the code-built
+   original is used, so a fresh site or a wiped table still shows both templates. */
+let BUILTIN_OVERRIDES=loadJSON('cms_builtin_templates',null)||{};
+function saveBuiltinOverrides(){
+  saveJSON('cms_builtin_templates',BUILTIN_OVERRIDES);
+  cmsSet('builtin_templates',BUILTIN_OVERRIDES).then(ok=>{toast(ok?'Saved ✓ — visible to all visitors':'⚠ Saved on this device only — cloud sync failed');});
+  renderTemplatesPageV2();
+}
+function builtinOv(id){ if(!BUILTIN_OVERRIDES[id])BUILTIN_OVERRIDES[id]={}; return BUILTIN_OVERRIDES[id]; }
+function builtinView(t){
+  const o=BUILTIN_OVERRIDES[t.id]||{};
+  return {label:o.label||t.label, description:o.description?o.description:t.description, thumbUrl:o.thumbUrl||t.thumbUrl, hidden:!!o.hidden};
+}
+function builtinStoredLayout(t,editorKey){ const o=BUILTIN_OVERRIDES[t.id]; return o&&o.sizes&&o.sizes[editorKey]||null; }
+// Card click → small size chooser, then loads the book into that size's editor.
+function chooseBuiltinTemplateSize(id){
   const t=BUILTIN_TEMPLATES.find(x=>x.id===id); if(!t)return;
-  const ed=EDS[t.editorKey]; if(!ed)return toast('Editor not available.');
-  if(editorHasContent(ed.doc)&&!confirm('Load the "'+t.label+'" template? This replaces the current, unsaved '+ed.pageCount()+'-page project in this editor. This can\'t be undone once you navigate away.'))return;
-  ['Cormorant Garamond','Josefin Sans','Lora'].forEach(loadGoogleFont); // fonts first so text measures correctly
-  openEditor(t.editorKey);
-  nsSetCtx(ed);
-  ed.doc.cover=buildNightSkyCover(ed);
-  ed.doc.pages=buildNightSkyPages(ed);
-  ed.doc.backCover=buildNightSkyBack(ed);
-  ed.doc.title='The Night Sky';
+  const old=document.getElementById('builtinSizeModal'); if(old)old.remove();
+  const m=document.createElement('div'); m.id='builtinSizeModal';
+  m.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(10,14,28,.55);display:flex;align-items:center;justify-content:center;padding:16px';
+  m.onclick=e=>{if(e.target===m)m.remove();};
+  m.innerHTML=`<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <h3 style="margin:0 0 4px;font-size:19px">${esc(builtinView(t).label)}</h3>
+    <p style="margin:0 0 18px;font-size:13.5px;color:var(--slate)">Choose a book size. ${t.pageCount} pages + cover, priced by page count.</p>
+    ${t.sizes.map(z=>`<button class="btn" style="display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:10px;padding:14px 16px;text-align:left" onclick="document.getElementById('builtinSizeModal').remove();startBuiltinTemplate('${t.id}','${z.editorKey}')"><b>${esc(z.label)}</b><span style="font-size:12px;color:var(--slate-l)">${esc(z.note)}</span></button>`).join('')}
+    <button class="btn" style="width:100%;margin-top:4px;border:0;background:transparent;color:var(--slate)" onclick="document.getElementById('builtinSizeModal').remove()">Cancel</button>
+  </div>`;
+  document.body.appendChild(m);
+}
+function startBuiltinTemplate(id,editorKey){
+  const t=BUILTIN_TEMPLATES.find(x=>x.id===id); if(!t)return;
+  const sz=t.sizes.find(z=>z.editorKey===editorKey); if(!sz)return;
+  const ed=EDS[editorKey]; if(!ed)return toast('Editor not available.');
+  if(editorHasContent(ed.doc)&&!confirm('Load the "'+t.label+' — '+sz.label+'" template? This replaces the current, unsaved '+ed.pageCount()+'-page project in this editor. This can\'t be undone once you navigate away.'))return;
+  (t.fonts||['Lora']).forEach(loadGoogleFont); // fonts first so text measures correctly
+  openEditor(editorKey);
+  if(t.prep)t.prep(ed);
+  const stored=builtinStoredLayout(t,editorKey);
+  const built=stored?{cover:JSON.parse(JSON.stringify(stored.cover)),pages:JSON.parse(JSON.stringify(stored.pages)),back:JSON.parse(JSON.stringify(stored.backCover))}:t.build(ed);
+  ed.doc.cover=built.cover; ed.doc.pages=built.pages; ed.doc.backCover=built.back;
+  ed.doc.title=t.bookTitle||t.label;
   ed._savedId=null;
   if($(ed.cfg.prefix+'-title'))$(ed.cfg.prefix+'-title').value=ed.doc.title;
   ed.cur='cover'; ed.sel=null; ed.renderAll();
-  updatePhotobookPrice(t.editorKey);
-  toast('Template loaded — 40 pages, priced accordingly · replace the [bracketed] text with your own ✓');
+  updatePhotobookPrice(editorKey);
+  toast('Template loaded — '+t.pageCount+' pages, priced accordingly'+(t.hint?' · '+t.hint:'')+' ✓');
 }
 
+
+/* ---------- Admin → Pages: edit the Start pages' text and images ---------- */
+let PE_ACTIVE='photobook';
+function peSet(key,field,value){ (PAGE_EDITS[key]=PAGE_EDITS[key]||{})[field]=value; savePageEdits(); }
+function peCard(key,i,field,value){
+  const E=(PAGE_EDITS[key]=PAGE_EDITS[key]||{}); E.cards=E.cards||[]; E.cards[i]=E.cards[i]||{}; E.cards[i][field]=value; savePageEdits();
+}
+function peContent(k,value){ CONTENT[k]=value; saveContent(); applyContent(); if(ACTIVE_START_KEY)renderStartPage(ACTIVE_START_KEY); }
+function peBlocks(key){ const E=(PAGE_EDITS[key]=PAGE_EDITS[key]||{}); E.blocks=E.blocks||[]; return E.blocks; }
+function peAddBlock(key){ peBlocks(key).push({heading:'',text:'',img:'',layout:'left'}); savePageEdits(); renderPagesAdmin(); }
+function peDelBlock(key,i){ if(!confirm('Remove this block?'))return; peBlocks(key).splice(i,1); savePageEdits(); renderPagesAdmin(); }
+function peMoveBlock(key,i,d){ const b=peBlocks(key),j=i+d; if(j<0||j>=b.length)return; [b[i],b[j]]=[b[j],b[i]]; savePageEdits(); renderPagesAdmin(); }
+async function peUploadBlockImage(key,i,file){
+  if(!file)return; toast('Uploading image…');
+  try{
+    const {error,url}=await uploadWebImage(`pages/${key}-${uid()}`,file,1600);
+    if(error)throw error;
+    peBlocks(key)[i].img=url; savePageEdits(); renderPagesAdmin();
+  }catch(e){ toast('⚠ Image upload failed — is the "cms-images" storage bucket created (public) in Supabase? '+(e.message||'')); }
+}
+async function peUploadHero(key,file){
+  if(!file)return;
+  await uploadCmsImage(START_PAGES[key].heroImgKey,file);
+  renderPagesAdmin();
+}
+function peResetHero(key){ const k=START_PAGES[key].heroImgKey; if(!CONTENT[k])return; if(!confirm('Go back to the original image?'))return; delete CONTENT[k]; saveContent(); applyContent(); renderPagesAdmin(); }
+function renderPagesAdmin(){
+  const tabs=$('pageEditTabs'), form=$('pageEditForm'); if(!tabs||!form)return;
+  tabs.innerHTML=Object.keys(START_PAGES).map(k=>`<button class="btn ${k===PE_ACTIVE?'btn-accent':'btn-ghost'} sm" onclick="PE_ACTIVE='${k}';renderPagesAdmin()">${esc(START_PAGES[k].label)} page</button>`).join('')
+    +`<span style="flex:1"></span><button class="btn btn-ghost sm" onclick="window.open('/${START_PATH_FOR_KEY[PE_ACTIVE]}','_blank')">View page ↗</button>`;
+  const key=PE_ACTIVE, info=START_PAGES[key], E=PAGE_EDITS[key]||{}, defs=START_CARD_DEFAULTS[key];
+  const lab='font-size:10.5px;color:var(--slate-l);text-transform:uppercase;letter-spacing:.05em;font-weight:700;display:block;margin-top:14px';
+  const inp=(label,field,def,ph)=>`<label style="${lab}">${label}</label><input class="field" style="margin:4px 0" value="${esc(E[field]||'')}" placeholder="${esc(ph||def)}" onchange="peSet('${key}','${field}',this.value.trim())">`;
+  const area=(label,k,rows,note)=>`<label style="${lab}">${label}</label><textarea class="field" style="margin:4px 0;min-height:${rows*22}px;resize:vertical" onchange="peContent('${k}',this.value)">${esc(CONTENT[k]||'')}</textarea>${note?`<div class="hint">${note}</div>`:''}`;
+  const sec=t=>`<h3 style="margin:26px 0 4px;font-size:16px;border-top:1px solid var(--line);padding-top:18px">${t}</h3>`;
+  const heroUrl=CONTENT[info.heroImgKey]||info.heroImg, heroIsVid=isVideoUrl(heroUrl);
+  let h=`<div style="max-width:760px">`;
+  h+=`<h3 style="margin:0 0 4px;font-size:16px">Top of the page</h3>`;
+  h+=inp('Small label above the headline','tag','Start creating');
+  h+=inp('Headline','h1',info.h1||info.label);
+  h+=area('Intro paragraph',info.contentKey,3);
+  h+=`<label style="${lab}">Hero image${key==='photobook'?' or video':''}</label>
+    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:6px">
+      <div style="width:160px;aspect-ratio:16/9;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--cream)">${heroIsVid?`<video src="${esc(heroUrl)}" muted playsinline style="width:100%;height:100%;object-fit:cover"></video>`:`<img src="${esc(heroUrl)}" style="width:100%;height:100%;object-fit:cover" alt="">`}</div>
+      <div><input type="file" id="peHeroInput" accept="${key==='photobook'?'image/*,video/*':'image/*'}" style="display:none" onchange="peUploadHero('${key}',this.files[0])">
+        <button class="btn btn-ghost sm" onclick="$('peHeroInput').click()">Replace</button>
+        ${CONTENT[info.heroImgKey]?` <button class="btn btn-ghost sm" onclick="peResetHero('${key}')">Use original</button>`:''}
+        <div class="hint" style="margin-top:6px">This image is also used on the matching Homepage tile.</div></div>
+    </div>`;
+  h+=sec('Checklist');
+  h+=inp('Heading','needHeading',"What you'll need before you start");
+  h+=area('Items',info.needKey,5,'One item per line.');
+  h+=sec('How it works');
+  h+=inp('Heading','stepsHeading','How it works');
+  h+=area('Steps',info.stepsKey,6,'One step per line, written as: Title | Description');
+  h+=sec('Extra sections (text and image)');
+  const blocks=E.blocks||[];
+  h+=`<div class="hint" style="margin-bottom:10px">Add as many as you like. They appear after “How it works”.</div>`;
+  blocks.forEach((b,i)=>{
+    h+=`<div style="border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;background:#fff">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><b style="font-size:13px">Section ${i+1}</b><span style="flex:1"></span>
+        <button class="btn btn-ghost xs" onclick="peMoveBlock('${key}',${i},-1)">↑</button><button class="btn btn-ghost xs" onclick="peMoveBlock('${key}',${i},1)">↓</button>
+        <button class="btn btn-ghost xs" style="color:#B0432E" onclick="peDelBlock('${key}',${i})">Remove</button></div>
+      <input class="field" style="margin:0 0 8px" placeholder="Heading (optional)" value="${esc(b.heading||'')}" onchange="peBlocks('${key}')[${i}].heading=this.value.trim();savePageEdits()">
+      <textarea class="field" style="margin:0 0 8px;min-height:90px;resize:vertical" placeholder="Text — leave a blank line between paragraphs" onchange="peBlocks('${key}')[${i}].text=this.value;savePageEdits()">${esc(b.text||'')}</textarea>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        ${b.img?`<img src="${esc(b.img)}" style="height:56px;border-radius:6px;border:1px solid var(--line)" alt="">`:''}
+        <input type="file" id="peBlk${i}" accept="image/*" style="display:none" onchange="peUploadBlockImage('${key}',${i},this.files[0])">
+        <button class="btn btn-ghost sm" onclick="$('peBlk${i}').click()">${b.img?'Replace image':'Add image'}</button>
+        ${b.img?`<button class="btn btn-ghost sm" onclick="peBlocks('${key}')[${i}].img='';savePageEdits();renderPagesAdmin()">Remove image</button>`:''}
+        <select class="field" style="width:auto;margin:0" onchange="peBlocks('${key}')[${i}].layout=this.value;savePageEdits()">
+          ${[['left','Image on the left'],['right','Image on the right'],['top','Image on top']].map(([v,l])=>`<option value="${v}" ${(b.layout||'left')===v?'selected':''}>${l}</option>`).join('')}
+        </select></div></div>`;
+  });
+  h+=`<button class="btn btn-accent sm" onclick="peAddBlock('${key}')">+ Add a section</button>`;
+  if(defs){
+    h+=sec(key==='photobook'?'Size cards':'Format cards');
+    h+=inp('Heading','cardsHeading',defs.heading);
+    defs.cards.forEach((c,i)=>{
+      const o=(E.cards&&E.cards[i])||{};
+      h+=`<div style="border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px;background:#fff">
+        <b style="font-size:13px">Card ${i+1}</b>
+        <input class="field" style="margin:8px 0" placeholder="${esc(c.title)}" value="${esc(o.title||'')}" onchange="peCard('${key}',${i},'title',this.value.trim())">
+        <textarea class="field" style="margin:0 0 8px;min-height:64px;resize:vertical" placeholder="${esc(c.desc)}" onchange="peCard('${key}',${i},'desc',this.value.trim())">${esc(o.desc||'')}</textarea>
+        <input class="field" style="margin:0" placeholder="${esc(c.btn)}" value="${esc(o.btn||'')}" onchange="peCard('${key}',${i},'btn',this.value.trim())">
+      </div>`;
+    });
+    h+=`<div class="hint">Greyed text shows the original wording. Prices written here are just text, so change them if your pricing changes.</div>`;
+  }else{
+    h+=sec('Button');
+    h+=inp('Button label','ctaLabel','Start creating your '+info.label.toLowerCase()+' →');
+  }
+  h+=inp('“See pricing” link label','pricingLabel','See full pricing →');
+  h+=sec('Search results (SEO)');
+  h+=inp('Page title','seoTitle',START_SEO[key].title);
+  h+=`<label style="${lab}">Description</label><textarea class="field" style="margin:4px 0;min-height:64px;resize:vertical" placeholder="${esc(START_SEO[key].desc)}" onchange="peSet('${key}','seoDesc',this.value.trim())">${esc(E.seoDesc||'')}</textarea>`;
+  h+=`</div>`;
+  form.innerHTML=h;
+}
 /* ---------- Admin: template CRUD, thumbnails, assets ---------- */
 function populateNewTplEditorSelect(){
   const sel=document.getElementById('newTplEditorSelect'); if(!sel)return;
@@ -1171,6 +1394,17 @@ async function uploadCustomTemplateThumb(id,file){
     toast('⚠ Thumbnail upload failed — is the "cms-images" storage bucket created (public) in Supabase? '+(e.message||''));
   }
 }
+async function uploadBuiltinThumb(id,file){
+  if(!file)return;
+  toast('Uploading thumbnail…');
+  try{
+    const {error,url}=await uploadWebImage(`custom-templates/${id}-${uid()}`,file,1200);
+    if(error)throw error;
+    builtinOv(id).thumbUrl=url; saveBuiltinOverrides(); renderCustomTemplatesAdmin();
+  }catch(e){
+    toast('⚠ Thumbnail upload failed — is the "cms-images" storage bucket created (public) in Supabase? '+(e.message||''));
+  }
+}
 function removeCustomTemplateThumb(id){
   const t=CUSTOM_TEMPLATES.find(x=>x.id===id); if(!t)return;
   t.thumbUrl=null; saveCustomTemplates(); renderCustomTemplatesAdmin();
@@ -1207,6 +1441,50 @@ function deleteCustomTemplateAsset(templateId,assetId){
 function renderCustomTemplatesAdmin(){
   populateNewTplEditorSelect();
   const wrap=document.getElementById('customTemplatesAdminRows'); if(!wrap)return; wrap.innerHTML='';
+  BUILTIN_TEMPLATES.forEach(t=>{
+    const v=builtinView(t), ov=BUILTIN_OVERRIDES[t.id]||{};
+    const lab='font-size:10.5px;color:var(--slate-l);text-transform:uppercase;letter-spacing:.05em;font-weight:700';
+    const row=document.createElement('div');
+    row.style.cssText='border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff';
+    row.innerHTML=`
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <div style="flex:0 0 auto;width:150px">
+          <div data-role="tile" title="Click to change thumbnail" style="width:100%;aspect-ratio:4/3;border:1px solid var(--line);border-radius:10px;background:url(${esc(v.thumbUrl)}) center/cover;cursor:pointer"></div>
+          <input type="file" accept="image/*" style="display:none" data-role="thumbInput">
+          <div style="font-size:11px;color:var(--slate-l);margin-top:8px">${t.pageCount} pages + cover · ${t.sizes.length} sizes</div>
+          ${ov.thumbUrl?'<button type="button" class="btn btn-ghost xs" style="width:100%;justify-content:center;margin-top:6px" data-role="resetThumb">Use original thumbnail</button>':''}
+        </div>
+        <div style="flex:1 1 260px;min-width:220px">
+          <div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--slate-l);border:1px solid var(--line);border-radius:6px;padding:2px 6px;display:inline-block;margin-bottom:8px">Built-in · 3 sizes</div>
+          <label style="${lab};display:block">Card title</label>
+          <input class="field" style="margin:4px 0 10px" data-role="labelInput" value="${esc(v.label)}">
+          <label style="${lab};display:block">Card description</label>
+          <textarea class="field" style="margin:4px 0 10px;min-height:70px;resize:vertical" data-role="descInput">${esc(v.description)}</textarea>
+          <label style="font-size:13px;display:flex;gap:8px;align-items:center"><input type="checkbox" data-role="showInput" ${v.hidden?'':'checked'}> Show on the public Templates page</label>
+        </div>
+        <div style="flex:1 1 240px;min-width:220px">
+          <label style="${lab};display:block;margin-bottom:6px">Layout per size</label>
+          ${t.sizes.map(z=>{const has=!!builtinStoredLayout(t,z.editorKey);return `
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+              <button type="button" class="btn btn-accent xs" data-edit="${z.editorKey}">Edit layout · ${esc(z.label)}</button>
+              ${has?`<span style="font-size:11px;color:var(--slate-l)">edited</span><button type="button" class="btn btn-ghost xs" style="color:#B0432E" data-reset="${z.editorKey}">Reset</button>`:'<span style="font-size:11px;color:var(--slate-l)">original</span>'}
+            </div>`;}).join('')}
+          <div class="hint" style="margin-top:6px">Edit layout opens the book in the real editor. Save as Template stores your version for that size; Reset goes back to the original design.</div>
+        </div>
+      </div>`;
+    row.querySelector('[data-role="tile"]').onclick=()=>row.querySelector('[data-role="thumbInput"]').click();
+    row.querySelector('[data-role="thumbInput"]').onchange=function(){uploadBuiltinThumb(t.id,this.files[0]);};
+    const rt=row.querySelector('[data-role="resetThumb"]'); if(rt)rt.onclick=()=>{builtinOv(t.id).thumbUrl=null;saveBuiltinOverrides();renderCustomTemplatesAdmin();};
+    row.querySelector('[data-role="labelInput"]').addEventListener('change',function(){builtinOv(t.id).label=this.value.trim();saveBuiltinOverrides();});
+    row.querySelector('[data-role="descInput"]').addEventListener('change',function(){builtinOv(t.id).description=this.value.trim();saveBuiltinOverrides();});
+    row.querySelector('[data-role="showInput"]').addEventListener('change',function(){builtinOv(t.id).hidden=!this.checked;saveBuiltinOverrides();});
+    row.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openBuiltinTemplateEditor(t.id,b.dataset.edit));
+    row.querySelectorAll('[data-reset]').forEach(b=>b.onclick=()=>{
+      if(!confirm('Reset this size to the original design? Your edited layout will be discarded.'))return;
+      const o=builtinOv(t.id); if(o.sizes)delete o.sizes[b.dataset.reset]; saveBuiltinOverrides(); renderCustomTemplatesAdmin();
+    });
+    wrap.appendChild(row);
+  });
   CUSTOM_TEMPLATES.forEach(t=>{
     const meta=templateEditorMeta(t.editorKey);
     const url=t.thumbUrl;
@@ -1269,7 +1547,24 @@ function renderCustomTemplatesAdmin(){
 }
 
 /* ---------- Admin: "Edit layout" (opens the template in the real editor) ---------- */
-let ADMIN_EDIT_TEMPLATE=null; // {id, editorKey, kind}
+let ADMIN_EDIT_TEMPLATE=null; // {id, editorKey, kind, builtin?}
+function openBuiltinTemplateEditor(id,editorKey){
+  const t=BUILTIN_TEMPLATES.find(x=>x.id===id); if(!t)return;
+  const ed=EDS[editorKey]; if(!ed)return toast('Editor not available.');
+  const sz=t.sizes.find(z=>z.editorKey===editorKey);
+  ['Lora'].concat(t.fonts||[]).forEach(loadGoogleFont);
+  ADMIN_EDIT_TEMPLATE={id,editorKey,kind:'book',builtin:true};
+  openEditor(editorKey);
+  if(t.prep)t.prep(ed);
+  const stored=builtinStoredLayout(t,editorKey);
+  const built=stored?{cover:JSON.parse(JSON.stringify(stored.cover)),pages:JSON.parse(JSON.stringify(stored.pages)),back:JSON.parse(JSON.stringify(stored.backCover))}:t.build(ed);
+  ed.doc.cover=built.cover; ed.doc.pages=built.pages; ed.doc.backCover=built.back;
+  ed.doc.title=builtinView(t).label; ed._savedId=null;
+  if($(ed.cfg.prefix+'-title'))$(ed.cfg.prefix+'-title').value=ed.doc.title;
+  ed.cur='cover'; ed.sel=null; ed.renderAll();
+  showUploadsTool(editorKey,true);
+  showTemplateEditBar({label:builtinView(t).label+' · '+(sz?sz.label:editorKey)},editorKey);
+}
 function openCustomTemplateEditor(templateId){
   const t=CUSTOM_TEMPLATES.find(x=>x.id===templateId); if(!t)return;
   const meta=templateEditorMeta(t.editorKey);
@@ -1347,6 +1642,17 @@ function hideTemplateEditBar(key){
 async function saveCustomTemplateLayout(){
   if(!ADMIN_EDIT_TEMPLATE)return;
   const {id,editorKey,kind}=ADMIN_EDIT_TEMPLATE;
+  if(ADMIN_EDIT_TEMPLATE.builtin){
+    const ed=EDS[editorKey]; if(!ed)return;
+    const pages=JSON.parse(JSON.stringify(ed.doc.pages||[]));
+    if(!pages.length){toast('A template needs at least one interior page.');return;}
+    const o=builtinOv(id); o.sizes=o.sizes||{};
+    o.sizes[editorKey]={cover:JSON.parse(JSON.stringify(ed.doc.cover||blankPage())),pages,backCover:JSON.parse(JSON.stringify(ed.doc.backCover||blankPage()))};
+    saveBuiltinOverrides();
+    toast('Template saved ✓ — used by every new customer from now on');
+    exitCustomTemplateEditor();
+    return;
+  }
   const t=CUSTOM_TEMPLATES.find(x=>x.id===id); if(!t)return;
   if(kind==='book'){
     const ed=EDS[editorKey]; if(!ed)return;
@@ -4060,7 +4366,7 @@ async function cmsRetryDirtyKeys(){
   }
   refreshCmsSyncBanner();
 }
-const CMS_KEY_LABELS={content:'Site text/images',catalog:'Store products',posts:'Kagaz Journal posts',clients:'Clients list',site_cfg:'Site settings',faq:'FAQ',custom_templates:'Templates'};
+const CMS_KEY_LABELS={content:'Site text/images',catalog:'Store products',posts:'Kagaz Journal posts',clients:'Clients list',site_cfg:'Site settings',faq:'FAQ',custom_templates:'Templates',builtin_templates:'Built-in template edits',page_edits:'Page edits'};
 function refreshCmsSyncBanner(){
   const banner=document.getElementById('cmsSyncBanner'); if(!banner)return;
   const stuck=CMS_KNOWN_KEYS.filter(k=>cmsIsDirty(k));
@@ -4083,7 +4389,7 @@ async function cmsClearCache(key){
 }
 
 // Load ALL cms keys at startup in one query — fast, single round trip
-const CMS_KNOWN_KEYS=['content','catalog','posts','clients','site_cfg','faq','photo_services','gallery','custom_templates'];
+const CMS_KNOWN_KEYS=['content','catalog','posts','clients','site_cfg','faq','photo_services','gallery','custom_templates','builtin_templates','page_edits'];
 async function cmsLoadAll(){
   const fetchStartedAt = Date.now(); // captured BEFORE asking Supabase, so we can tell if a
   // local write happened while this request was in flight — see below.
@@ -4862,12 +5168,49 @@ function renderStore(){
     wrap.appendChild(drawer);
   });
 }
+
+function renderProductGalleryForm(){
+  const w=$('pfGallery'); if(!w)return;
+  w.innerHTML=_pfExtra.map((u,i)=>`<div style="position:relative;width:76px;height:76px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:#eee">
+    <img src="${esc(u)}" alt="" style="width:100%;height:100%;object-fit:cover">
+    <button type="button" title="Remove" onclick="pfGalleryDel(${i})" style="position:absolute;top:2px;right:2px;width:20px;height:20px;border:0;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;font-size:12px;cursor:pointer;line-height:1">×</button>
+    <div style="position:absolute;bottom:0;left:0;right:0;display:flex;background:rgba(0,0,0,.55)">
+      <button type="button" title="Move earlier" onclick="pfGalleryMove(${i},-1)" style="flex:1;border:0;background:none;color:#fff;font-size:11px;cursor:pointer">◀</button>
+      <button type="button" title="Move later" onclick="pfGalleryMove(${i},1)" style="flex:1;border:0;background:none;color:#fff;font-size:11px;cursor:pointer">▶</button></div></div>`).join('');
+}
+function pfGalleryDel(i){_pfExtra.splice(i,1);renderProductGalleryForm();}
+function pfGalleryMove(i,d){const j=i+d;if(j<0||j>=_pfExtra.length)return;[_pfExtra[i],_pfExtra[j]]=[_pfExtra[j],_pfExtra[i]];renderProductGalleryForm();}
+async function onProductGalleryUpload(files){
+  files=[...(files||[])]; if(!files.length)return;
+  _productImgUploading=true; toast('Uploading '+files.length+' image'+(files.length>1?'s':'')+'…');
+  let fail=0;
+  for(const f of files){
+    try{ _pfExtra.push(await uploadProductImageToStorage(f)); renderProductGalleryForm(); }
+    catch(e){ fail++; console.warn('Gallery upload failed',e.message||e); }
+  }
+  _productImgUploading=false;
+  try{$('pfGalleryUpload').value='';}catch(e){}
+  toast(fail?`⚠ ${fail} image${fail>1?'s':''} failed to upload — is the "cms-images" bucket public?`:'Images uploaded ✓ — press Save product');
+}
+function productGallery(p){ return [p.img].concat(Array.isArray(p.images)?p.images:[]).filter(Boolean); }
+let _pdGallery=[],_pdIdx=0;
+function renderProductDetailMedia(){
+  const el=$('pdImg'),g=_pdGallery,u=g[_pdIdx];
+  el.style.cssText='width:100%;overflow:hidden;position:relative;'+(u?'':'background:#8A8A87;aspect-ratio:4/3');
+  if(!u){el.innerHTML='';return;}
+  const nav=g.length>1?`<button type="button" aria-label="Previous image" onclick="pdStep(-1)" style="position:absolute;left:8px;top:calc(50% - 40px);width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.88);font-size:16px;cursor:pointer;z-index:2">‹</button>
+    <button type="button" aria-label="Next image" onclick="pdStep(1)" style="position:absolute;right:8px;top:calc(50% - 40px);width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.88);font-size:16px;cursor:pointer;z-index:2">›</button>`:'';
+  const thumbs=g.length>1?`<div style="display:flex;gap:6px;margin-top:8px;overflow-x:auto">${g.map((x,i)=>`<button type="button" aria-label="Image ${i+1}" onclick="pdGo(${i})" style="flex:0 0 auto;width:58px;height:58px;padding:0;border-radius:6px;overflow:hidden;cursor:pointer;background:#eee;border:2px solid ${i===_pdIdx?'var(--accent,#52B57D)':'transparent'}">${isVideoUrl(x)?'<span style="font-size:11px">▶</span>':`<img src="${esc(x)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`}</button>`).join('')}</div>`:'';
+  el.innerHTML=`<div style="position:relative;width:100%;aspect-ratio:4/3;overflow:hidden">${mediaTagHtml(u,'', 'style="width:100%;height:100%;object-fit:cover;display:block"')}${nav}</div>${thumbs}`;
+  el.style.overflow='visible';
+}
+function pdStep(d){const n=_pdGallery.length;_pdIdx=(_pdIdx+d+n)%n;renderProductDetailMedia();}
+function pdGo(i){_pdIdx=i;renderProductDetailMedia();}
 function openProductDetail(id,push){
   const p=CATALOG.find(x=>x.id===id||x.slug===id); if(!p)return;
   if(!p.slug){p.slug=uniqueProductSlug(slugify(p.name),p.id);saveJSON('cms_catalog',CATALOG);cmsSet('catalog',CATALOG);}
   const slugPath=p.slug;
-  $('pdImg').style.cssText='width:100%;aspect-ratio:4/3;overflow:hidden;'+(p.img?'':'background:#8A8A87');
-  $('pdImg').innerHTML=p.img?mediaTagHtml(p.img,p.name,'style="width:100%;height:100%;object-fit:cover;display:block"'):'';
+  _pdGallery=productGallery(p);_pdIdx=0;renderProductDetailMedia();
   $('pdName').textContent=p.name;
   $('pdPrice').textContent=inr(p.price);
   const badgeEl=$('pdBadge');
@@ -5611,11 +5954,12 @@ async function deleteCoupon(id){
   renderCouponRows();
 }
 function adminTab(t){document.querySelectorAll('.admin-side button[data-ap]').forEach(b=>b.classList.toggle('on',b.dataset.ap===t));
-  ['dashboard','orders','pdf','fonts','content','gallery-edit','templates','products','journal','customers','payments','seomoat','coupons'].forEach(x=>{const el=$('ap-'+x);if(el)el.style.display=x===t?'block':'none'});
+  ['dashboard','orders','pdf','fonts','content','gallery-edit','templates','pages','products','journal','customers','payments','seomoat','coupons'].forEach(x=>{const el=$('ap-'+x);if(el)el.style.display=x===t?'block':'none'});
   if(t==='dashboard')renderDashboard(); if(t==='orders')renderOrderRows(); if(t==='pdf')renderPdfRows();
   if(t==='fonts')renderFontRows();
   if(t==='gallery-edit'){renderGalAdmin();migrateOversizedGalleryImages();} if(t==='products'){renderProductRows();migrateOversizedProductImages();}
   if(t==='templates')renderCustomTemplatesAdmin();
+  if(t==='pages')renderPagesAdmin();
   if(t==='content'){renderContentFields();loadSiteCfgIntoAdmin();renderClientsAdmin();renderPhotoServicesAdmin();migrateOversizedContentImages();migrateOversizedPhotoServiceImages();}
   if(t==='journal'){renderJournalAdmin();migrateOversizedHeroImages();}
   if(t==='customers')renderCustomerRows(); if(t==='payments')renderPaymentsForm();
@@ -6395,7 +6739,9 @@ function renderProductRows(){const wrap=$('productRows');wrap.innerHTML='';const
       <b>${inr(p.price)}</b><button class="btn btn-ghost xs" onclick="openProductForm('${p.id}')">Edit</button><button class="btn btn-ghost xs" onclick="deleteProduct('${p.id}')">Delete</button>`;
     wrap.appendChild(row);rows.push(row);});
   wireRowReorder(rows,CATALOG,()=>{saveCatalog();renderProductRows();renderStore();});}
+let _pfExtra=[];
 function openProductForm(id){_editingProductId=id||null;_pendingProductImg=null;const p=id?CATALOG.find(x=>x.id===id):null;
+  _pfExtra=p&&Array.isArray(p.images)?p.images.slice():[];renderProductGalleryForm();
   $('pfTitle').textContent=id?'Edit product':'Add product';$('pfName').value=p?p.name:'';$('pfBlurb').value=p?p.blurb:'';
   $('pfDetails').value=p&&p.details?p.details:'';
   $('pfPrice').value=p?(p.price/100):'';$('pfBadge').value=p&&p.badge?p.badge:'';
@@ -6443,8 +6789,8 @@ function saveProductForm(){
   const urlImg=$('pfImgUrl').value.trim();
   const category=$('pfCategory').value;
   const finalImg=_pendingProductImg||(urlImg||null);
-  if(_editingProductId){const p=CATALOG.find(x=>x.id===_editingProductId);Object.assign(p,{name,blurb,details,price,badge:$('pfBadge').value.trim()||null,category});if(!p.slug)p.slug=uniqueProductSlug(slugify(name),p.id);if(finalImg)p.img=finalImg;}
-  else{const id=uid();CATALOG.push({id,name,blurb,details,price,badge:$('pfBadge').value.trim()||null,grad:['#141414','#52B57D'],img:finalImg,category,slug:uniqueProductSlug(slugify(name),id)});}
+  if(_editingProductId){const p=CATALOG.find(x=>x.id===_editingProductId);Object.assign(p,{name,blurb,details,price,badge:$('pfBadge').value.trim()||null,category,images:_pfExtra.slice()});if(!p.slug)p.slug=uniqueProductSlug(slugify(name),p.id);if(finalImg)p.img=finalImg;}
+  else{const id=uid();CATALOG.push({id,name,blurb,details,price,badge:$('pfBadge').value.trim()||null,grad:['#141414','#52B57D'],img:finalImg,images:_pfExtra.slice(),category,slug:uniqueProductSlug(slugify(name),id)});}
   saveCatalog();hide('productFormModal');renderProductRows();renderStore();toast('Saved');}
 function deleteProduct(id){if(!confirm('Remove this product?'))return;CATALOG=CATALOG.filter(p=>p.id!==id);saveCatalog();renderProductRows();renderStore();}
 /* ================= Customers (detailed) =================
@@ -7664,6 +8010,18 @@ cmsLoadAll().then((fetched)=>{
   const sbCustomTemplates=fetched.custom_templates;
   if(sbCustomTemplates&&Array.isArray(sbCustomTemplates)&&sbCustomTemplates.length){
     CUSTOM_TEMPLATES=sbCustomTemplates; renderTemplatesPageV2();
+    if(document.getElementById('ap-templates')&&$('ap-templates').style.display!=='none')renderCustomTemplatesAdmin();
+  }
+
+  const sbPageEdits=fetched.page_edits;
+  if(sbPageEdits&&typeof sbPageEdits==='object'&&!Array.isArray(sbPageEdits)){
+    PAGE_EDITS=sbPageEdits;
+    if(ACTIVE_START_KEY&&document.getElementById('view-start')&&$('view-start').classList.contains('active'))renderStartPage(ACTIVE_START_KEY);
+  }
+
+  const sbBuiltin=fetched.builtin_templates;
+  if(sbBuiltin&&typeof sbBuiltin==='object'&&!Array.isArray(sbBuiltin)){
+    BUILTIN_OVERRIDES=sbBuiltin; renderTemplatesPageV2();
     if(document.getElementById('ap-templates')&&$('ap-templates').style.display!=='none')renderCustomTemplatesAdmin();
   }
 

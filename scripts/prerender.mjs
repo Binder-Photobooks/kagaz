@@ -65,7 +65,7 @@ function extractObject(name) {
 const SEO_META = extractObject('const SEO_META');
 const START_SEO = extractObject('const START_SEO');
 const CONTENT = extractObject('const CONTENT_DEFAULTS');
-const START_H1 = { photobook: 'Custom Photobook Printing', tradebook: 'Trade Book Printing & Self-Publishing', artprints: 'Archival Art Print Printing' };
+const START_H1 = { photobook: 'Custom Photobook Printing', tradebook: 'Trade Book Printing & Self-Publishing', artprints: 'Archival Art Prints' };
 const START_KEYS = { photobook: 'Photobook', tradebook: 'Tradebook', artprints: 'Artprints' };
 const START_PRICE = { photobook: '2200', tradebook: '1000', artprints: '800' };
 
