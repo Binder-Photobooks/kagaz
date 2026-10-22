@@ -6790,7 +6790,7 @@ function saveProductForm(){
   const category=$('pfCategory').value;
   const finalImg=_pendingProductImg||(urlImg||null);
   if(_editingProductId){const p=CATALOG.find(x=>x.id===_editingProductId);Object.assign(p,{name,blurb,details,price,badge:$('pfBadge').value.trim()||null,category,images:_pfExtra.slice()});if(!p.slug)p.slug=uniqueProductSlug(slugify(name),p.id);if(finalImg)p.img=finalImg;}
-  else{const id=uid();CATALOG.push({id,name,blurb,details,price,badge:$('pfBadge').value.trim()||null,grad:['#141414','#52B57D'],img:finalImg,images:_pfExtra.slice(),category,slug:uniqueProductSlug(slugify(name),id)});}
+  else{const id=uid();CATALOG.unshift({id,name,blurb,details,price,badge:$('pfBadge').value.trim()||null,grad:['#141414','#52B57D'],img:finalImg,images:_pfExtra.slice(),category,slug:uniqueProductSlug(slugify(name),id)});}
   saveCatalog();hide('productFormModal');renderProductRows();renderStore();toast('Saved');}
 function deleteProduct(id){if(!confirm('Remove this product?'))return;CATALOG=CATALOG.filter(p=>p.id!==id);saveCatalog();renderProductRows();renderStore();}
 /* ================= Customers (detailed) =================
