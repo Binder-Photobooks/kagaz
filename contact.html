@@ -35,7 +35,8 @@
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "@id": "https://www.binder.co.in/#business",
-  "name": "Binder",
+  "name": "Binder Photobooks",
+  "alternateName": "Binder",
   "image": "https://www.binder.co.in/images/logo.png",
   "logo": "https://www.binder.co.in/images/logo.png",
   "description": "Binder is a Delhi-based printer and publishing studio offering photobook printing, trade book (novel) printing, art print production, and free ISBN guidance for self-published authors.",
@@ -56,7 +57,7 @@
 }
 </script>
 <script type="application/ld+json" id="ldPage">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.binder.co.in/"},{"@type":"ListItem","position":2,"name":"Contact","item":"https://www.binder.co.in/contact"}]}</script>
-<link rel="stylesheet" href="/styles.css?v=20261022a">
+<link rel="stylesheet" href="/styles.css?v=20261025c">
 </head>
 <body>
 <!-- ============ NAV ============ -->
@@ -121,7 +122,14 @@
     <div class="faq-wrap">
       <span class="tag" style="color:rgba(0,0,0,.6)">FAQ</span>
       <h2 class="faq-heading">Everything you need to know</h2>
-      <div class="faq-list" id="faqList"><!-- populated by renderFaq() --></div>
+      <div class="faq-list" id="faqList">
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(0,this)" aria-expanded="false"><span>What is the minimum order quantity?</span><svg class="faq-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a" hidden><p>There is no minimum for photobooks and trade books — you can order a single copy. For Art Prints, the minimum is one set of 4. For scanning services, the minimum is 100 images.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(1,this)" aria-expanded="false"><span>How long does printing take?</span><svg class="faq-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a" hidden><p>Standard turnaround is a week from the date your print file is confirmed. We review every order before it goes to press and will contact you if anything needs attention. Expedited turnaround (3–4 days) is available — contact us to arrange it.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(2,this)" aria-expanded="false"><span>Do you deliver across India?</span><svg class="faq-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a" hidden><p>Yes. We ship to all PIN codes across India via insured courier. Delivery typically takes 5 days after dispatch. For customers in Delhi NCR, we also offer pick-up from our Okhla Phase I studio.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(3,this)" aria-expanded="false"><span>What file format should I upload my photos in?</span><svg class="faq-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a" hidden><p>JPEG, PNG, and HEIC (iPhone photos) are all supported. For best print quality, use images shot at the highest resolution your camera allows — we flag any photos below 300 DPI at the size you've placed them so you can swap them out before ordering.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(4,this)" aria-expanded="false"><span>How do I pay? Is it secure?</span><svg class="faq-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a" hidden><p>We accept all major credit and debit cards, UPI, and net banking via Razorpay. Your card details never touch our servers — Razorpay handles the entire payment flow and every transaction is cryptographically verified. We issue a GST invoice on request.</p></div></div>
+        <div class="faq-item"><button class="faq-q" onclick="toggleFaq(5,this)" aria-expanded="false"><span>What if I'm not happy with the print?</span><svg class="faq-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="faq-a" hidden><p>Quality is checked before every order ships. If your book arrives damaged or the print quality is clearly below standard, contact us within 7 days with photos and we will reprint it at no charge. We stand behind every book we make.</p></div></div>
+      </div><!--/faqList-->
     </div>
   </div>
 
@@ -146,6 +154,248 @@
   <div id="clientsGrid"></div>
 </div></section>
 
+<!-- ============ WEDDING PHOTOBOOKS (landing page) ============ -->
+<section class="view" id="view-wedding-photobooks"><div class="page-wrap seo-page">
+  <span class="tag">Wedding photobooks</span>
+  <h1>Wedding Photobooks, Printed and Bound in Delhi</h1>
+  <p class="lead">Your photographer hands over a thousand photos. A wedding photobook turns the best of them into something the family will actually open, pass around and keep for decades.</p>
+  <div class="seo-cta-row">
+    <a href="/photobooks" class="btn btn-accent" onclick="goStart('photobook');return false;">Start your wedding photobook →</a>
+    <a href="https://wa.me/917011305116" class="btn btn-ghost" target="_blank" rel="noopener">Ask us on WhatsApp</a>
+  </div>
+  <!-- Owner: replace with a photo of a finished Binder wedding book (same file name, or change the src). -->
+  <img class="seo-hero" src="/images/img-4.jpg" alt="An open Binder layflat photobook" loading="lazy" decoding="async">
+
+  <h2>Why print your wedding photos as a book</h2>
+  <p>Wedding photos tend to live in a pen drive or a cloud folder that nobody opens after the first month. A printed book puts the day in order: the haldi, the mehendi, the sangeet, the pheras, the vidaai and the reception, told as one story. Every Binder photobook is printed on 250gsm matte art paper and bound layflat, so pages open completely flat and a photo can run across both pages without disappearing into the fold. Every book is colour-checked and reviewed before it goes to press.</p>
+
+  <h2>Choose a size</h2>
+  <div class="seo-cards">
+    <div class="seo-card">
+      <span class="tag" style="color:rgba(0,0,0,.6)">For family copies</span>
+      <h3>8.5″ × 8.5″ hardcover</h3>
+      <p class="seo-price">₹2,200 <small>for 20 pages</small></p>
+      <p>Compact and easy to gift. The natural choice for copies for parents, grandparents and siblings.</p>
+    </div>
+    <div class="seo-card">
+      <span class="tag" style="color:rgba(0,0,0,.6)">The classic album</span>
+      <h3>12″ × 12″ hardbound or softbound</h3>
+      <p class="seo-price">₹4,200 <small>for 20 pages</small></p>
+      <p>The traditional wedding-album size, with room for big portraits and full-page group photos.</p>
+    </div>
+    <div class="seo-card">
+      <span class="tag" style="color:rgba(0,0,0,.6)">The statement book</span>
+      <h3>12″ × 18″ portrait or landscape</h3>
+      <p class="seo-price">₹6,300 <small>for 20 pages</small></p>
+      <p>A large coffee-table book. Landscape suits wide mandap and venue shots; portrait suits couple portraits.</p>
+    </div>
+  </div>
+  <p class="seo-note">Prices are per copy and include delivery anywhere in India. See <a href="/pricing" onclick="go('pricing');return false;">full pricing</a>.</p>
+
+  <h2>What a 40-page wedding album costs</h2>
+  <p>Most couples want more than the 20 pages included in the base price. Here is what one copy costs at 40 pages:</p>
+  <table class="seo-table">
+    <thead><tr><th>Size</th><th>20 pages (base)</th><th>Extra 20 pages</th><th>40-page book</th></tr></thead>
+    <tbody>
+      <tr><td>8.5″ × 8.5″</td><td>₹2,200</td><td>₹1,000 <small>(₹200 per 4 pages)</small></td><td><strong>₹3,200</strong></td></tr>
+      <tr><td>12″ × 12″</td><td>₹4,200</td><td>₹2,000 <small>(₹100 per page)</small></td><td><strong>₹6,200</strong></td></tr>
+      <tr><td>12″ × 18″</td><td>₹6,300</td><td>₹3,000 <small>(₹150 per page)</small></td><td><strong>₹9,300</strong></td></tr>
+    </tbody>
+  </table>
+  <p>Not sure how many pages you need? Read <a href="/wedding-photobook-pages" onclick="go('wedding-photobook-pages');return false;">how many pages a wedding photobook should have</a>.</p>
+
+  <h2>Copies for both families</h2>
+  <p>Order 10 or more copies of the same book and every copy drops to the bulk rate automatically, with no code needed. The 8.5″ × 8.5″ book goes from ₹2,200 to ₹1,100 a copy, and the 12″ × 12″ from ₹4,200 to ₹2,940. Ten 20-page 8.5″ copies cost ₹11,000 in total, which covers both sets of parents, grandparents and siblings, with copies to spare. Extra pages are charged per copy at the usual rate. For more than 50 copies, <a href="/contact" onclick="go('contact');return false;">contact us</a> for a quote.</p>
+
+  <h2>How it works</h2>
+  <ol class="seo-steps">
+    <li><strong>Pick your size.</strong> Start a photobook and choose 8.5″, 12″ × 12″ or 12″ × 18″.</li>
+    <li><strong>Add your photos.</strong> Upload JPEG, PNG or HEIC (iPhone) files. Lay pages out freely, or let auto-arrange do a first pass, and add text in any Google Font. The editor flags any photo below 300 DPI at the size you've placed it, so you can swap it before ordering.</li>
+    <li><strong>Check your pages.</strong> Preview every spread in the editor before you order, and we review every book again before it goes to press.</li>
+    <li><strong>We print and bind.</strong> Production takes about a week from the day your file is confirmed. Expedited turnaround of 3–4 days is available; ask us.</li>
+    <li><strong>Delivered to your door.</strong> Insured courier to any PIN code in India, typically 5 days after dispatch. In Delhi NCR you can also collect from our Okhla Phase I studio.</li>
+  </ol>
+
+  <h2>For wedding photographers</h2>
+  <p>Many of the books we print are made by photographers for their couples. Design the album in our editor and order a single copy for the couple, or ten or more at the bulk rate for the families. <a href="https://wa.me/917011305116" target="_blank" rel="noopener">Message us on WhatsApp</a> to talk about regular orders.</p>
+
+  <h2>Questions couples ask</h2>
+  <div class="seo-faq">
+    <h3>How long does a wedding photobook take?</h3>
+    <p>About a week to print from the day your file is confirmed, plus about 5 days for delivery. Expedited 3–4 day printing is available on request.</p>
+    <h3>Can I order different numbers of copies for each family?</h3>
+    <p>Yes. There is no minimum order, so you can order a single copy. Ten or more copies of the same book are charged at the bulk rate.</p>
+    <h3>Our photographer gave us edited files. Can we use them directly?</h3>
+    <p>Yes. Upload the full-resolution JPEGs your photographer delivered rather than copies saved from WhatsApp or social media, which are heavily compressed.</p>
+    <h3>What if the book arrives damaged?</h3>
+    <p>Contact us within 7 days with photos. If the book is damaged or the print is clearly below standard, we will reprint it at no charge.</p>
+  </div>
+
+  <div class="seo-cta-box">
+    <h2>Make your wedding book</h2>
+    <p>From ₹2,200 a copy, delivery included anywhere in India.</p>
+    <a href="/photobooks" class="btn btn-accent" onclick="goStart('photobook');return false;">Start your wedding photobook →</a>
+  </div>
+
+  <p class="seo-related">More guides: <a href="/layflat-vs-regular-photobooks" onclick="go('layflat-vs-regular-photobooks');return false;">Layflat vs regular binding</a> · <a href="/how-to-digitise-old-photos" onclick="go('how-to-digitise-old-photos');return false;">Digitising old family photos</a> · <a href="/guides" onclick="go('guides');return false;">All guides</a></p>
+</div></section>
+
+<!-- ============ GUIDES (index) ============ -->
+<section class="view" id="view-guides"><div class="page-wrap seo-page">
+  <span class="tag">Guides</span>
+  <h1>Guides to Photobooks, Scanning and Self-Publishing</h1>
+  <p class="lead">Straight answers to the questions we hear every day at the bindery in Delhi.</p>
+  <div class="seo-guide-list">
+    <a class="seo-guide" href="/wedding-photobook-pages" onclick="go('wedding-photobook-pages');return false;">
+      <span class="tag">Photobooks</span>
+      <h3>How many pages should a wedding photobook have?</h3>
+      <p>How to choose a page count, how many photos fit, and what each option costs.</p>
+    </a>
+    <a class="seo-guide" href="/layflat-vs-regular-photobooks" onclick="go('layflat-vs-regular-photobooks');return false;">
+      <span class="tag">Photobooks</span>
+      <h3>Layflat vs regular binding: which should you choose?</h3>
+      <p>What the binding does to your photos, and when each type makes sense.</p>
+    </a>
+    <a class="seo-guide" href="/how-to-digitise-old-photos" onclick="go('how-to-digitise-old-photos');return false;">
+      <span class="tag">Scanning</span>
+      <h3>How to digitise old photos, negatives and slides</h3>
+      <p>Phone apps, home scanners or a professional service: what each gets you.</p>
+    </a>
+    <a class="seo-guide" href="/isbn" onclick="go('isbn');return false;">
+      <span class="tag">Self-publishing</span>
+      <h3>How to get a free ISBN in India</h3>
+      <p>The five steps to register your book's ISBN with the national agency.</p>
+    </a>
+  </div>
+</div></section>
+
+<!-- ============ GUIDE: wedding photobook pages ============ -->
+<section class="view" id="view-wedding-photobook-pages"><div class="page-wrap seo-page">
+  <span class="tag">Guide · Photobooks</span>
+  <h1>How Many Pages Should a Wedding Photobook Have?</h1>
+  <p class="lead">For most weddings, 40 to 60 pages is the sweet spot. Fewer pages feels rushed; far more, and the best photos get lost among the rest. Here is how to decide.</p>
+
+  <h2>Start with the photos, not the page count</h2>
+  <p>A wedding photographer typically delivers several hundred edited photos. A good book uses a small fraction of them. As a rough guide, a page holds one hero photo on its own, or two to four smaller photos that belong together. That means:</p>
+  <table class="seo-table">
+    <thead><tr><th>Pages</th><th>Photos it comfortably holds</th><th>Good for</th></tr></thead>
+    <tbody>
+      <tr><td>20</td><td>about 30–50</td><td>A highlights book, or copies for relatives</td></tr>
+      <tr><td>40</td><td>about 60–100</td><td>Most weddings, told from start to finish</td></tr>
+      <tr><td>60</td><td>about 90–150</td><td>Multi-day weddings with many functions</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Give each function its own chapter</h2>
+  <p>Plan the book in the order the day happened. Sort your photos into folders before you open the editor: preparations, haldi, mehendi, sangeet, baraat, pheras, vidaai, reception. Then give each a set number of pages. A wedding with five functions at about six pages each, plus a few pages for portraits and an opening and closing spread, lands naturally at around 40 pages.</p>
+
+  <h2>Choosing what makes the cut</h2>
+  <ul class="seo-list">
+    <li><strong>One hero per spread.</strong> Let one strong photo lead each pair of pages, and support it with smaller ones.</li>
+    <li><strong>Use the full spread.</strong> Binder photobooks are layflat, so a wide mandap or venue shot can run across both pages. Keep faces away from the centre line.</li>
+    <li><strong>Leave some white space.</strong> Crowded pages feel like a contact sheet. Breathing room makes the book feel premium.</li>
+    <li><strong>Mix wide and close.</strong> Follow a wide shot of the room with close details: hands with mehendi, jewellery, the garlands.</li>
+    <li><strong>Use the original files.</strong> Upload the full-resolution JPEGs from your photographer, not copies forwarded on WhatsApp.</li>
+  </ul>
+
+  <h2>What it costs at Binder</h2>
+  <p>Every size includes 20 pages in the base price. Extra pages cost ₹200 per 4 pages on the 8.5″ book, ₹100 per page on the 12″ × 12″, and ₹150 per page on the 12″ × 18″ (added in steps of 4 pages). Delivery anywhere in India is included.</p>
+  <table class="seo-table">
+    <thead><tr><th>Size</th><th>20 pages</th><th>40 pages</th><th>60 pages</th></tr></thead>
+    <tbody>
+      <tr><td>8.5″ × 8.5″</td><td>₹2,200</td><td>₹3,200</td><td>₹4,200</td></tr>
+      <tr><td>12″ × 12″</td><td>₹4,200</td><td>₹6,200</td><td>₹8,200</td></tr>
+      <tr><td>12″ × 18″</td><td>₹6,300</td><td>₹9,300</td><td>₹12,300</td></tr>
+    </tbody>
+  </table>
+  <p>A common approach is one large 12″ × 12″ album for the couple at 40–60 pages, plus a shorter 8.5″ highlights book for the families. Ten or more copies of the same book are charged at the bulk rate. See <a href="/wedding-photobooks" onclick="go('wedding-photobooks');return false;">wedding photobooks</a> for details.</p>
+
+  <div class="seo-cta-box">
+    <h2>Ready to lay out your book?</h2>
+    <p>Start in the editor; you can add pages as you go.</p>
+    <a href="/photobooks" class="btn btn-accent" onclick="goStart('photobook');return false;">Start a photobook →</a>
+  </div>
+  <p class="seo-related"><a href="/guides" onclick="go('guides');return false;">← All guides</a></p>
+</div></section>
+
+<!-- ============ GUIDE: layflat vs regular ============ -->
+<section class="view" id="view-layflat-vs-regular-photobooks"><div class="page-wrap seo-page">
+  <span class="tag">Guide · Photobooks</span>
+  <h1>Layflat vs Regular Binding: Which Should You Choose?</h1>
+  <p class="lead">The binding decides whether your photos open flat across two pages or curve into the spine. For a photobook, that difference matters more than almost any other choice.</p>
+
+  <h2>What “layflat” means</h2>
+  <p>In a layflat book, each spread opens completely flat, from the left edge to the right edge, with no curve towards the spine. A photo can run across both pages and be seen almost in full. Layflat pages are usually thicker and stiffer, which also makes the book feel substantial in the hand.</p>
+
+  <h2>What regular binding means</h2>
+  <p>Most books on a shop shelf, such as novels and paperbacks, use regular binding: the pages are glued or sewn into the spine. When you open the book, the pages curve towards the centre. For text this doesn't matter, because there are generous inner margins. For a photo that crosses the middle, it does: the centre of the image disappears into the fold.</p>
+
+  <h2>Side by side</h2>
+  <table class="seo-table">
+    <thead><tr><th></th><th>Layflat</th><th>Regular</th></tr></thead>
+    <tbody>
+      <tr><td>Photos across two pages</td><td>Shown almost in full</td><td>Centre lost in the fold</td></tr>
+      <tr><td>Page feel</td><td>Thick, stiff pages</td><td>Thinner, flexible pages</td></tr>
+      <tr><td>Best for</td><td>Wedding albums, portfolios, travel and family photobooks</td><td>Novels, monographs, text-heavy books</td></tr>
+      <tr><td>Cost</td><td>Higher per page</td><td>Lower, especially for long books</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Which to choose</h2>
+  <p><strong>Choose layflat</strong> when photos are the point of the book: weddings, travel, a baby's first year, a photographer's portfolio. It is the only way to use wide, two-page images properly.</p>
+  <p><strong>Choose regular binding</strong> when words are the point: a novel, a memoir or a manual, where pages are mostly text and the book may run to hundreds of pages.</p>
+
+  <h2>How Binder binds its books</h2>
+  <p>Every Binder <a href="/photobooks" onclick="goStart('photobook');return false;">photobook</a> is bound layflat and printed on 250gsm matte art paper, in 8.5″ × 8.5″, 12″ × 12″ and 12″ × 18″ sizes. Our <a href="/trade-books" onclick="goStart('tradebook');return false;">trade books</a> (5.5″ × 8″ novel format) use regular perfect binding, which suits text.</p>
+  <p><strong>One tip for layflat design:</strong> even on a flat spread there is a centre line where the pages meet. Run landscapes and venue shots across it freely, but keep faces and important details a little to one side.</p>
+
+  <div class="seo-cta-box">
+    <h2>Make a layflat photobook</h2>
+    <p>Three sizes, from ₹2,200 a copy with delivery included.</p>
+    <a href="/photobooks" class="btn btn-accent" onclick="goStart('photobook');return false;">Start a photobook →</a>
+  </div>
+  <p class="seo-related"><a href="/guides" onclick="go('guides');return false;">← All guides</a></p>
+</div></section>
+
+<!-- ============ GUIDE: digitise old photos ============ -->
+<section class="view" id="view-how-to-digitise-old-photos"><div class="page-wrap seo-page">
+  <span class="tag">Guide · Scanning</span>
+  <h1>How to Digitise Old Photos, Negatives and Slides</h1>
+  <p class="lead">Family prints fade and negatives deteriorate a little every year. Here are the three ways to get them onto a computer, and what each one actually gets you.</p>
+
+  <h2>Option 1: a phone scanning app</h2>
+  <p>Free scanning apps are quick and fine for sharing a photo on WhatsApp. They are limited by your phone camera and the light in the room: expect glare on glossy prints, slightly bent edges, and files too small to reprint large. Phone apps also can't scan negatives or slides properly, because those need light shone <em>through</em> them.</p>
+
+  <h2>Option 2: a home flatbed scanner</h2>
+  <p>A decent flatbed scanner gives sharp, glare-free scans of prints and documents. Scanning negatives and slides needs a model with a transparency adapter. The real cost is time: a few minutes per photo once you include cleaning, cropping and colour correction. That is manageable for 30 photos and a project of weeks for 500.</p>
+
+  <h2>Option 3: a professional scanning service</h2>
+  <p>A professional service scans at archival resolution with calibrated equipment, corrects colour against the original, and handles negatives and slides as easily as prints. It costs more per photo, but it is the right choice for large collections, fragile originals, and anything you will want to reprint.</p>
+
+  <h2>What resolution do you need?</h2>
+  <p>For prints, scan at <strong>600 DPI</strong>. A 4×6″ print scanned at 600 DPI becomes a 2400 × 3600 pixel file, enough to reprint it sharply at up to 8×12″. Save masters as <strong>TIFF</strong>, which keeps every detail, and make JPEG copies for sharing.</p>
+
+  <h2>Before you scan: five tips</h2>
+  <ul class="seo-list">
+    <li><strong>Sort first.</strong> Group photos by family, decade or event, and write names and dates on a sheet for each group while the people who remember are around.</li>
+    <li><strong>Handle by the edges.</strong> Fingerprints on negatives and slides show up in scans. Cotton gloves help.</li>
+    <li><strong>Don't force photos out of old albums.</strong> Prints stuck to album pages can tear. A professional can scan them in place.</li>
+    <li><strong>Don't wipe with cloth or tissue.</strong> Loose dust can be blown off gently; anything more can scratch the surface.</li>
+    <li><strong>Keep three copies.</strong> Once scanned, store the files on two different devices plus one cloud backup.</li>
+  </ul>
+
+  <h2>Binder's scanning service</h2>
+  <p>We scan photographic prints from 4×6″ to A3, 35mm, 120 and 4×5″ negatives and slides in colour and black and white, and documents and artwork, at 600 DPI archival quality, colour-calibrated to the original, delivered as TIFF files. Pricing is ₹15 per MB. A standard 4×6″ print comes to about 8–12 MB, so roughly ₹120–180 a print. The minimum order is 100 images, and turnaround is 5–7 working days.</p>
+  <p>Anywhere in Delhi NCR (Delhi, Gurugram, Noida, Faridabad and Ghaziabad) we collect from your home or office. Every collection is logged and photographed, and your originals come back in padded, archival packaging.</p>
+
+  <div class="seo-cta-box">
+    <h2>Digitise your family archive</h2>
+    <p>Pick-up and drop across Delhi NCR.</p>
+    <a href="/scanning" class="btn btn-accent" onclick="go('scanning');return false;">See scanning services →</a>
+  </div>
+  <p class="seo-related">Once your photos are scanned, turn the best of them into a <a href="/photobooks" onclick="goStart('photobook');return false;">family photobook</a>. · <a href="/guides" onclick="go('guides');return false;">← All guides</a></p>
+</div></section>
+
 <!-- ============ SITEMAP (human-readable page — the machine-readable /sitemap.xml is a separate static file for crawlers) ============ -->
 <section class="view" id="view-sitemap"><div class="page-wrap">
   <span class="tag">Sitemap</span>
@@ -156,6 +406,7 @@
       <a href="/photobooks" onclick="goStart('photobook');return false;">Photobooks</a>
       <a href="/trade-books" onclick="goStart('tradebook');return false;">Trade Books</a>
       <a href="/art-prints" onclick="goStart('artprints');return false;">Art Prints</a>
+      <a href="/wedding-photobooks" onclick="go('wedding-photobooks');return false;">Wedding Photobooks</a>
       <a href="/pricing" onclick="go('pricing');return false;">Pricing</a>
       <a href="/isbn" onclick="go('isbn');return false;">Publish | Free ISBN</a>
     </div>
@@ -170,6 +421,13 @@
       <a href="/journal" onclick="go('journal');return false;">Kagaz Journal</a>
       <a href="/gallery" onclick="go('gallery');return false;">Gallery</a>
       <a href="/templates" onclick="go('templates');return false;">Ready-to-go Templates</a>
+    </div>
+    <div class="sitemap-group">
+      <h3>Guides</h3>
+      <a href="/guides" onclick="go('guides');return false;">All guides</a>
+      <a href="/wedding-photobook-pages" onclick="go('wedding-photobook-pages');return false;">How many pages for a wedding photobook</a>
+      <a href="/layflat-vs-regular-photobooks" onclick="go('layflat-vs-regular-photobooks');return false;">Layflat vs regular binding</a>
+      <a href="/how-to-digitise-old-photos" onclick="go('how-to-digitise-old-photos');return false;">How to digitise old photos</a>
     </div>
     <div class="sitemap-group">
       <h3>Company</h3>
@@ -537,7 +795,9 @@
      so it shows on every normal page but never inside an editor. -->
 <footer class="footer" id="siteFooter">
   <div class="footer-links">
+    <a href="/wedding-photobooks" onclick="go('wedding-photobooks');return false;">Wedding Photobooks</a>
     <a href="/scanning" onclick="go('scanning');return false;">Scanning Services</a>
+    <a href="/guides" onclick="go('guides');return false;">Guides</a>
     <a href="/contact" onclick="go('contact');return false;">Contact</a>
     <a href="/pricing" onclick="go('pricing');return false;">Pricing</a>
     <a href="/isbn" onclick="go('isbn');return false;">Publish | Free ISBN</a>
@@ -1492,6 +1752,6 @@
 
 </template>
 
-<script src="/script.js?v=20261022b" defer></script>
+<script src="/script.js?v=20261025c" defer></script>
 </body>
 </html>

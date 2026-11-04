@@ -109,3 +109,69 @@ Selecting an inside page (Page 1, Pages 2–3 …) while the Cover tool was open
 spine & back cover" panel showing, so every page looked like it was the cover. Now the panel
 switches automatically — to Text in the Trade Book editor, to Photos in the photobook editors —
 and the Cover tool always takes you back to the cover. Applies to all book editors.
+
+## Making the SEO pages actually live (v16, 25 Oct 2026)
+
+**Why the September changes never took effect:** the per-page files were uploaded, but `.htaccess`
+was not — it is a hidden file, and GitHub's "Add files via upload" and many FTP apps silently skip
+hidden files. Without it the host kept routing every URL to the homepage, so Google still saw one
+page with one canonical. The `.htaccess` is now back in this folder; **upload it** (see UPLOAD-TO-HOST.md).
+
+- **`.htaccess` rewritten and tested on Apache**: https + www in one hop; `/pricing.html` and
+  `/pricing/` → `/pricing`; `/index.html`, `/Index.html`, `/binder-standalone.html` and `/app.html`
+  → `/` (old duplicate homepages); `/store/<slug>`, `/journal/<slug>`, `/admin`, `/dashboard`,
+  `/editor/…` served from `app.html`; **unknown URLs now return a real 404** (the page still shows
+  the site); `X-Robots-Tag: noindex` on admin, dashboard, editors and accounts; build scripts,
+  docs, SQL, `.bundle` and `.bak` files blocked; gzip and browser caching switched on.
+- **FAQ is now in the page HTML** (it was filled in by JavaScript only, so search engines saw an
+  empty FAQ). `prerender.mjs` reads the live FAQ from Supabase, writes it into `index.html`, and
+  adds FAQPage structured data on the homepage. `renderFaq()` still re-renders it on load.
+- **Scanning page structured data**: a Service entry with Delhi NCR cities and ₹15/MB pricing.
+- **Admin link hidden from visitors** (it showed in the nav to everyone). It appears only on a
+  device where an admin has signed in at /admin. Real protection is unchanged (Supabase is_admin).
+- `prerender.mjs` can use an offline snapshot of the CMS: `CMS_SNAPSHOT=rows.json node scripts/prerender.mjs`.
+
+**New rule, because CSS/JS are now cached for a month:** whenever you change `styles.css` or
+`script.js`, bump the `?v=` stamp on both links in `index.html` (e.g. `?v=20261025a` → `?v=20261102a`),
+then run `node scripts/prerender.mjs`. Otherwise visitors keep the old file for up to a month.
+
+`htaccess-backup.txt` is an exact copy of `.htaccess`, kept so the rules survive a GitHub web
+upload (which drops hidden files). If `.htaccess` ever goes missing, copy it and rename to `.htaccess`.
+
+## New landing page and guides (v17, 25 Oct 2026)
+
+Five new pages, each served as its own HTML file with its own title, description, canonical and
+structured data, and linked from the footer (every page) and the /sitemap page:
+
+| URL | What it is | Structured data |
+|---|---|---|
+| `/wedding-photobooks` | Landing page for wedding albums: sizes, 40-page costs, family copies, FAQ | Service (3 offers) + FAQPage + breadcrumb |
+| `/guides` | Index of all guides | breadcrumb |
+| `/wedding-photobook-pages` | Guide: how many pages a wedding photobook needs, with costs | Article + breadcrumb |
+| `/layflat-vs-regular-photobooks` | Guide: layflat vs regular binding | Article + breadcrumb |
+| `/how-to-digitise-old-photos` | Guide: phone apps vs scanners vs professional scanning | Article + breadcrumb |
+
+All prices and specs on these pages come from /pricing and the live FAQ. **If prices change, update
+these pages too** (search `index.html` for `seo-page`). The wedding page uses `/images/img-4.jpg`;
+replace it with a photo of a real Binder wedding book when you have one.
+
+Page-specific structured data now sits in its own `#ldStatic` block, which script.js never touches,
+so it survives in the rendered page Google reads. The homepage FAQ schema is no longer duplicated.
+
+To add another guide: copy one of the `<section class="view seo-page">` blocks in `index.html`,
+add a `SEO_META` and `VIEW_LABELS` entry in `script.js`, add a `PAGES` line (with `guide: 'YYYY-MM-DD'`)
+in `scripts/prerender.mjs`, link it from `/guides`, then run `node scripts/prerender.mjs`.
+
+## .htaccess made host-proof (v18, 4 Nov 2026)
+
+On the live host the inner pages returned an error with the v16 rules (the REDIRECT_STATUS checks
+are not set the same way on every host, which caused a redirect loop). The rules now use
+THE_REQUEST and list every public page by name. **When you add a new page, add its name to the
+`RewriteRule ^(photobooks|trade-books|…)$` line in `.htaccess`** (a fallback rule usually covers it,
+but the list always works).
+
+## Safety net (v19, 4 Nov 2026)
+
+Any address that isn't a real file now falls back to index.html (the site's script then shows the
+right page), so the site never shows "not found", even if page files are missing on the server.
+When the page files *are* there, each address still gets its own HTML for Google.
