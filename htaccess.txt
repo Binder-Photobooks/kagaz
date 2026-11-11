@@ -1,0 +1,109 @@
+# Binder — routing, redirects and indexing rules for the Linux host (Apache).
+#
+# This file is HIDDEN (its name starts with a dot). When uploading, turn on "show hidden files"
+# in the file manager / FTP app, or it will be silently skipped — which is exactly why the SEO
+# pages built in September never took effect on the live site.
+#
+# What it does:
+#   1. Forces https://www.binder.co.in (one version of the site for Google, not four).
+#   2. Retires duplicate homepages (/index, /index.html, /Index.html, /binder-standalone.html).
+#   3. Clean URLs: /pricing is served from pricing.html; /pricing.html and /pricing/ redirect to /pricing.
+#   4. App routes (/store/<product>, /journal/<post>, /admin, /dashboard, /editor/…) are served from app.html.
+#   5. Any other unknown URL returns a real 404 (the page still shows the site, so visitors aren't stranded).
+#   6. Keeps private screens (admin, dashboard, editors, accounts) out of Google.
+#   7. Blocks public access to build scripts, docs, SQL and backups.
+#   8. Turns on compression and browser caching (faster pages = better rankings).
+
+Options -Indexes -MultiViews
+DirectoryIndex index.html
+ErrorDocument 404 /index.html
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+
+# ── 1. HTTPS + www ────────────────────────────────────────────────────────────
+# Any address other than www.binder.co.in (binder.co.in, the server IP, old store/CDN
+# addresses that pull pages from this server) is sent permanently to www.binder.co.in.
+RewriteCond %{HTTP_HOST} !^www\.binder\.co\.in$ [NC]
+RewriteCond %{HTTP_HOST} !^$
+RewriteRule ^ https://www.binder.co.in%{REQUEST_URI} [R=301,L,NE]
+# (X-Forwarded-Proto check stops a redirect loop on hosts that terminate HTTPS in front of Apache)
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+RewriteCond %{HTTP_HOST} ^www\.binder\.co\.in$ [NC]
+RewriteRule ^ https://www.binder.co.in%{REQUEST_URI} [R=301,L,NE]
+
+# ── 7. Never serve build/source files ────────────────────────────────────────
+RewriteRule ^(scripts|supabase)(/|$) - [F,L]
+RewriteRule (^|/)\.(?!well-known/) - [F,L]
+RewriteRule \.(md|sql|toml|bundle|bak|mjs|DS_Store)$ - [F,L,NC]
+RewriteRule ^(vercel\.json|htaccess-backup\.txt)$ - [F,L]
+
+# ── 2. Duplicate homepages → / ────────────────────────────────────────────────
+RewriteCond %{THE_REQUEST} \s/+(index|index\.html|Index\.html|binder-standalone\.html)[\s?] [NC]
+RewriteRule ^ https://www.binder.co.in/ [R=301,L]
+
+# app.html is an internal shell, never a page of its own.
+# (THE_REQUEST is the browser's original request line, so our own internal rewrites to
+#  app.html / pricing.html never trigger these redirects. This works on Apache and LiteSpeed;
+#  the older REDIRECT_STATUS check caused a redirect loop on some shared hosts.)
+RewriteCond %{THE_REQUEST} \s/+app\.html[\s?] [NC]
+RewriteRule ^ https://www.binder.co.in/ [R=301,L]
+
+# ── 3. Clean URLs ─────────────────────────────────────────────────────────────
+# /pricing.html → /pricing (only when the browser asked for .html itself)
+RewriteCond %{THE_REQUEST} \s/+([a-z0-9-]+)\.html[\s?] [NC]
+RewriteRule ^ https://www.binder.co.in/%1 [R=301,L]
+
+# /pricing/ → /pricing
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.+)/$ https://www.binder.co.in/$1 [R=301,L]
+
+# /pricing → pricing.html, when that file is on the server.
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^([a-z0-9-]+)$ $1.html [L]
+
+# ── 4. App routes → app.html (when it's on the server) ──────────────────────
+# (If app.html can't be found, the safety net below serves index.html instead.)
+RewriteCond %{DOCUMENT_ROOT}/app.html -f
+RewriteRule ^(admin|dashboard|editor/.+|store/[^/]+|journal/[^/]+)$ app.html [L]
+
+# ── 5. Safety net: anything else that isn't a real file or folder gets the
+#       homepage file, and the site's own script shows the right page. This keeps
+#       every page working even if some page files are missing on the server.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
+</IfModule>
+
+# ── 6. Keep private screens out of search ────────────────────────────────────
+<IfModule mod_headers.c>
+  SetEnvIf Request_URI "^/(admin|dashboard|editor/|accounts)" NOINDEX=1
+  Header always set X-Robots-Tag "noindex, nofollow" env=NOINDEX
+  Header always set X-Robots-Tag "noindex, nofollow" env=REDIRECT_NOINDEX
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ── 8. Compression ───────────────────────────────────────────────────────────
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/xml application/javascript text/javascript application/json image/svg+xml
+</IfModule>
+
+# ── 8. Browser caching ───────────────────────────────────────────────────────
+# styles.css and script.js are linked with ?v=… version stamps, so they can be cached long.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 hour"
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType application/xml "access plus 0 seconds"
+  ExpiresByType text/xml "access plus 0 seconds"
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType text/javascript "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 6 months"
+  ExpiresByType image/png "access plus 6 months"
+  ExpiresByType image/webp "access plus 6 months"
+  ExpiresByType video/mp4 "access plus 6 months"
+</IfModule>
