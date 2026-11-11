@@ -23,7 +23,10 @@ RewriteEngine On
 RewriteBase /
 
 # ── 1. HTTPS + www ────────────────────────────────────────────────────────────
-RewriteCond %{HTTP_HOST} ^binder\.co\.in$ [NC]
+# Any address other than www.binder.co.in (binder.co.in, the server IP, old store/CDN
+# addresses that pull pages from this server) is sent permanently to www.binder.co.in.
+RewriteCond %{HTTP_HOST} !^www\.binder\.co\.in$ [NC]
+RewriteCond %{HTTP_HOST} !^$
 RewriteRule ^ https://www.binder.co.in%{REQUEST_URI} [R=301,L,NE]
 # (X-Forwarded-Proto check stops a redirect loop on hosts that terminate HTTPS in front of Apache)
 RewriteCond %{HTTPS} !=on
