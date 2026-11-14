@@ -2809,7 +2809,7 @@ function genericRenderPanel(ed){
       <div class="hint">${m.words.toLocaleString('en-IN')} words → pages ${m.from}–${m.to} · ${m.chapters} chapter${m.chapters===1?'':'s'}${m.images?` · ${m.images} image${m.images===1?'':'s'}`:''}.</div>
       <button class="btn btn-ghost sm" style="width:100%;justify-content:center;margin-bottom:8px" onclick="openManuscriptModal()">↻ Re-run layout…</button>`:''}
       <div class="hint">Afterwards, every page is a normal editable text box — switch to the <b>Text</b> tool to restyle paragraphs, indents, spacing and alignment, or drag images around. Undo (↺) reverts the whole layout in one step.</div>
-      <div class="hint" style="color:var(--slate-l)">A print-ready proof PDF (300 DPI, 0.2″ bleed, trim marks) can be generated after ordering — see Admin → PDF Manager.</div>`;
+      <div class="hint" style="color:var(--slate-l)">After you order, we prepare the print file and check it before it goes to press.</div>`;
   }
   else if(ed.tool==='cover'){
     if(ed.cfg.hasSpine){
@@ -5024,8 +5024,7 @@ function orderCardHTML(o,compact){
       ${addonsHTML}
       ${couponHTML}
       ${giftHTML}
-      <div class="order-detail-row"><span>Print files</span></div>
-      ${filesHTML}
+      ${'' /* print files (bleed, trim marks) are back-end only — shown in Admin → PDF Manager, never to customers */}
       <div class="order-card-actions">
         ${canReorder?`<button class="btn btn-accent xs" onclick="event.stopPropagation();openCheckout('${o.product}')">Reorder</button>`:`<button class="btn btn-accent xs" onclick="event.stopPropagation();go('store')">Shop again</button>`}
       </div>
@@ -5609,10 +5608,11 @@ function doPay(){
         else if(data&&data[0]&&!data[0].success)console.warn('Coupon redeem returned unsuccessful:',data[0].reason);
       });
     }
-    // Trigger server-side PDF render for each file
-    triggerServerRender(order);
+    // Print PDFs (with bleed and trim marks) are made only in the back end: Admin → PDF Manager
+    // renders them from the saved snapshot. Nothing is rendered in the customer's browser, so the
+    // customer never sees print files, trim marks or render progress.
     if(CHECKOUT_CTX.type==='store'){S.cart=[];saveJSON('binder_cart',S.cart);syncCartBadge();}
-    hide('checkoutModal');toast(god?'Order placed 🎉 No payment required — house account.':(order.gift?'Order placed 🎉 It\'ll ship straight to '+order.gift.recipientName+'.':'Order placed 🎉 Your print-ready files will appear in Admin → PDF Manager.'));};
+    hide('checkoutModal');toast(god?'Order placed 🎉 No payment required — house account.':(order.gift?'Order placed 🎉 It\'ll ship straight to '+order.gift.recipientName+'.':'Order placed 🎉 We\'ll check your design before it goes to press.'));};
   if(god){
     finish({razorpay_payment_id:'HOUSE-'+uid().toUpperCase(),razorpay_order_id:null,_verified:false});
     return;

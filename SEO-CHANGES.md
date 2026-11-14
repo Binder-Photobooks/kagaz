@@ -189,3 +189,11 @@ When the page files *are* there, each address still gets its own HTML for Google
 - **Prices are PLACEHOLDERS** (₹600 / 20 pages, ₹100 per extra 4 pages, ₹420 at 10+ copies). Change in
   three places: `PRICING_RULES.zine` and `START_SERVICE_PRICE` in script.js, `START_PRICE` in
   scripts/prerender.mjs, and the Zine card on the Pricing page in index.html. Then run the prerender.
+
+## Print files are back-end only (v21, 14 Nov 2026)
+
+Print PDFs (bleed + trim marks) are made only in Admin → PDF Manager. Previously the customer's
+browser also rendered them right after payment and showed "Rendering PDFs…" / "…Admin → PDF Manager"
+messages; their My Orders cards listed the print files ("trim marks", "Queued/Ready"), and the trade
+book editor mentioned trim marks. All removed from the customer side. The editor's on-screen bleed
+and safe-margin guides stay, since customers need them to design.
