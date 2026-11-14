@@ -61,7 +61,8 @@ h1,h2,h3{font-family:var(--disp);letter-spacing:-.03em;color:var(--ink)}
 .nav-links a:hover{color:var(--ink)}
 .nav-actions{display:flex;align-items:center;gap:10px;flex:0 0 auto;margin-left:auto}
 .nav-cart{position:relative;cursor:pointer;display:inline-flex;align-items:center;flex:0 0 auto}
-.nav-admin-link{font-size:12px;color:var(--slate-l);cursor:pointer;white-space:nowrap}
+.nav-admin-link{display:none;font-size:12px;color:var(--slate-l);cursor:pointer;white-space:nowrap}
+.is-admin .nav-admin-link{display:inline} /* only shown to signed-in admins — see setAdminFlag() in script.js */
 .user-menu-wrap{position:relative;flex:0 0 auto}
 
 .page-wrap{max-width:1100px;margin:0 auto;padding:60px 5vw 100px}
@@ -167,7 +168,7 @@ h1,h2,h3{font-family:var(--disp);letter-spacing:-.03em;color:var(--ink)}
   .nav-menu.open{display:flex}
   .nav-links{flex-direction:column;gap:0;width:100%}
   .nav-links a{padding:16px 24px;border-bottom:1px solid var(--line);font-size:17px;font-weight:500;color:var(--text)}
-  .nav-admin-link{display:none}
+  .nav-admin-link,.is-admin .nav-admin-link{display:none}
 }
 
 /* ── Mobile ────────────────────────────────────── */
@@ -811,3 +812,43 @@ td{padding:12px 10px;border-bottom:1px solid var(--line)}
 
 /* Store page uses the full screen width so product cards can be large (3+ across on desktop). */
 #view-store .page-wrap{max-width:1380px}
+
+/* ── Landing pages & guides (/wedding-photobooks, /guides, guide articles) ── */
+.seo-page{max-width:860px}
+.seo-page h2{font-size:clamp(24px,3vw,30px);font-weight:500;letter-spacing:-.01em;margin:52px 0 14px;line-height:1.25}
+.seo-page h3{font-size:19px;font-weight:600;margin:0 0 6px}
+.seo-page p,.seo-page li{font-size:17px;line-height:1.75;color:var(--text)}
+.seo-page p{margin:0 0 16px;max-width:70ch}
+.seo-page p a,.seo-page li a,.seo-related a{color:var(--accent-d);text-decoration:underline;text-underline-offset:3px}
+.seo-cta-row{display:flex;flex-wrap:wrap;gap:12px;margin:26px 0 34px}
+.seo-hero{width:100%;height:auto;max-height:560px;object-fit:contain;display:block;margin:0 auto}
+.seo-page a.btn{text-decoration:none}
+.seo-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:8px}
+.seo-card{background:var(--cream);border-radius:18px;padding:26px}
+.seo-card h3{margin:10px 0 8px}
+.seo-card p{font-size:15px;line-height:1.6;margin:0}
+.seo-card .seo-price{font-size:26px;font-weight:600;margin:0 0 10px;color:var(--ink)}
+.seo-card .seo-price small{font-size:14px;font-weight:400;color:var(--slate);white-space:nowrap}
+.seo-note{font-size:15px!important;color:var(--slate)!important;margin-top:14px!important}
+.seo-table{width:100%;border-collapse:collapse;margin:8px 0 20px;font-size:16px}
+.seo-table th,.seo-table td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.seo-table th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);font-weight:700}
+.seo-table small{color:var(--slate)}
+.seo-steps,.seo-list{padding-left:22px;margin:0 0 16px}
+.seo-steps li,.seo-list li{margin-bottom:12px;padding-left:4px}
+.seo-faq h3{margin-top:24px}
+.seo-cta-box{background:var(--cream);border-radius:22px;padding:38px 34px;margin:56px 0 30px;text-align:center}
+.seo-cta-box h2{margin:0 0 8px}
+.seo-cta-box p{margin:0 auto 22px;color:var(--slate)}
+.seo-related{font-size:15px!important;color:var(--slate)!important}
+.seo-guide-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:34px}
+.seo-guide{display:block;background:var(--cream);border-radius:18px;padding:28px;color:inherit;text-decoration:none;transition:transform .15s}
+.seo-guide:hover{transform:translateY(-2px)}
+.seo-guide h3{font-size:21px;margin:10px 0 8px;line-height:1.3}
+.seo-guide p{font-size:15px;line-height:1.6;color:var(--slate);margin:0}
+@media (max-width:640px){
+  .seo-page p,.seo-page li{font-size:16px}
+  .seo-table{display:block;overflow-x:auto;white-space:nowrap;font-size:15px}
+  .seo-cta-box{padding:30px 22px}
+  .seo-guide-list{grid-template-columns:1fr}
+}

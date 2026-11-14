@@ -21,7 +21,9 @@ rules live in `.htaccess`. `vercel.json` is ignored there.
 | `https://www.binder.co.in/pricing` | Pricing page; View Source shows `<link rel="canonical" href="https://www.binder.co.in/pricing">` |
 | `https://www.binder.co.in/pricing.html` | redirects to `/pricing` |
 | a store product or journal post link | opens normally |
-| `https://www.binder.co.in/sitemap.xml` | XML list of ~36 URLs |
+| `https://www.binder.co.in/sitemap.xml` | XML list of ~32 URLs |
+| `https://www.binder.co.in/some-made-up-page` | site still shows, but browser dev tools show status 404 |
+| `https://www.binder.co.in/Index.html` | redirects to `/` |
 | `https://www.binder.co.in/scripts/prerender.mjs` | 403 or 404 |
 
 If the whole site shows "500 Internal Server Error" after uploading, the host doesn't allow one

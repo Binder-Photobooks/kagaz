@@ -95,6 +95,16 @@ const SEO_META={
     keywords:'architecture photography Delhi, editorial photography India, corporate photography Delhi, professional photographer Delhi'},
   sitemap:{title:'Sitemap | Binder',desc:'A full map of every page on Binder — photobooks, trade books, art prints, scanning and photography services, the store, Kagaz Journal, and more.',
     keywords:'binder sitemap'},
+  'wedding-photobooks':{title:'Wedding Photobooks — Layflat Wedding Albums, Delhi | Binder',desc:'Layflat wedding photobooks printed in Delhi on 250gsm matte art paper. Three sizes from ₹2,200, family copies from ₹1,100 each. Delivery across India included.',
+    keywords:'wedding photobook, wedding album printing Delhi, layflat wedding album India'},
+  guides:{title:'Guides — Photobooks, Photo Scanning & Self-Publishing | Binder',desc:'Practical guides from Binder in Delhi: wedding photobook page counts, layflat vs regular binding, digitising old photos, and getting a free ISBN in India.',
+    keywords:'photobook guide, photo scanning guide, self publishing guide India'},
+  'wedding-photobook-pages':{title:'How Many Pages Should a Wedding Photobook Have? | Binder',desc:'For most weddings 40–60 pages is right. How many photos fit per page, how to plan chapters for each function, and what each page count costs.',
+    keywords:'wedding photobook pages, how many photos in wedding album, wedding album page count'},
+  'layflat-vs-regular-photobooks':{title:'Layflat vs Regular Binding: Which to Choose? | Binder',desc:'Layflat books open completely flat so photos run across both pages; regular binding curves into the spine. Which suits photobooks, novels and portfolios.',
+    keywords:'layflat photobook, layflat vs regular binding, layflat album India'},
+  'how-to-digitise-old-photos':{title:'How to Digitise Old Photos, Negatives & Slides | Binder',desc:'Phone apps, home scanners or a professional service: how to digitise old prints, negatives and slides, what resolution to use, and how to protect originals.',
+    keywords:'digitise old photos, scan negatives Delhi, photo scanning service Delhi NCR'},
   templates:{title:'Ready-to-go Templates — Photobook, Trade Book & Art Print Starters | Binder',desc:'Blank starting templates sized exactly for each Binder format — cover, back cover, and pages ready to go. Pick a size and start designing.',
     keywords:'photobook template blank, trade book template, art print template, book layout starter India'},
 };
@@ -180,7 +190,7 @@ function updateSeoMeta(v){
   const canon=canonLink(); if(canon)canon.setAttribute('href','https://www.binder.co.in'+pathForView(v));
 }
 // Breadcrumb names per page — keep in step with the labels in scripts/prerender.mjs.
-const VIEW_LABELS={pricing:'Pricing',scanning:'Scanning Services',photography:'Photography Services',store:'Store',journal:'Kagaz Journal',isbn:'Free ISBN',publish:'Publish with us',gallery:'Gallery',templates:'Templates',clients:'Clients',contact:'Contact',sitemap:'Sitemap'};
+const VIEW_LABELS={'wedding-photobooks':'Wedding Photobooks',guides:'Guides','wedding-photobook-pages':'Wedding photobook pages','layflat-vs-regular-photobooks':'Layflat vs regular binding','how-to-digitise-old-photos':'Digitising old photos',pricing:'Pricing',scanning:'Scanning Services',photography:'Photography Services',store:'Store',journal:'Kagaz Journal',isbn:'Free ISBN',publish:'Publish with us',gallery:'Gallery',templates:'Templates',clients:'Clients',contact:'Contact',sitemap:'Sitemap'};
 function go(v,push){
   if(v==='dashboard'&&!S.user){authGo('login');show('authModal');toast('Sign in to view your dashboard');return}
   const robots=document.querySelector('meta[name="robots"]');
@@ -192,7 +202,9 @@ function go(v,push){
   if($('siteFooter'))$('siteFooter').style.display='block';
   $('view-'+v).classList.add('active'); window.scrollTo(0,0);
   updateSeoMeta(v);
-  if(v==='home')setPageSchema(buildFaqSchema()); // FAQ section only actually renders on the home view
+  // FAQ section only renders on the home view. The page HTML already carries an #ldFaq block
+  // (written by prerender.mjs); refresh that one with the live FAQ instead of adding a duplicate.
+  if(v==='home'){ const lf=$('ldFaq'); if(lf)lf.textContent=JSON.stringify(buildFaqSchema()); else setPageSchema(buildFaqSchema()); }
   else if(VIEW_LABELS[v])setPageSchema(buildBreadcrumbSchema([{name:'Home',url:'https://www.binder.co.in/'},{name:VIEW_LABELS[v],url:'https://www.binder.co.in'+pathForView(v)}]));
   if(push!==false)setPath(pathForView(v));
   if(v==='journal')renderBlog(); if(v==='store')renderStore(); if(v==='clients')renderClients(); if(v==='gallery')renderGallery();
@@ -5661,6 +5673,15 @@ async function openRazorpay(amountRupees,desc,onSuccess,onCancel,phone){try{awai
    only accepted by the database when the signed-in user's profile has
    is_admin = true, regardless of what the browser lets you click. */
 let _isAdmin=false;
+/* The nav "Admin" link is hidden from the public (it was visible to every visitor and every
+   search engine). It appears only on a device where an admin has signed in. This is purely
+   cosmetic — real protection is the is_admin() check in Supabase. */
+function setAdminFlag(v){
+  _isAdmin=!!v;
+  try{ v?localStorage.setItem('binder_admin_ui','1'):localStorage.removeItem('binder_admin_ui'); }catch(e){}
+  document.documentElement.classList.toggle('is-admin',_isAdmin);
+}
+try{ if(localStorage.getItem('binder_admin_ui')==='1')document.documentElement.classList.add('is-admin'); }catch(e){}
 async function doAdminLogin(){
   const email=$('adminUser').value.trim(),pass=$('adminPass').value;
   if(!email||!pass)return;
@@ -5682,17 +5703,18 @@ async function doAdminLogin(){
     await sb.auth.signOut();
     return;
   }
-  _isAdmin=true;
+  setAdminFlag(true);
   $('adminGate').style.display='none';$('adminPanel').style.display='grid';adminTab('dashboard');refreshCmsSyncBanner();
   if(window._cmsLoadFailed)toast('⚠ CMS cloud sync is not working: '+window._cmsLoadFailed+' — edits will only save on this device until fixed (run cms-setup.sql in Supabase).');
 }
-async function doAdminLogout(){_isAdmin=false;await sb.auth.signOut();$('adminPanel').style.display='none';$('adminGate').style.display='flex';}
+async function doAdminLogout(){setAdminFlag(false);await sb.auth.signOut();$('adminPanel').style.display='none';$('adminGate').style.display='flex';}
 async function checkAdminGate(){
   const {data:{session}}=await sb.auth.getSession();
   if(session&&session.user){
     const {data:profile}=await sb.from('profiles').select('is_admin').eq('id',session.user.id).single();
     _isAdmin=!!(profile&&profile.is_admin);
   } else { _isAdmin=false; }
+  setAdminFlag(_isAdmin);
   $('adminGate').style.display=_isAdmin?'none':'flex';$('adminPanel').style.display=_isAdmin?'grid':'none';
   if(_isAdmin)adminTab('dashboard');
 }
