@@ -121,7 +121,7 @@ function buildBreadcrumbSchema(items){
 // Service schema for the three "before you start" format pages (/photobooks, /trade-books,
 // /art-prints) — these are Binder's main commercial landing pages and previously shipped with
 // zero structured data at all.
-const START_SERVICE_PRICE={photobook:'2200',tradebook:'1000',artprints:'800',zine:'600'}; // zine: PLACEHOLDER price, keep in step with PRICING_RULES.zine
+const START_SERVICE_PRICE={photobook:'2200',tradebook:'1000',artprints:'800',zine:'200'}; // zine: keep in step with PRICING_RULES.zine
 function buildServiceSchema(key){
   const info=START_PAGES[key], seo=START_SEO[key]; if(!info||!seo)return null;
   return {"@context":"https://schema.org","@type":"Service",
@@ -5397,7 +5397,7 @@ const PRICING_RULES={
   photobook:{basePages:20,  perCopyLow:220000, perCopyBulk:110000, perPage:5000, bulkFrom:10},
   photobook12:{basePages:20, perCopyLow:420000, perCopyBulk:294000, perPage:10000, bulkFrom:10}, // 30% off at 10+ copies
   photobook18:{basePages:20, perCopyLow:630000, perCopyBulk:441000, perPage:15000, bulkFrom:10}, // 30% off at 10+ copies — placeholder pricing, adjust to your real cost
-  zine:{basePages:20, perCopyLow:60000, perCopyBulk:42000, perPage:2500, bulkFrom:10}, // PLACEHOLDER: ₹600 for 20 pages, ₹100 per extra 4 pages, 30% off at 10+ copies. Replace with real prices (also in index.html pricing card + START_CARD/START_PRICE).
+  zine:{basePages:20, perCopyLow:20000, perCopyBulk:20000, perPage:800, bulkFrom:1e9}, // ₹200 for 20 pages, ₹8 per extra page; no bulk rate. Keep in step with the Zine card in index.html, START_SERVICE_PRICE and START_PRICE in scripts/prerender.mjs.
 };
 function quoteEditorOrder(editorKey,qty){
   const rule=PRICING_RULES[editorKey];

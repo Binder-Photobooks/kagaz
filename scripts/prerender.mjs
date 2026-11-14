@@ -96,7 +96,7 @@ const faqLive = cmsRow('faq').value;
 const FAQ = (Array.isArray(faqLive) && faqLive.length ? faqLive : FAQ_DEFAULTS).filter(f => f && f.q && f.a);
 const START_H1 = { photobook: 'Custom Photobook Printing', tradebook: 'Trade Book Printing & Self-Publishing', artprints: 'Archival Art Prints', zine: 'Zine Printing' };
 const START_KEYS = { photobook: 'Photobook', tradebook: 'Tradebook', artprints: 'Artprints', zine: 'Zine' };
-const START_PRICE = { photobook: '2200', tradebook: '1000', artprints: '800', zine: '600' }; // zine: PLACEHOLDER, keep in step with PRICING_RULES.zine
+const START_PRICE = { photobook: '2200', tradebook: '1000', artprints: '800', zine: '200' }; // zine: keep in step with PRICING_RULES.zine
 
 // ---------- helpers ----------
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

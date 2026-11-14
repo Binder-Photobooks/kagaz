@@ -186,9 +186,9 @@ When the page files *are* there, each address still gets its own HTML for Google
 - **New page `/zines`** (start page) — in the top bar, footer, /sitemap page, sitemap.xml, pricing,
   Admin → Pages (text, cards, SEO) and Admin → Content (page image: "Zine — page image").
 - Admin can build zine templates (Templates → editor "Zine A5").
-- **Prices are PLACEHOLDERS** (₹600 / 20 pages, ₹100 per extra 4 pages, ₹420 at 10+ copies). Change in
-  three places: `PRICING_RULES.zine` and `START_SERVICE_PRICE` in script.js, `START_PRICE` in
-  scripts/prerender.mjs, and the Zine card on the Pricing page in index.html. Then run the prerender.
+- **Price: ₹200 for 20 pages, ₹8 per extra page** (pages added 4 at a time, so +₹32), same price at any
+  quantity. To change it, edit `PRICING_RULES.zine` and `START_SERVICE_PRICE` in script.js, `START_PRICE`
+  in scripts/prerender.mjs, and the Zine card on the Pricing page in index.html. Then run the prerender.
 
 ## Print files are back-end only (v21, 14 Nov 2026)
 

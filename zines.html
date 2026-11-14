@@ -56,7 +56,7 @@
   "sameAs": []
 }
 </script>
-<script type="application/ld+json" id="ldPage">[{"@context":"https://schema.org","@type":"Service","serviceType":"Zine Printing","provider":{"@id":"https://www.binder.co.in/#business"},"areaServed":["Delhi","India"],"description":"Design and print your own A5 zine online with Binder in Delhi. 20 pages to start, add pages four at a time, full colour, print-ready with 5 mm bleed. Delivery across India.","offers":{"@type":"Offer","priceCurrency":"INR","price":"600","url":"https://www.binder.co.in/zines"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.binder.co.in/"},{"@type":"ListItem","position":2,"name":"Zines","item":"https://www.binder.co.in/zines"}]}]</script>
+<script type="application/ld+json" id="ldPage">[{"@context":"https://schema.org","@type":"Service","serviceType":"Zine Printing","provider":{"@id":"https://www.binder.co.in/#business"},"areaServed":["Delhi","India"],"description":"Design and print your own A5 zine online with Binder in Delhi. 20 pages to start, add pages four at a time, full colour, print-ready with 5 mm bleed. Delivery across India.","offers":{"@type":"Offer","priceCurrency":"INR","price":"200","url":"https://www.binder.co.in/zines"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.binder.co.in/"},{"@type":"ListItem","position":2,"name":"Zines","item":"https://www.binder.co.in/zines"}]}]</script>
 <link rel="stylesheet" href="/styles.css?v=20261114a">
 </head>
 <body>
@@ -612,16 +612,16 @@
       <button class="btn btn-accent sm" style="width:100%;justify-content:center;margin-top:auto" onclick="goStart('tradebook')">Start a trade book →</button>
     </div>
 
-    <!-- Zine: PLACEHOLDER prices — keep in step with PRICING_RULES.zine in script.js -->
+    <!-- Zine — keep in step with PRICING_RULES.zine in script.js -->
     <div style="border-radius:18px;padding:32px;background:var(--cream);display:flex;flex-direction:column">
       <span class="tag" style="color:rgba(0,0,0,.6)">Zine</span>
       <h3 style="font-size:24px;margin:10px 0 18px">A5 portrait (148 × 210 mm)</h3>
       <table style="width:100%;margin-bottom:22px">
         <tbody>
           <tr><td style="color:var(--slate)">Default pages</td><td style="text-align:right;font-weight:600">20</td></tr>
-          <tr><td style="color:var(--slate)">1–9 copies</td><td style="text-align:right;font-weight:600">₹600 / copy</td></tr>
-          <tr><td style="color:var(--slate)">10–50 copies (bulk)</td><td style="text-align:right;font-weight:600">₹420 / copy</td></tr>
-          <tr><td style="color:var(--slate)">Additional pages</td><td style="text-align:right;font-weight:600">₹100 / 4 pages / copy</td></tr>
+          <tr><td style="color:var(--slate)">Price</td><td style="text-align:right;font-weight:600">₹200 / copy</td></tr>
+          <tr><td style="color:var(--slate)">Additional pages</td><td style="text-align:right;font-weight:600">₹8 / page / copy</td></tr>
+          <tr><td style="color:var(--slate)">Pages added</td><td style="text-align:right;font-weight:600">4 at a time</td></tr>
           <tr><td style="color:var(--slate)">Delivery (India)</td><td style="text-align:right;font-weight:600">Included</td></tr>
         </tbody>
       </table>
@@ -1578,7 +1578,7 @@
     <button class="icon-btn" id="zn-pnBtn" title="Toggle auto page numbers" onclick="EDS.zine.togglePageNums()" style="font-size:10px;font-weight:700;font-family:serif;letter-spacing:-.02em">Pn</button>
     <button class="icon-btn ed-theme-btn" title="Switch to light mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <div id="zn-priceTag" style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;margin-left:4px;margin-right:2px">
-      <span id="zn-priceMain" style="font-size:13px;font-weight:600;color:var(--text)">₹600/copy</span>
+      <span id="zn-priceMain" style="font-size:13px;font-weight:600;color:var(--text)">₹200/copy</span>
       <span id="zn-priceSub" style="font-size:10.5px;color:var(--slate-l)">20 pages · base price</span>
     </div>
     <span class="spacer"></span>
@@ -1819,6 +1819,6 @@
 
 </template>
 
-<script src="/script.js?v=20261114b" defer></script>
+<script src="/script.js?v=20261114c" defer></script>
 </body>
 </html>
