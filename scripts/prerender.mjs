@@ -260,6 +260,61 @@ for (const page of PAGES) {
   written.push(file);
 }
 
+// ---------- Store product pages ----------
+// One pre-built page per product at store-pages/<slug>.html, served at /store/<slug> by .htaccess.
+// Search engines and link previews (WhatsApp, Facebook) get the product's own title, description,
+// image, price and Product schema without running JavaScript; script.js then takes over as usual.
+// Titles/descriptions come from the product's SEO fields (Admin → Store → Edit product), with the
+// same automatic fallbacks as productSeoTitle()/productSeoDesc() in script.js.
+const inr = paise => '₹' + (paise / 100).toLocaleString('en-IN');
+const seoTitle = p => (p.seoTitle || '').trim() || (p.name + ' | Binder Store');
+const seoDesc = p => {
+  const own = (p.seoDesc || '').trim(); if (own) return own;
+  const base = (p.blurb || p.details || '').replace(/\s+/g, ' ').trim();
+  return (base ? base.slice(0, 120) + (base.length > 120 ? '…' : '') + ' ' : '') + 'From Binder, Delhi. ' + inr(p.price) + '.';
+};
+const STORE_DIR = path.join(ROOT, 'store-pages');
+const catalogForPages = (() => { const v = (typeof cmsRow === 'function' ? cmsRow('catalog').value : null); return Array.isArray(v) ? v : null; })();
+if (catalogForPages) {
+  fs.rmSync(STORE_DIR, { recursive: true, force: true });
+  fs.mkdirSync(STORE_DIR, { recursive: true });
+  let made = 0;
+  for (const p of catalogForPages) {
+    if (!p || !p.slug || !p.name || !p.price) continue;
+    const url = `${SITE}/store/${encodeURIComponent(p.slug)}`;
+    const img = (p.img && !String(p.img).startsWith('data:')) ? p.img : DEFAULT_OG_IMAGE;
+    const gallery = [img, ...(Array.isArray(p.images) ? p.images : [])].filter(u => typeof u === 'string' && /^https?:/.test(u) && !/\.(mp4|webm|mov)(\?|$)/i.test(u));
+    const product = {
+      '@context': 'https://schema.org', '@type': 'Product', name: p.name, image: gallery.length ? gallery : [DEFAULT_OG_IMAGE],
+      description: seoDesc(p), sku: p.id, brand: { '@type': 'Brand', name: 'Binder' }, category: p.category || undefined,
+      offers: { '@type': 'Offer', url, priceCurrency: 'INR', price: (p.price / 100).toString(), availability: 'https://schema.org/InStock',
+        seller: { '@id': SITE + '/#business' } },
+    };
+    const crumbs = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE + '/' },
+      { '@type': 'ListItem', position: 2, name: 'Store', item: SITE + '/store' },
+      { '@type': 'ListItem', position: 3, name: p.name, item: url } ] };
+    let html = setHead(template, { title: seoTitle(p), desc: seoDesc(p), url, image: img, ld: [product, crumbs] });
+    html = withoutFaqLd(setActiveView(html, 'store'));
+    html = html.replace(/<meta property="og:type" content="[^"]*">/, '<meta property="og:type" content="product">');
+    // Fill the product panel that script.js opens for /store/<slug>, so the page is complete without JS.
+    const fill = (re, rep) => { if (!re.test(html)) throw new Error('prerender: product panel markup changed: ' + re); html = html.replace(re, rep); };
+    fill(/<div class="modal-bg" id="productDetailModal"/, '<div class="modal-bg show" id="productDetailModal"');
+    fill(/<div id="pdImg"><\/div>/, `<div id="pdImg"><img src="${esc(img)}" alt="${esc(p.name)}" style="width:100%;border-radius:10px;display:block"></div>`);
+    if (p.badge) fill(/<span id="pdBadge" class="tag" style="margin-top:14px;display:none"><\/span>/, `<span id="pdBadge" class="tag" style="margin-top:14px;display:inline-block">${esc(p.badge)}</span>`);
+    fill(/<h3 id="pdName" style="margin-top:10px">Product<\/h3>/, `<h1 id="pdName" style="margin-top:10px;font-size:22px">${esc(p.name)}</h1>`);
+    fill(/<p id="pdBlurb"([^>]*)><\/p>/, `<p id="pdBlurb"$1>${esc(p.blurb || '')}</p>`);
+    fill(/<p id="pdDetails"([^>]*)><\/p>/, `<p id="pdDetails"$1>${esc(p.details || '').replace(/\n/g, '<br>')}</p>`);
+    fill(/<b id="pdPrice" style="font-size:19px"><\/b>/, `<b id="pdPrice" style="font-size:19px">${inr(p.price)}</b>`);
+    fill(/<button id="pdAddBtn" class="btn btn-accent" onclick="">/, `<button id="pdAddBtn" class="btn btn-accent" onclick="closeProductDetail();addToCart('${esc(p.id)}')">`);
+    fs.writeFileSync(path.join(STORE_DIR, p.slug + '.html'), html);
+    made++;
+  }
+  written.push(`store-pages/ (${made} products)`);
+} else {
+  console.warn('prerender: WARNING — store catalog not available; product pages not rebuilt (existing store-pages/ left as is).');
+}
+
 // App shell for dynamic routes (/store/<slug>, /journal/<slug>, /admin, /editor/…) — served by
 // .htaccess rule 5. No canonical, no og:url; script.js sets both per page.
 let app = withoutFaqLd(heroLazy(template)).replace(/\s*<link rel="canonical"[^>]*>/, '').replace(/\s*<meta property="og:url"[^>]*>/, '');

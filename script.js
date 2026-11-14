@@ -158,12 +158,21 @@ function buildPostSchema(p,slugPath){
   if(modified)schema.dateModified=modified;
   return schema;
 }
+/* Product SEO — editable per product in Admin → Store → Edit product → "Search engines (SEO)".
+   Empty fields fall back to an automatic title/description, so every product always has both.
+   scripts/prerender.mjs mirrors these two functions for the pre-built product pages. */
+function productSeoTitle(p){ return (p.seoTitle||'').trim()||(p.name+' | Binder Store'); }
+function productSeoDesc(p){
+  const own=(p.seoDesc||'').trim(); if(own)return own;
+  const base=(p.blurb||p.details||'').replace(/\s+/g,' ').trim();
+  return (base?base.slice(0,120)+(base.length>120?'…':'')+' ':'')+'From Binder, Delhi. '+inr(p.price)+'.';
+}
 function buildProductSchema(p,slugPath){
   return {
     "@context":"https://schema.org","@type":"Product",
     "name":p.name,
     "image":(productGallery(p).filter(u=>!isVideoUrl(u)).length?productGallery(p).filter(u=>!isVideoUrl(u)):[DEFAULT_OG_IMAGE]),
-    "description":p.blurb||p.details||('Order '+p.name+' from Binder, a premium printer in Delhi.'),
+    "description":productSeoDesc(p),
     "sku":p.id,
     "brand":{"@type":"Brand","name":"Binder"},
     "offers":{
@@ -396,7 +405,11 @@ function routeFromPath(){
   if(segs[0]==='editor'&&segs[1]){ openEditor(segs[1],false); return; }
   if(START_KEY_FOR_PATH[segs[0]]&&segs.length===1){ goStart(START_KEY_FOR_PATH[segs[0]],false); return; }
   if(segs[0]==='journal'&&segs[1]){ const key=segs[1]; let p=POSTS.find(x=>x.slug===key); if(!p)p=POSTS.find(x=>x.id===key); if(p){ openPost(p,false); return; } go('journal',false); return; }
-  if(segs[0]==='store'&&segs[1]){ const key=segs[1]; let p=CATALOG.find(x=>x.slug===key); if(!p)p=CATALOG.find(x=>x.id===key); if(p){ openProductDetail(p.id,false); return; } go('store',false); return; }
+  if(segs[0]==='store'&&segs[1]){ const key=segs[1]; let p=CATALOG.find(x=>x.slug===key); if(!p)p=CATALOG.find(x=>x.id===key); if(p){ openProductDetail(p.id,false); return; }
+    // Pre-built product page (store-pages/<slug>.html) and the catalog hasn't loaded yet: keep the page's own
+    // title/description/schema rather than switching to the Store page — the catalog load re-runs this route.
+    if($('productDetailModal')&&$('productDetailModal').classList.contains('show'))return;
+    go('store',false); return; }
   if(!segs.length){ go('home',false); return; }
 
   const v=segs[0];
@@ -5259,8 +5272,8 @@ function openProductDetail(id,push){
   }
   if(push!==false)setPath('/store/'+slugPath);
   else if(location.pathname!=='/store/'+slugPath){history.replaceState({},'','/store/'+slugPath);} // old id-based link → canonical slug URL
-  const pageTitle=p.name+' — Binder Store';
-  const pageDesc=(p.blurb||p.details||'').trim().slice(0,155)||('Order '+p.name+' from Binder, a premium printer in Delhi, India.');
+  const pageTitle=productSeoTitle(p);
+  const pageDesc=productSeoDesc(p);
   const pageImg=p.img||DEFAULT_OG_IMAGE;
   document.title=pageTitle;
   const desc=document.querySelector('meta[name="description"]'); if(desc)desc.setAttribute('content',pageDesc);
@@ -6792,12 +6805,14 @@ function openProductForm(id){_editingProductId=id||null;_pendingProductImg=null;
   _pfExtra=p&&Array.isArray(p.images)?p.images.slice():[];renderProductGalleryForm();
   $('pfTitle').textContent=id?'Edit product':'Add product';$('pfName').value=p?p.name:'';$('pfBlurb').value=p?p.blurb:'';
   $('pfDetails').value=p&&p.details?p.details:'';
+  $('pfSeoTitle').value=p&&p.seoTitle?p.seoTitle:''; $('pfSeoDesc').value=p&&p.seoDesc?p.seoDesc:'';
   $('pfPrice').value=p?(p.price/100):'';$('pfBadge').value=p&&p.badge?p.badge:'';
   $('pfCategory').value=p&&p.category?p.category:'Books';
   const prev=$('pfImgPreview');
   const imgUrl=p&&p.img&&!p.img.startsWith('data:')?p.img:'';
   $('pfImgUrl').value=imgUrl;
   if(p&&p.img){prev.src=p.img;prev.style.display='block'}else prev.style.display='none';
+  updateProductSeoPreview();
   show('productFormModal');}
 /* Product images are uploaded to Supabase Storage (not embedded as base64) — embedding
    base64 directly in the CATALOG JSON blew past localStorage's quota silently (the
@@ -6837,9 +6852,22 @@ function saveProductForm(){
   const urlImg=$('pfImgUrl').value.trim();
   const category=$('pfCategory').value;
   const finalImg=_pendingProductImg||(urlImg||null);
-  if(_editingProductId){const p=CATALOG.find(x=>x.id===_editingProductId);Object.assign(p,{name,blurb,details,price,badge:$('pfBadge').value.trim()||null,category,images:_pfExtra.slice()});if(!p.slug)p.slug=uniqueProductSlug(slugify(name),p.id);if(finalImg)p.img=finalImg;}
-  else{const id=uid();CATALOG.unshift({id,name,blurb,details,price,badge:$('pfBadge').value.trim()||null,grad:['#141414','#52B57D'],img:finalImg,images:_pfExtra.slice(),category,slug:uniqueProductSlug(slugify(name),id)});}
+  if(_editingProductId){const p=CATALOG.find(x=>x.id===_editingProductId);Object.assign(p,{name,blurb,details,price,seoTitle:$('pfSeoTitle').value.trim(),seoDesc:$('pfSeoDesc').value.trim(),badge:$('pfBadge').value.trim()||null,category,images:_pfExtra.slice()});if(!p.slug)p.slug=uniqueProductSlug(slugify(name),p.id);if(finalImg)p.img=finalImg;}
+  else{const id=uid();CATALOG.unshift({id,name,blurb,details,price,seoTitle:$('pfSeoTitle').value.trim(),seoDesc:$('pfSeoDesc').value.trim(),badge:$('pfBadge').value.trim()||null,grad:['#141414','#52B57D'],img:finalImg,images:_pfExtra.slice(),category,slug:uniqueProductSlug(slugify(name),id)});}
   saveCatalog();hide('productFormModal');renderProductRows();renderStore();toast('Saved');}
+// Live Google-style preview + character counts for the product SEO fields in the admin form.
+function updateProductSeoPreview(){
+  const name=$('pfName').value.trim()||'Product name', price=Math.round(parseFloat($('pfPrice').value)*100)||0;
+  const p={name,price,blurb:$('pfBlurb').value,details:$('pfDetails').value,seoTitle:$('pfSeoTitle').value,seoDesc:$('pfSeoDesc').value};
+  const t=productSeoTitle(p), d=productSeoDesc(p);
+  $('pfSeoTitle').placeholder=productSeoTitle({...p,seoTitle:''}); $('pfSeoDesc').placeholder=productSeoDesc({...p,seoDesc:''});
+  const cnt=(el,v,max)=>{el.textContent=v.length+' / '+max+(v.length>max?' — Google may cut this off':'');el.style.color=v.length>max?'#B0432E':'var(--slate-l)';};
+  cnt($('pfSeoTitleCount'),t,60); cnt($('pfSeoDescCount'),d,155);
+  const slug=(CATALOG.find(x=>x.id===_editingProductId)||{}).slug||slugify(name);
+  $('pfSeoPreview').innerHTML=`<div style="font-size:12px;color:#4D5156">www.binder.co.in › store › ${esc(slug)}</div>
+    <div style="font-size:17px;color:#1A0DAB;line-height:1.3;margin:2px 0">${esc(t.length>62?t.slice(0,60)+'…':t)}</div>
+    <div style="font-size:13px;color:#4D5156;line-height:1.45">${esc(d.length>158?d.slice(0,155)+'…':d)}</div>`;
+}
 function deleteProduct(id){if(!confirm('Remove this product?'))return;CATALOG=CATALOG.filter(p=>p.id!==id);saveCatalog();renderProductRows();renderStore();}
 /* ================= Customers (detailed) =================
    Customer records merge three sources by email:

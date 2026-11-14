@@ -1324,15 +1324,22 @@
 <div class="modal-bg" id="productFormModal" onclick="if(event.target===this)hide('productFormModal')"><div class="modal">
   <button class="modal-close" onclick="hide('productFormModal')" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
   <h3 id="pfTitle">Add product</h3>
-  <input class="field" id="pfName" placeholder="Product name">
-  <input class="field" id="pfBlurb" placeholder="Short description (shown on the product card)">
+  <input class="field" id="pfName" placeholder="Product name" oninput="updateProductSeoPreview()">
+  <input class="field" id="pfBlurb" placeholder="Short description (shown on the product card)" oninput="updateProductSeoPreview()">
   <textarea class="field" id="pfDetails" rows="4" placeholder="Full product details (shown when a customer clicks the product — materials, sizing, what's included, etc.)"></textarea>
-  <input class="field" id="pfPrice" type="number" placeholder="Price (₹)">
+  <input class="field" id="pfPrice" type="number" placeholder="Price (₹)" oninput="updateProductSeoPreview()">
   <select class="field" id="pfCategory">
     <option value="Books">Books</option>
     <option value="Photographs & Fine Art">Photographs & Fine Art</option>
   </select>
   <input class="field" id="pfBadge" placeholder="Badge (optional)">
+  <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--slate-l);font-weight:700;margin:6px 0 8px">Search engines (SEO)</div>
+  <input class="field" id="pfSeoTitle" style="margin-bottom:2px" oninput="updateProductSeoPreview()" placeholder="Search title">
+  <div id="pfSeoTitleCount" style="font-size:11px;margin:0 0 8px"></div>
+  <textarea class="field" id="pfSeoDesc" rows="3" style="margin-bottom:2px" oninput="updateProductSeoPreview()" placeholder="Search description"></textarea>
+  <div id="pfSeoDescCount" style="font-size:11px;margin:0 0 8px"></div>
+  <div style="font-size:11px;color:var(--slate-l);margin-bottom:4px">How it can look on Google (leave a field empty to use the grey suggestion):</div>
+  <div id="pfSeoPreview" style="border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:14px;background:#fff;font-family:Arial,sans-serif"></div>
   <img alt="" id="pfImgPreview" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:none;margin-bottom:8px" loading="lazy" decoding="async">
   <input class="field" id="pfImgUrl" placeholder="Image URL (optional — or upload below)">
   <input type="file" accept="image/*,video/*" id="pfImgUpload" style="display:none" onchange="onProductImageUpload(this.files[0])">
@@ -1817,6 +1824,6 @@
 
 </template>
 
-<script src="/script.js?v=20261114e" defer></script>
+<script src="/script.js?v=20261114g" defer></script>
 </body>
 </html>
