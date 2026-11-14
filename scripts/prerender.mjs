@@ -33,6 +33,7 @@ const PAGES = [
   { path: '/photobooks',  start: 'photobook',  freq: 'monthly', pri: '0.9', label: 'Photobooks' },
   { path: '/trade-books', start: 'tradebook',  freq: 'monthly', pri: '0.9', label: 'Trade Books', img: '/images/img-3.jpg' },
   { path: '/art-prints',  start: 'artprints',  freq: 'monthly', pri: '0.9', label: 'Art Prints', img: '/images/img-5.jpg' },
+  { path: '/zines',       start: 'zine',       freq: 'monthly', pri: '0.9', label: 'Zines', img: '/images/img-2.jpg' },
   { path: '/pricing',     view: 'pricing',     freq: 'monthly', pri: '0.9', label: 'Pricing' },
   { path: '/scanning',    view: 'scanning',    freq: 'monthly', pri: '0.8', label: 'Scanning Services' },
   { path: '/photography', view: 'photography', freq: 'monthly', pri: '0.8', label: 'Photography Services' },
@@ -93,9 +94,9 @@ try {
 const cmsRow = k => (CMS || []).find(r => r.key === k) || {};
 const faqLive = cmsRow('faq').value;
 const FAQ = (Array.isArray(faqLive) && faqLive.length ? faqLive : FAQ_DEFAULTS).filter(f => f && f.q && f.a);
-const START_H1 = { photobook: 'Custom Photobook Printing', tradebook: 'Trade Book Printing & Self-Publishing', artprints: 'Archival Art Prints' };
-const START_KEYS = { photobook: 'Photobook', tradebook: 'Tradebook', artprints: 'Artprints' };
-const START_PRICE = { photobook: '2200', tradebook: '1000', artprints: '800' };
+const START_H1 = { photobook: 'Custom Photobook Printing', tradebook: 'Trade Book Printing & Self-Publishing', artprints: 'Archival Art Prints', zine: 'Zine Printing' };
+const START_KEYS = { photobook: 'Photobook', tradebook: 'Tradebook', artprints: 'Artprints', zine: 'Zine' };
+const START_PRICE = { photobook: '2200', tradebook: '1000', artprints: '800', zine: '200' }; // zine: keep in step with PRICING_RULES.zine
 
 // ---------- helpers ----------
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

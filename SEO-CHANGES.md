@@ -175,3 +175,25 @@ but the list always works).
 Any address that isn't a real file now falls back to index.html (the site's script then shows the
 right page), so the site never shows "not found", even if page files are missing on the server.
 When the page files *are* there, each address still gets its own HTML for Google.
+
+## Zines (v20, 14 Nov 2026)
+
+- **New editor `zine`**: A5 portrait (148 × 210 mm), 20 pages minimum, pages added/removed 4 at a time,
+  5 mm bleed, 10 mm safe margin. Same engine as the photobooks, so it has every photobook tool
+  (photos, Smart Layout / AI arrange, shapes, text, layers, cover, grid, page numbers, CMYK, undo/redo).
+- **Export**: the print PDFs (cover + interior) are 158 × 220 mm per page with trim marks at every
+  corner, outside the trim. Bleed is now read per product (`cfg.bleedIn`), so other products keep 0.2in.
+- **New page `/zines`** (start page) — in the top bar, footer, /sitemap page, sitemap.xml, pricing,
+  Admin → Pages (text, cards, SEO) and Admin → Content (page image: "Zine — page image").
+- Admin can build zine templates (Templates → editor "Zine A5").
+- **Price: ₹200 for 20 pages, ₹8 per extra page** (pages added 4 at a time, so +₹32), same price at any
+  quantity. To change it, edit `PRICING_RULES.zine` and `START_SERVICE_PRICE` in script.js, `START_PRICE`
+  in scripts/prerender.mjs, and the Zine card on the Pricing page in index.html. Then run the prerender.
+
+## Print files are back-end only (v21, 14 Nov 2026)
+
+Print PDFs (bleed + trim marks) are made only in Admin → PDF Manager. Previously the customer's
+browser also rendered them right after payment and showed "Rendering PDFs…" / "…Admin → PDF Manager"
+messages; their My Orders cards listed the print files ("trim marks", "Queued/Ready"), and the trade
+book editor mentioned trim marks. All removed from the customer side. The editor's on-screen bleed
+and safe-margin guides stay, since customers need them to design.
