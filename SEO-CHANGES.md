@@ -204,3 +204,17 @@ and safe-margin guides stay, since customers need them to design.
   Replace it in Admin → Content → "Homepage — lower image (above the FAQ)".
 - The Zines page now has no image until one is uploaded in Admin → Content → "Zine — page image".
   (A start page with no image simply skips the image block; the other start pages are unchanged.)
+
+## Store product SEO (v23, 14 Nov 2026)
+
+- **Every product has an SEO title and description**, editable in Admin → Store → Edit product →
+  "Search engines (SEO)", with character counts (60 / 155) and a live Google preview. Leave a field
+  empty to use the automatic suggestion (shown in grey). Stored on each product as `seoTitle` / `seoDesc`.
+- All 10 current products were given hand-written titles/descriptions (only facts from their own
+  listings: size, paper, pages, price).
+- **Pre-built product pages**: `scripts/prerender.mjs` writes `store-pages/<slug>.html` for every product
+  (title, description, canonical, product image for link previews, Product + Breadcrumb schema, and the
+  product panel filled in). `.htaccess` serves them at `/store/<slug>`; direct `/store-pages/…` addresses
+  redirect there. A product added later still works through `app.html` until the next rebuild.
+- After adding or editing products: re-run `node scripts/prerender.mjs` and upload `store-pages/`.
+  If a product is deleted, also delete its file from `store-pages/` on the server.

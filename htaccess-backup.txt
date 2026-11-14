@@ -64,6 +64,16 @@ RewriteRule ^(.+)/$ https://www.binder.co.in/$1 [R=301,L]
 RewriteCond %{REQUEST_FILENAME}.html -f
 RewriteRule ^([a-z0-9-]+)$ $1.html [L]
 
+# ── Store products: /store/<slug> → its pre-built page (store-pages/<slug>.html), when it exists.
+#    (REQUEST_FILENAME is used instead of DOCUMENT_ROOT, which some shared hosts report wrongly.)
+#    Apache reports the path as ".../store" (the part that exists), so take the folder from that.
+RewriteCond %{REQUEST_FILENAME} ^(.+?)/store(/[^/]*)?$
+RewriteCond %1/store-pages/$1.html -f
+RewriteRule ^store/([a-z0-9-]+)$ store-pages/$1.html [L,NC]
+# The pre-built files are only ever reached through /store/<slug>.
+RewriteCond %{THE_REQUEST} \s/+store-pages/([a-z0-9-]+)\.html[\s?] [NC]
+RewriteRule ^ https://www.binder.co.in/store/%1 [R=301,L]
+
 # ── 4. App routes → app.html (when it's on the server) ──────────────────────
 # (If app.html can't be found, the safety net below serves index.html instead.)
 RewriteCond %{DOCUMENT_ROOT}/app.html -f
