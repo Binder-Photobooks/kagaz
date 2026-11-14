@@ -33,7 +33,7 @@ const PAGES = [
   { path: '/photobooks',  start: 'photobook',  freq: 'monthly', pri: '0.9', label: 'Photobooks' },
   { path: '/trade-books', start: 'tradebook',  freq: 'monthly', pri: '0.9', label: 'Trade Books', img: '/images/img-3.jpg' },
   { path: '/art-prints',  start: 'artprints',  freq: 'monthly', pri: '0.9', label: 'Art Prints', img: '/images/img-5.jpg' },
-  { path: '/zines',       start: 'zine',       freq: 'monthly', pri: '0.9', label: 'Zines', img: '/images/img-2.jpg' },
+  { path: '/zines',       start: 'zine',       freq: 'monthly', pri: '0.9', label: 'Zines' },
   { path: '/pricing',     view: 'pricing',     freq: 'monthly', pri: '0.9', label: 'Pricing' },
   { path: '/scanning',    view: 'scanning',    freq: 'monthly', pri: '0.8', label: 'Scanning Services' },
   { path: '/photography', view: 'photography', freq: 'monthly', pri: '0.8', label: 'Photography Services' },

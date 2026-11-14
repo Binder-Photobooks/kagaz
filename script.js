@@ -234,7 +234,7 @@ const START_PAGES={
     label:'Art Prints',h1:'Archival Art Prints',heroImg:'/images/img-5.jpg',heroImgKey:'artprintsTileImageUrl',contentKey:'startArtprintsIntro',needKey:'startArtprintsNeed',stepsKey:'startArtprintsSteps',
   },
   zine:{
-    label:'Zine',h1:'Zine Printing',heroImg:'/images/img-2.jpg',heroImgKey:'zineTileImageUrl',contentKey:'startZineIntro',needKey:'startZineNeed',stepsKey:'startZineSteps',
+    label:'Zine',h1:'Zine Printing',heroImg:'',heroImgKey:'zineTileImageUrl',contentKey:'startZineIntro',needKey:'startZineNeed',stepsKey:'startZineSteps',
   }
 };
 let ACTIVE_START_KEY=null;
@@ -329,7 +329,8 @@ function renderStartPage(key){
   const intro=CONTENT[info.contentKey]||'';
   const E=PAGE_EDITS[key]||{};
   const defs=START_CARD_DEFAULTS[key];
-  const heroBlock=key==='photobook'
+  const heroBlock=!heroSrc?'<div style="height:28px"></div>' // no image yet (e.g. the Zines page until one is uploaded in Admin → Content)
+    :key==='photobook'
     ? `<div class="start-video-hero-wrap">${isVideoUrl(heroSrc)
         ? `<video src="${esc(heroSrc)}" autoplay muted playsinline preload="auto"></video>`
         : `<img src="${esc(heroSrc)}" alt="${esc(info.label)}">`}</div>`
@@ -4474,6 +4475,7 @@ const CONTENT_DEFAULTS={
   tradebookTileImageUrl:'',
   artprintsTileImageUrl:'',
   zineTileImageUrl:'',
+  homeLowerImageUrl:'',
   isbnImageUrl:'',
   photobookTileTitle:'Photobook',
   photobookTileDesc:'8.5″ × 8.5″ layflat books. Free-form layout, AI auto-arrange, rich text with any Google Font.',
@@ -6341,6 +6343,7 @@ const CONTENT_IMAGE_LABELS={
   tradebookTileImageUrl:'Trade Book — tile & page image',
   artprintsTileImageUrl:'Art Prints — tile & page image',
   zineTileImageUrl:'Zine — page image (top of /zines)',
+  homeLowerImageUrl:'Homepage — lower image (above the FAQ)',
   isbnImageUrl:'ISBN page — image',
   photographyLeadImageUrl:'Photography Services — lead image (top of page)',
 };
