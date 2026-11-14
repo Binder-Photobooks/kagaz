@@ -57,7 +57,7 @@
 }
 </script>
 <script type="application/ld+json" id="ldPage">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.binder.co.in/"},{"@type":"ListItem","position":2,"name":"Kagaz Journal","item":"https://www.binder.co.in/journal"}]}</script>
-<link rel="stylesheet" href="/styles.css?v=20261025c">
+<link rel="stylesheet" href="/styles.css?v=20261114a">
 </head>
 <body>
 <!-- ============ NAV ============ -->
@@ -70,6 +70,7 @@
     <div class="nav-links">
       <a href="/" onclick="go('home');return false;">Home</a>
       <a href="/photobooks" onclick="goStart('photobook');return false;">Photobooks</a>
+      <a href="/zines" onclick="goStart('zine');return false;">Zines</a>
       <a href="/gallery" onclick="go('gallery');return false;">Gallery</a>
       <a href="/templates" onclick="go('templates');return false;">Ready-to-go Templates</a>
       <a href="/trade-books" onclick="goStart('tradebook');return false;">Trade Books</a>
@@ -407,6 +408,7 @@
       <a href="/trade-books" onclick="goStart('tradebook');return false;">Trade Books</a>
       <a href="/art-prints" onclick="goStart('artprints');return false;">Art Prints</a>
       <a href="/wedding-photobooks" onclick="go('wedding-photobooks');return false;">Wedding Photobooks</a>
+      <a href="/zines" onclick="goStart('zine');return false;">Zines</a>
       <a href="/pricing" onclick="go('pricing');return false;">Pricing</a>
       <a href="/isbn" onclick="go('isbn');return false;">Publish | Free ISBN</a>
     </div>
@@ -600,6 +602,22 @@
         </tbody>
       </table>
       <button class="btn btn-accent sm" style="width:100%;justify-content:center;margin-top:auto" onclick="goStart('tradebook')">Start a trade book →</button>
+    </div>
+
+    <!-- Zine: PLACEHOLDER prices — keep in step with PRICING_RULES.zine in script.js -->
+    <div style="border-radius:18px;padding:32px;background:var(--cream);display:flex;flex-direction:column">
+      <span class="tag" style="color:rgba(0,0,0,.6)">Zine</span>
+      <h3 style="font-size:24px;margin:10px 0 18px">A5 portrait (148 × 210 mm)</h3>
+      <table style="width:100%;margin-bottom:22px">
+        <tbody>
+          <tr><td style="color:var(--slate)">Default pages</td><td style="text-align:right;font-weight:600">20</td></tr>
+          <tr><td style="color:var(--slate)">1–9 copies</td><td style="text-align:right;font-weight:600">₹600 / copy</td></tr>
+          <tr><td style="color:var(--slate)">10–50 copies (bulk)</td><td style="text-align:right;font-weight:600">₹420 / copy</td></tr>
+          <tr><td style="color:var(--slate)">Additional pages</td><td style="text-align:right;font-weight:600">₹100 / 4 pages / copy</td></tr>
+          <tr><td style="color:var(--slate)">Delivery (India)</td><td style="text-align:right;font-weight:600">Included</td></tr>
+        </tbody>
+      </table>
+      <button class="btn btn-accent sm" style="width:100%;justify-content:center;margin-top:auto" onclick="goStart('zine')">Start a zine →</button>
     </div>
 
     <div style="border-radius:18px;padding:32px;background:var(--cream);display:flex;flex-direction:column">
@@ -796,6 +814,7 @@
 <footer class="footer" id="siteFooter">
   <div class="footer-links">
     <a href="/wedding-photobooks" onclick="go('wedding-photobooks');return false;">Wedding Photobooks</a>
+    <a href="/zines" onclick="goStart('zine');return false;">Zines</a>
     <a href="/scanning" onclick="go('scanning');return false;">Scanning Services</a>
     <a href="/guides" onclick="go('guides');return false;">Guides</a>
     <a href="/contact" onclick="go('contact');return false;">Contact</a>
@@ -1539,6 +1558,46 @@
   </div>
 </div>
 
+<!-- ============ ZINE EDITOR (A5 portrait, 5 mm bleed) ============ -->
+<div class="ed-root ed-dark" id="editor-zine">
+  <div class="ed-top">
+    <button class="icon-btn" onclick="navHome()" aria-label="Back to home"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 3L5 8l5 5" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <a href="/" onclick="navHome();return false;" class="ed-brand"><img src="/images/logo.png" alt="Binder" style="height:18px;display:block;opacity:.85" loading="lazy" decoding="async"></a>
+    <input class="title" id="zn-title" value="Untitled Zine">
+    <button class="icon-btn" id="zn-undoBtn" onclick="EDS.zine.undo()" aria-label="Undo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6H9.5a3.5 3.5 0 0 1 0 7H6" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M3 6L6 3M3 6l3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn" id="zn-redoBtn" onclick="EDS.zine.redo()" aria-label="Redo"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 6H6.5a3.5 3.5 0 0 0 0 7H10" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/><path d="M13 6L10 3m3 3-3 3" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn" id="zn-gridBtn" title="Toggle layout grid" onclick="EDS.zine.toggleGrid()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="#52B57D" stroke-width="1.6"/></svg></button>
+    <button class="icon-btn" id="zn-pnBtn" title="Toggle auto page numbers" onclick="EDS.zine.togglePageNums()" style="font-size:10px;font-weight:700;font-family:serif;letter-spacing:-.02em">Pn</button>
+    <button class="icon-btn ed-theme-btn" title="Switch to light mode" onclick="toggleEditorTheme()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 9A6 6 0 0 1 7 2.5a5.5 5.5 0 1 0 6.5 6.5z" stroke="#52B57D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div id="zn-priceTag" style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;margin-left:4px;margin-right:2px">
+      <span id="zn-priceMain" style="font-size:13px;font-weight:600;color:var(--text)">₹600/copy</span>
+      <span id="zn-priceSub" style="font-size:10.5px;color:var(--slate-l)">20 pages · base price</span>
+    </div>
+    <span class="spacer"></span>
+    <span style="font-size:12px;color:var(--slate-l)" id="zn-saveState"></span>
+    <button class="btn btn-ghost sm" onclick="openMyDashboard()">My Dashboard</button>
+    <button class="btn btn-ghost sm" onclick="saveCurrentProject()">Save</button>
+    <button class="btn btn-accent sm" onclick="openCheckout('zine')">Order print →</button>
+  </div>
+  <div class="ed-body">
+    <div class="ed-rail" id="zn-rail">
+      <button data-tool="adjust" onclick="EDS.zine.setTool('adjust')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 4h12M2 8h12M2 12h12" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round"/><circle cx="5" cy="4" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="10" cy="8" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/><circle cx="6" cy="12" r="1.5" fill="#fff" stroke="#52B57D" stroke-width="1.5"/></svg></span>Photo Edit</button>
+      <button data-tool="photos" class="on" onclick="EDS.zine.setTool('photos')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="#52B57D" stroke-width="1.6"/><circle cx="5.5" cy="7" r="1.5" fill="#52B57D"/><path d="M1.5 11l3.5-3 3 2.5 2-2 4 3.5" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Photos</button>
+      <button data-tool="uploads" style="display:none" onclick="EDS.zine.setTool('uploads')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 11V2M4.5 5.5L8 2l3.5 3.5" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2" stroke="#52B57D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Clip Art</button>
+      <button data-tool="shapes" onclick="EDS.zine.setTool('shapes')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="6" height="6" rx="1" stroke="#52B57D" stroke-width="1.6"/><circle cx="11.5" cy="4.5" r="2.5" stroke="#52B57D" stroke-width="1.6"/><path d="M2 14.5l4-7 4 7H2z" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="9.5" y="9.5" width="5" height="5" rx="0.5" stroke="#52B57D" stroke-width="1.5"/></svg></span>Shapes</button>
+      
+      <button data-tool="text" onclick="EDS.zine.setTool('text')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3h10M8 3v10M5 13h6" stroke="#52B57D" stroke-width="1.8" stroke-linecap="round"/></svg></span>Text</button>
+      <button data-tool="layers" onclick="EDS.zine.setTool('layers')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2L14 5.5 8 9 2 5.5 8 2z" stroke="#52B57D" stroke-width="1.5" stroke-linejoin="round"/><path d="M2 9l6 3.5L14 9" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Layers</button>
+      <button data-tool="cover" onclick="EDS.zine.setTool('cover')"><span><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="12" height="12" rx="1.5" stroke="#52B57D" stroke-width="1.6"/><path d="M7.5 2v12" stroke="#52B57D" stroke-width="1.2" stroke-dasharray="2 1.5"/><path d="M5 5h1.5M5 7.5h1.5M5 10h1.5" stroke="#52B57D" stroke-width="1.3" stroke-linecap="round"/><rect x="9" y="4.5" width="3" height="4" rx="0.5" stroke="#52B57D" stroke-width="1.3"/></svg></span>Cover</button>
+    </div>
+    <div class="ed-panel" id="zn-panel"></div>
+    <div class="ed-stage"><div class="stage-scroll"><div id="zn-stage"></div>
+      <div class="zoom-ctl"><button onclick="EDS.zine.setZoom(-10)">−</button><span id="zn-zoomVal" title="Reset zoom" ondblclick="EDS.zine.setZoom(0)">100%</span><button onclick="EDS.zine.setZoom(10)">+</button></div>
+    </div><div class="ed-bottom" id="zn-strip"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ============ PHOTOBOOK EDITOR (12x18, portrait/landscape) ============ -->
 <div class="ed-root ed-dark" id="editor-photobook18">
   <div class="ed-top">
@@ -1752,6 +1811,6 @@
 
 </template>
 
-<script src="/script.js?v=20261025c" defer></script>
+<script src="/script.js?v=20261114a" defer></script>
 </body>
 </html>

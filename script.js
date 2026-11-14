@@ -121,7 +121,7 @@ function buildBreadcrumbSchema(items){
 // Service schema for the three "before you start" format pages (/photobooks, /trade-books,
 // /art-prints) — these are Binder's main commercial landing pages and previously shipped with
 // zero structured data at all.
-const START_SERVICE_PRICE={photobook:'2200',tradebook:'1000',artprints:'800'};
+const START_SERVICE_PRICE={photobook:'2200',tradebook:'1000',artprints:'800',zine:'600'}; // zine: PLACEHOLDER price, keep in step with PRICING_RULES.zine
 function buildServiceSchema(key){
   const info=START_PAGES[key], seo=START_SEO[key]; if(!info||!seo)return null;
   return {"@context":"https://schema.org","@type":"Service",
@@ -221,8 +221,8 @@ function go(v,push){
    "Start creating" button is what actually calls openEditor(). Specs are pulled
    from the real editor config (EDS[key].cfg) and PRICING_RULES so this can't
    drift out of sync with the actual editor limits. */
-const START_PATH_FOR_KEY={photobook:'photobooks',tradebook:'trade-books',artprints:'art-prints'};
-const START_KEY_FOR_PATH={photobooks:'photobook','trade-books':'tradebook','art-prints':'artprints'};
+const START_PATH_FOR_KEY={photobook:'photobooks',tradebook:'trade-books',artprints:'art-prints',zine:'zines'};
+const START_KEY_FOR_PATH={photobooks:'photobook','trade-books':'tradebook','art-prints':'artprints',zines:'zine'};
 const START_PAGES={
   photobook:{
     label:'Photobook',h1:'Custom Photobook Printing',heroImg:'/images/photobook-hero.mp4',heroImgKey:'photobookTileImageUrl',contentKey:'startPhotobookIntro',needKey:'startPhotobookNeed',stepsKey:'startPhotobookSteps',
@@ -232,6 +232,9 @@ const START_PAGES={
   },
   artprints:{
     label:'Art Prints',h1:'Archival Art Prints',heroImg:'/images/img-5.jpg',heroImgKey:'artprintsTileImageUrl',contentKey:'startArtprintsIntro',needKey:'startArtprintsNeed',stepsKey:'startArtprintsSteps',
+  },
+  zine:{
+    label:'Zine',h1:'Zine Printing',heroImg:'/images/img-2.jpg',heroImgKey:'zineTileImageUrl',contentKey:'startZineIntro',needKey:'startZineNeed',stepsKey:'startZineSteps',
   }
 };
 let ACTIVE_START_KEY=null;
@@ -242,6 +245,8 @@ const START_SEO={
     keywords:'trade book printing India, self publish novel India, perfect bound book printing, manuscript printing Delhi, free ISBN India'},
   artprints:{title:'Archival Art Print Printing Delhi — Photo & Fine Art',desc:'Order archival-quality art prints in Delhi — 6×4″ sets or large-format 12″×18″ and 16″×20″ single prints on 300gsm fine art paper, with pan-India delivery.',
     keywords:'archival art print printing India, fine art print Delhi, photo print framing India, giclee print India, large format print Delhi'},
+  zine:{title:'Zine Printing India — A5 Zines, Printed in Delhi | Binder',desc:'Design and print your own A5 zine online with Binder in Delhi. 20 pages to start, add pages four at a time, full colour, print-ready with 5 mm bleed. Delivery across India.',
+    keywords:'zine printing India, print my zine, A5 zine printing Delhi, self publish zine India, small run zine printing'},
 };
 function goStart(key,push){
   const info=START_PAGES[key]; if(!info)return;
@@ -639,6 +644,7 @@ const TEMPLATE_EDITOR_OPTIONS=[
   {key:'photobook',label:'Photobook 8.5″×8.5″',kind:'book'},
   {key:'photobook12',label:'Photobook 12″×12″',kind:'book'},
   {key:'photobook18',label:'Photobook 12″×18″',kind:'book'},
+  {key:'zine',label:'Zine A5',kind:'book'},
   {key:'tradebook',label:'Trade Book',kind:'book'},
   {key:'artprints',label:'Art Prints (Set of 4)',kind:'artprints'},
   {key:'artprint12x18',label:'Art Print 12″×18″ (Single)',kind:'artprint-single'},
@@ -1907,13 +1913,13 @@ function createEditor(key,cfg){
     pageCount(){return ed.doc.pages.length},
     addPages(){if(cfg.maxPages&&ed.pageCount()>=cfg.maxPages)return toast('Maximum page count reached.');
       ed.mutate(d=>{for(let i=0;i<cfg.pageStep;i++)d.pages.push(mkPage())});
-      toast(cfg.pageStep+' pages added — now '+ed.pageCount()+' pages');ed.renderAll();if(key==='photobook'||key==='photobook12'||key==='photobook18')updatePhotobookPrice(key);},
-    removePages(){if(ed.pageCount()<=cfg.minPages)return toast('Books start at '+cfg.minPages+' pages.');
+      toast(cfg.pageStep+' pages added — now '+ed.pageCount()+' pages');ed.renderAll();if(key==='photobook'||key==='photobook12'||key==='photobook18'||key==='zine')updatePhotobookPrice(key);},
+    removePages(){if(ed.pageCount()<=cfg.minPages)return toast((key==='zine'?'Zines':'Books')+' start at '+cfg.minPages+' pages.');
       const tail=ed.doc.pages.slice(-cfg.pageStep);
       if(tail.some(p=>p.images.length||p.texts.length)&&!confirm('The last pages contain content. Remove anyway?'))return;
       ed.mutate(d=>{d.pages.length-=cfg.pageStep});
       if(typeof ed.cur==='number'){const max=ed.interiorLayout().length-1;if(ed.cur>max)ed.cur=Math.max(0,max);}
-      toast(cfg.pageStep+' pages removed — now '+ed.pageCount()+' pages');ed.renderAll();if(key==='photobook'||key==='photobook12'||key==='photobook18')updatePhotobookPrice(key);},
+      toast(cfg.pageStep+' pages removed — now '+ed.pageCount()+' pages');ed.renderAll();if(key==='photobook'||key==='photobook12'||key==='photobook18'||key==='zine')updatePhotobookPrice(key);},
 
     usedIds(){const s=new Set();[ed.doc.cover,ed.doc.backCover,...ed.doc.pages].forEach(p=>p.images.forEach(im=>s.add(im.photo)));return s},
     addFiles(files){ingestFiles(files,cfg.minPrintPx).then(added=>{ed.photos.push(...added);ed.renderPanel();toast(added.length+' photo(s) in your tray')})},
@@ -3083,7 +3089,12 @@ createEditor('photobook18',{prefix:'pb18',defaultTitle:'Untitled Photobook (12×
 createEditor('tradebook',{prefix:'tb',defaultTitle:'Untitled Trade Book',pageCssW:'min(calc(100vw - var(--stage-reserved)),58vh,460px)',aspect:'0.6875/1',
   minPages:100,pageStep:8,monochrome:true,hasAdjust:true,minPrintPx:1650,hasSpine:true,spineCaliperIn:0.0035,blockStartsRecto:true,hasManuscript:true,coverDefaultText:'',
   pageInW:5.5,pageInH:8,marginIn:0.5,bleedIn:0.2});
-wireEditorMethods(EDS.photobook); wireEditorMethods(EDS.photobook12); wireEditorMethods(EDS.photobook18); wireEditorMethods(EDS.tradebook);
+// Zine: A5 portrait (148 × 210 mm), 20 pages minimum, added/removed 4 at a time (saddle-stitch
+// needs multiples of 4), 5 mm bleed, 10 mm safe margin. Same engine and tools as the photobooks.
+createEditor('zine',{prefix:'zn',defaultTitle:'Untitled Zine',pageCssW:'min(calc(100vw - var(--stage-reserved)),40vh,340px)',aspect:'148/210',
+  minPages:20,pageStep:4,monochrome:false,hasAdjust:true,minPrintPx:2598,hasShapes:true,
+  pageInW:148/25.4,pageInH:210/25.4,marginIn:10/25.4,bleedIn:5/25.4});
+wireEditorMethods(EDS.photobook); wireEditorMethods(EDS.photobook12); wireEditorMethods(EDS.photobook18); wireEditorMethods(EDS.tradebook); wireEditorMethods(EDS.zine);
 /* ---------- Editor open/close, file routing, AI Arrange ---------- */
 let ACTIVE_EDITOR=null;
 function openEditor(key,push){
@@ -3535,7 +3546,7 @@ fi.addEventListener('change',e=>{msReadTextFile(e.target.files[0]);e.target.valu
    Produces real, downloadable proof PDFs entirely in the browser via html2canvas + jsPDF:
    each page is rendered at true 300 DPI pixel dimensions for its trim size, with 0.2" bleed
    and vector trim marks drawn directly by jsPDF.                                        */
-const PAGE_DIMS={photobook:{w:8.5,h:8.5,ref:420},photobook12:{w:12,h:12,ref:420},tradebook:{w:5.5,h:8,ref:300}};
+const PAGE_DIMS={photobook:{w:8.5,h:8.5,ref:420},photobook12:{w:12,h:12,ref:420},tradebook:{w:5.5,h:8,ref:300},zine:{w:148/25.4,h:210/25.4,ref:340}};
 const PDF_BLOBS={};
 async function ensurePdfLibs(){
   if(!window.jspdf)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
@@ -3921,7 +3932,9 @@ function finalizePdf(pdfDoc,order,fileKey){
 // correct, not two that can quietly drift apart.
 async function buildPdfForOrder(o,fileKey,onProgress){
   await ensurePdfLibs();
-  const {jsPDF}=window.jspdf; const BLEED=0.2, DPI=300; const PT=72;
+  const {jsPDF}=window.jspdf; const DPI=300; const PT=72;
+  // Bleed per product: the zine uses 5 mm; every other product 0.2in. Trim marks sit in the bleed.
+  const BLEED=(EDS[o.product]&&EDS[o.product].cfg&&EDS[o.product].cfg.bleedIn)||0.2;
 
   // ── Art Prints ──────────────────────────────────────────────────────────
   if(o.product==='artprints'){
@@ -4460,6 +4473,7 @@ const CONTENT_DEFAULTS={
   photobookTileImageUrl:'',
   tradebookTileImageUrl:'',
   artprintsTileImageUrl:'',
+  zineTileImageUrl:'',
   isbnImageUrl:'',
   photobookTileTitle:'Photobook',
   photobookTileDesc:'8.5″ × 8.5″ layflat books. Free-form layout, AI auto-arrange, rich text with any Google Font.',
@@ -4479,6 +4493,9 @@ const CONTENT_DEFAULTS={
   startPhotobookIntro:'Everything worth knowing before you lay out your first spread — trim size, page limits, image resolution, and how the free-form editor works.',
   startTradebookIntro:'Everything worth knowing before you drop in your manuscript — trim size, page limits, typography, and how ISBN and cover design work.',
   startArtprintsIntro:'Everything worth knowing before you pick your four images — print size, paper, and how orientation and cropping work.',
+  startZineIntro:'Everything worth knowing before you make your zine — A5 portrait pages, 20 pages to start, more added four at a time, and how bleed works so nothing important gets trimmed.',
+  startZineNeed:'Your photos, artwork, scans or writing — anything you want on the page\nA rough running order (you can rearrange pages any time)\nOptional: a title for the cover',
+  startZineSteps:'Lay out your pages | Add photos, text and shapes on A5 portrait pages — free-form, page by page, with every tool from our photobook editor.\nAdd pages as you go | Start at 20 pages and add four at a time, so the zine always folds and binds correctly.\nMind the bleed | Run images to the edge of the page; keep words and faces inside the safe margin.\nOrder your copies | We print, bind and deliver anywhere in India. Order one copy or a run for your readers.',
   storeBooksTagline:'',
   storePhotoTagline:'Loose prints and framing-ready editions, pulled on 300gsm archival stock.',
   heroHeading:"It's your moment, save it.",
@@ -4789,7 +4806,7 @@ function resumePendingEditor(){
 }
 
 /* ---------- Per-user saved projects (Photobook / Trade Book / Art Prints) — stored in Supabase ---------- */
-function projectLabel(type){return{photobook:'Photobook',photobook12:'Photobook (12×12)',photobook18:'Photobook (12×18)',tradebook:'Trade Book',artprints:'Art Prints',artprint12x18:'Art Print (12×18)',artprint16x20:'Art Print (16×20)'}[type]||type}
+function projectLabel(type){return{photobook:'Photobook',photobook12:'Photobook (12×12)',photobook18:'Photobook (12×18)',zine:'Zine (A5)',tradebook:'Trade Book',artprints:'Art Prints',artprint12x18:'Art Print (12×18)',artprint16x20:'Art Print (16×20)'}[type]||type}
 function collectUsedPhotoIds(doc){
   const ids=new Set();
   [doc.cover,doc.backCover,doc.spine,...(doc.pages||[])].forEach(p=>{if(!p)return;
@@ -4986,14 +5003,14 @@ function statusPillHTML(status){
   const key=(status||'received').toLowerCase();
   return `<span class="status-pill status-${key}">${esc(status||'Received')}</span>`;
 }
-const ORDER_ICON={photobook:{bg:'#141414',glyph:'◙'},photobook12:{bg:'#141414',glyph:'◙'},photobook18:{bg:'#141414',glyph:'◙'},tradebook:{bg:'#1B4332',glyph:'◙'},artprints:{bg:'#B0432E',glyph:'▦'},artprint12x18:{bg:'#B0432E',glyph:'▦'},artprint16x20:{bg:'#B0432E',glyph:'▦'},Store:{bg:'#3A3A3C',glyph:'🛍'}};
+const ORDER_ICON={photobook:{bg:'#141414',glyph:'◙'},photobook12:{bg:'#141414',glyph:'◙'},photobook18:{bg:'#141414',glyph:'◙'},zine:{bg:'#141414',glyph:'◙'},tradebook:{bg:'#1B4332',glyph:'◙'},artprints:{bg:'#B0432E',glyph:'▦'},artprint12x18:{bg:'#B0432E',glyph:'▦'},artprint16x20:{bg:'#B0432E',glyph:'▦'},Store:{bg:'#3A3A3C',glyph:'🛍'}};
 function orderIconHTML(o){
   const k=ORDER_ICON[o.product]||ORDER_ICON.Store;
   return `<div class="order-icon" style="background:${k.bg}">${k.glyph}</div>`;
 }
 const PDF_FILE_LABELS={cover:'Cover + spine + back (wrap)',interior:'Book block (interior pages)',artboard:'Artboards (4-up, trim marks)',print:'Print (single sheet, trim marks)'};
 function orderCardHTML(o,compact){
-  const canReorder=o.product==='photobook'||o.product==='photobook12'||o.product==='photobook18'||o.product==='tradebook'||o.product==='artprints'||o.product==='artprint12x18'||o.product==='artprint16x20';
+  const canReorder=o.product==='photobook'||o.product==='photobook12'||o.product==='photobook18'||o.product==='zine'||o.product==='tradebook'||o.product==='artprints'||o.product==='artprint12x18'||o.product==='artprint16x20';
   const filesHTML=o.pdfFiles?`<ul class="order-files">${Object.entries(o.pdfFiles).map(([name,st])=>`<li><span>${esc(PDF_FILE_LABELS[name]||name)}</span><span>${esc(st)}</span></li>`).join('')}</ul>`:'<p style="font-size:13px;color:var(--slate-l)">No print files on this order.</p>';
   const addonsHTML=(o.addons&&o.addons.length)?`<div class="order-detail-row"><span>Add-ons</span><span>${o.addons.map(a=>esc(a.name)).join(', ')}</span></div>`:'';
   const coupon=o.couponCode||o.coupon_code;
@@ -5381,6 +5398,7 @@ const PRICING_RULES={
   photobook:{basePages:20,  perCopyLow:220000, perCopyBulk:110000, perPage:5000, bulkFrom:10},
   photobook12:{basePages:20, perCopyLow:420000, perCopyBulk:294000, perPage:10000, bulkFrom:10}, // 30% off at 10+ copies
   photobook18:{basePages:20, perCopyLow:630000, perCopyBulk:441000, perPage:15000, bulkFrom:10}, // 30% off at 10+ copies — placeholder pricing, adjust to your real cost
+  zine:{basePages:20, perCopyLow:60000, perCopyBulk:42000, perPage:2500, bulkFrom:10}, // PLACEHOLDER: ₹600 for 20 pages, ₹100 per extra 4 pages, 30% off at 10+ copies. Replace with real prices (also in index.html pricing card + START_CARD/START_PRICE).
 };
 function quoteEditorOrder(editorKey,qty){
   const rule=PRICING_RULES[editorKey];
@@ -5458,7 +5476,7 @@ function recalcCheckout(){
   const q=quoteEditorOrder(editorKey,qty);
   const subtotal=q.total+addonsTotal;
   CHECKOUT_CTX.qty=qty;
-  const label=editorKey==='tradebook'?'Trade Book':editorKey==='photobook12'?'Photobook (12″×12″)':editorKey==='photobook18'?'Photobook (12″×18″)':'Photobook';
+  const label=editorKey==='tradebook'?'Trade Book':editorKey==='photobook12'?'Photobook (12″×12″)':editorKey==='photobook18'?'Photobook (12″×18″)':editorKey==='zine'?'Zine (A5)':'Photobook';
   const bulkNote=qty>=rule.bulkFrom?` (bulk rate, ${rule.bulkFrom}+ copies)`:'';
   const rows=`<div class="sum-row"><span>${label} · ${qty} ${qty===1?'copy':'copies'}${bulkNote}</span><span>${inr(q.perCopyBase*qty)}</span></div>`+
     (q.extraPages>0?`<div class="sum-row"><span>+${q.extraPages} extra pages × ₹${rule.perPage/100} × ${qty} ${qty===1?'copy':'copies'}</span><span>${inr(q.extraCost*qty)}</span></div>`:'')+
@@ -5471,7 +5489,7 @@ function openCheckout(editorKey){
   CHECKOUT_CTX={type:'editor',key:editorKey,price:0,qty:1,addons:[],gift:null,couponCode:null,couponPercent:0};
   const title=ed?ed.doc.title:(AP_SINGLE_VARIANTS[editorKey]?AP_SINGLE[editorKey].title:AP.title);
   $('coSub').textContent=title+' · print order';
-  const showQty=(editorKey==='photobook'||editorKey==='photobook12'||editorKey==='photobook18'||editorKey==='tradebook');
+  const showQty=(editorKey==='photobook'||editorKey==='photobook12'||editorKey==='photobook18'||editorKey==='zine'||editorKey==='tradebook');
   $('coQtyRow').style.display=showQty?'block':'none';
   $('coQtyNudge').style.display=showQty?'block':'none';
   $('coFinishRow').style.display='block';
@@ -5542,12 +5560,12 @@ function doPay(){
   const amt=CHECKOUT_CTX.type==='store'?cartTotal():CHECKOUT_CTX.price;
   const finish=(resp)=>{btn.disabled=false;$('payBtnLabel').textContent=god?'Place order — no payment':'Pay';
     const product=CHECKOUT_CTX.type==='store'?'Store':CHECKOUT_CTX.key;
-    const pdfFiles=product==='photobook'||product==='photobook12'||product==='photobook18'||product==='tradebook'?{'cover':'Queued','interior':'Queued'}
+    const pdfFiles=product==='photobook'||product==='photobook12'||product==='photobook18'||product==='zine'||product==='tradebook'?{'cover':'Queued','interior':'Queued'}
       :product==='artprints'?{'artboard':'Queued'}
       :AP_SINGLE_VARIANTS[product]?{'print':'Queued'}:null;
     const qty=CHECKOUT_CTX.qty||1;
     let snapshot=null;
-    if(product==='photobook'||product==='photobook12'||product==='photobook18'||product==='tradebook'){
+    if(product==='photobook'||product==='photobook12'||product==='photobook18'||product==='zine'||product==='tradebook'){
       const ed=EDS[product];
       snapshot={doc:JSON.parse(JSON.stringify(ed.doc)),photoMap:snapshotPhotoMap(ed.doc,ed.photos)};
     }else if(product==='artprints'){
@@ -6185,6 +6203,7 @@ async function renderPdfRows(){
       o.product==='artprints'?'6″×4″ boards · 4-up artboard':
       o.product==='artprint12x18'?'12″×18″ · full colour · 300dpi':
       o.product==='artprint16x20'?'16″×20″ · full colour · 300dpi':
+      o.product==='zine'?'A5 portrait 148×210 mm · full colour · 300dpi · 5 mm bleed · trim marks':
       o.product==='photobook12'?'12″×12″ · full colour · 300dpi':
       o.product==='photobook18'?'12″×18″ · full colour · 300dpi (or 18″×12″ landscape)':'8.5″×8.5″ · full colour · 300dpi')
       +(o.qty>1?` · ${o.qty} copies`:'');
@@ -6308,6 +6327,9 @@ const CONTENT_LABELS={
   startArtprintsIntro:'Start Art Prints — intro copy',
   startArtprintsNeed:'Start Art Prints — "What you\'ll need" (one item per line)',
   startArtprintsSteps:'Start Art Prints — "How it works" (Title | Description, one step per line)',
+  startZineIntro:'Start a Zine — intro copy',
+  startZineNeed:'Start a Zine — "What you\'ll need" (one item per line)',
+  startZineSteps:'Start a Zine — "How it works" (Title | Description, one step per line)',
 };
 // Multi-line fields (checklists / step lists) get a taller textarea than a one-line headline does.
 const CONTENT_WIDE_FIELDS=new Set(['startPhotobookNeed','startPhotobookSteps','startTradebookNeed','startTradebookSteps','startArtprintsNeed','startArtprintsSteps','publishBody']);
@@ -6318,6 +6340,7 @@ const CONTENT_IMAGE_LABELS={
   photobookTileImageUrl:'Photobook — homepage tile & page hero (image or video)',
   tradebookTileImageUrl:'Trade Book — tile & page image',
   artprintsTileImageUrl:'Art Prints — tile & page image',
+  zineTileImageUrl:'Zine — page image (top of /zines)',
   isbnImageUrl:'ISBN page — image',
   photographyLeadImageUrl:'Photography Services — lead image (top of page)',
 };
