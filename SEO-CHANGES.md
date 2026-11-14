@@ -197,3 +197,10 @@ browser also rendered them right after payment and showed "Rendering PDFs…" / 
 messages; their My Orders cards listed the print files ("trim marks", "Queued/Ready"), and the trade
 book editor mentioned trim marks. All removed from the customer side. The editor's on-screen bleed
 and safe-margin guides stay, since customers need them to design.
+
+## Homepage lower image; Zines page image left empty (v22, 14 Nov 2026)
+
+- New image on the homepage between the product cards and the FAQ (`/images/img-2.jpg` by default).
+  Replace it in Admin → Content → "Homepage — lower image (above the FAQ)".
+- The Zines page now has no image until one is uploaded in Admin → Content → "Zine — page image".
+  (A start page with no image simply skips the image block; the other start pages are unchanged.)

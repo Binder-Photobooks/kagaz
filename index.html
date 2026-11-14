@@ -58,7 +58,7 @@
 </script>
 <script type="application/ld+json" id="ldPage"></script>
 <script type="application/ld+json" id="ldFaq">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is the minimum order quantity?","acceptedAnswer":{"@type":"Answer","text":"There is no minimum for photobooks and trade books — you can order a single copy. For Art Prints, the minimum is one set of 4. For scanning services, the minimum is 100 images."}},{"@type":"Question","name":"How long does printing take?","acceptedAnswer":{"@type":"Answer","text":"Standard turnaround is a week from the date your print file is confirmed. We review every order before it goes to press and will contact you if anything needs attention. Expedited turnaround (3–4 days) is available — contact us to arrange it."}},{"@type":"Question","name":"Do you deliver across India?","acceptedAnswer":{"@type":"Answer","text":"Yes. We ship to all PIN codes across India via insured courier. Delivery typically takes 5 days after dispatch. For customers in Delhi NCR, we also offer pick-up from our Okhla Phase I studio."}},{"@type":"Question","name":"What file format should I upload my photos in?","acceptedAnswer":{"@type":"Answer","text":"JPEG, PNG, and HEIC (iPhone photos) are all supported. For best print quality, use images shot at the highest resolution your camera allows — we flag any photos below 300 DPI at the size you've placed them so you can swap them out before ordering."}},{"@type":"Question","name":"How do I pay? Is it secure?","acceptedAnswer":{"@type":"Answer","text":"We accept all major credit and debit cards, UPI, and net banking via Razorpay. Your card details never touch our servers — Razorpay handles the entire payment flow and every transaction is cryptographically verified. We issue a GST invoice on request."}},{"@type":"Question","name":"What if I'm not happy with the print?","acceptedAnswer":{"@type":"Answer","text":"Quality is checked before every order ships. If your book arrives damaged or the print quality is clearly below standard, contact us within 7 days with photos and we will reprint it at no charge. We stand behind every book we make."}}]}</script>
-<link rel="stylesheet" href="/styles.css?v=20261114a">
+<link rel="stylesheet" href="/styles.css?v=20261114d">
 </head>
 <body>
 <!-- ============ NAV ============ -->
@@ -117,6 +117,11 @@
     <div class="tri-card"><video data-c-img-video="tradebookTileImageUrl" class="tri-card-img" muted loop playsinline preload="auto" style="display:none"></video><img data-c-img="tradebookTileImageUrl" src="/images/img-3.jpg" alt="Trade Book" class="tri-card-img" loading="lazy" decoding="async"><h3 data-c="tradebookTileTitle">Trade Book</h3><p data-c="tradebookTileDesc">5.5″ × 8″ novel-format books. Monochrome imagery, vector text, classic serif typography.</p><button class="btn btn-ghost sm" onclick="goStart('tradebook')">Learn more →</button></div>
     <div class="tri-card"><video data-c-img-video="photobookTileImageUrl" class="tri-card-img" muted loop playsinline preload="auto" style="display:none"></video><img data-c-img="photobookTileImageUrl" src="/images/img-4.jpg" alt="Photobook" class="tri-card-img" loading="lazy" decoding="async"><h3 data-c="photobookTileTitle">Photobook</h3><p data-c="photobookTileDesc">8.5″ × 8.5″ layflat books. Free-form layout, AI auto-arrange, rich text with any Google Font.</p><button class="btn btn-ghost sm" onclick="goStart('photobook')">Learn more →</button></div>
     <div class="tri-card"><video data-c-img-video="artprintsTileImageUrl" class="tri-card-img" muted loop playsinline preload="auto" style="display:none"></video><img data-c-img="artprintsTileImageUrl" src="/images/img-5.jpg" alt="Art Prints" class="tri-card-img" loading="lazy" decoding="async"><h3 data-c="artprintsTileTitle">Art Prints</h3><p data-c="artprintsTileDesc">6″ × 4″ gallery prints. Four museum-style prints on archival grade paper.</p><button class="btn btn-ghost sm" onclick="goStart('artprints')">Learn more →</button></div>
+  </div>
+
+  <!-- Lower homepage image — replaceable in Admin → Content ("Homepage — lower image") -->
+  <div class="home-lower-image">
+    <img data-c-img="homeLowerImageUrl" src="/images/img-2.jpg" alt="Photobooks, books and art prints made by Binder" loading="lazy" decoding="async">
   </div>
 
   <!-- ── FAQ ──────────────────────────────────────── -->
@@ -1812,6 +1817,6 @@
 
 </template>
 
-<script src="/script.js?v=20261114c" defer></script>
+<script src="/script.js?v=20261114e" defer></script>
 </body>
 </html>
