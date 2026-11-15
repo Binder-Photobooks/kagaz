@@ -1,0 +1,60 @@
+# Publishes the site to the live host (public_html on ftp.binder.co.in) — no FileZilla needed.
+#
+# Runs:
+#   • on every push to main (any site change merged on GitHub goes live by itself)
+#   • every night at 03:00 IST, to rebuild the sitemap and store product pages from the CMS
+#   • on demand: GitHub → Actions → "Deploy site" → Run workflow (tick "dry run" to only preview)
+#
+# Needs one repository secret: FTP_PASSWORD (Settings → Secrets and variables → Actions).
+# Optional repository variables: FTP_SERVER (default ftp.binder.co.in), FTP_USERNAME (default binder),
+# FTP_SERVER_DIR (default public_html/).
+#
+# Only files this workflow uploads are ever updated or removed on the server; anything else in
+# public_html (other folders, uploads) is left alone. .htaccess is uploaded like any other file.
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '30 21 * * *'   # 21:30 UTC = 03:00 IST
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run: only list what would change, upload nothing'
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-site
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build site (pages, sitemap, store pages from the live CMS)
+        run: bash scripts/build-site.sh
+
+      - name: Upload to the host
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ vars.FTP_SERVER || 'ftp.binder.co.in' }}
+          username: ${{ vars.FTP_USERNAME || 'binder' }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./dist/
+          server-dir: ${{ vars.FTP_SERVER_DIR || 'public_html/' }}
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          log-level: standard

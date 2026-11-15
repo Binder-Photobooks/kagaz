@@ -225,3 +225,15 @@ and safe-margin guides stay, since customers need them to design.
   the **Admin** link in the nav and **Admin & CMS** under their name. Customers see neither.
 - Supabase: the `cms` table's write policy allowed anyone (no sign-in) to insert/update/delete. Replaced
   with admin-only policies (`public.is_admin()`); public read is unchanged. Migration: `cms_admin_only_writes`.
+
+## Automatic publishing (v25, 15 Nov 2026)
+
+`.github/workflows/deploy.yml` builds the site (`scripts/build-site.sh`: prerender from the live CMS, then
+copy the public files into `dist/`) and uploads it to `public_html` over FTPS with FTP Deploy Action.
+- Runs on every push to `main`, nightly at 03:00 IST (fresh sitemap + store product pages from the CMS),
+  and on demand (Actions → Deploy site → Run workflow; tick "dry run" to preview).
+- Uploads only changed files, `.htaccess` included. Only files it uploaded itself are ever replaced or
+  removed; anything else on the server is left alone.
+- Needs the repository secret `FTP_PASSWORD`. Server/username default to ftp.binder.co.in / binder
+  (override with repository variables FTP_SERVER, FTP_USERNAME, FTP_SERVER_DIR).
+FileZilla uploads are no longer needed; if you do upload by hand, the next run simply re-syncs.
