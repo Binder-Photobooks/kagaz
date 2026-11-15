@@ -218,3 +218,10 @@ and safe-margin guides stay, since customers need them to design.
   redirect there. A product added later still works through `app.html` until the next rebuild.
 - After adding or editing products: re-run `node scripts/prerender.mjs` and upload `store-pages/`.
   If a product is deleted, also delete its file from `store-pages/` on the server.
+
+## Admin link for signed-in admins; CMS writes locked (v24, 15 Nov 2026)
+
+- Signing in anywhere on the site (top-bar Sign in or /admin) now checks `profiles.is_admin`; admins see
+  the **Admin** link in the nav and **Admin & CMS** under their name. Customers see neither.
+- Supabase: the `cms` table's write policy allowed anyone (no sign-in) to insert/update/delete. Replaced
+  with admin-only policies (`public.is_admin()`); public read is unchanged. Migration: `cms_admin_only_writes`.

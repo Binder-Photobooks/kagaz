@@ -4690,7 +4690,19 @@ sb.auth.onAuthStateChange((event,session)=>{
   if(session&&session.user){S.user={id:session.user.id,name:session.user.user_metadata?.name||session.user.email.split('@')[0],email:session.user.email,since:session.user.created_at||null};}
   else{S.user=null;}
   syncAuthLink();
+  refreshAdminFlag(session);
 });
+// However an admin signs in (top-bar Sign in or /admin), show them the Admin link in the nav and
+// under their name. Only the database decides who is an admin (profiles.is_admin, enforced by RLS);
+// this only controls whether the link is visible.
+async function refreshAdminFlag(session){
+  if(!session||!session.user){ setAdminFlag(false); syncAuthLink(); return; }
+  try{
+    const {data}=await sb.from('profiles').select('is_admin').eq('id',session.user.id).maybeSingle();
+    setAdminFlag(!!(data&&data.is_admin));
+  }catch(e){ /* offline — leave the link as it is */ }
+  syncAuthLink();
+}
 function syncAuthLink(){
   const btn=$('authLink');
   const dd=$('userMenuDropdown');
@@ -4717,6 +4729,9 @@ function syncAuthLink(){
       <button class="user-menu-item" onclick="closeUserMenu();openCart()">
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1.5h2l2 7h6.5l1.5-5H5" stroke="#52B57D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="12.5" r="1" fill="#52B57D"/><circle cx="11" cy="12.5" r="1" fill="#52B57D"/></svg> Cart
       </button>
+      ${document.documentElement.classList.contains('is-admin')?`<button class="user-menu-item" onclick="closeUserMenu();go('admin')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="12" height="12" rx="2" stroke="#52B57D" stroke-width="1.5"/><path d="M4.5 5h6M4.5 7.5h6M4.5 10h3.5" stroke="#52B57D" stroke-width="1.4" stroke-linecap="round"/></svg> Admin &amp; CMS
+      </button>`:''}
       <div class="user-menu-sep"></div>
       <button class="user-menu-item" onclick="closeUserMenu();go('dashboard');dashGo('account')">
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7.5" cy="7.5" r="2" stroke="#52B57D" stroke-width="1.5"/><path d="M7.5 1v1.5M7.5 12.5V14M1 7.5h1.5M12.5 7.5H14M3.2 3.2l1 1M10.8 10.8l1 1M3.2 11.8l1-1M10.8 4.2l1-1" stroke="#52B57D" stroke-width="1.4" stroke-linecap="round"/></svg> Account settings
