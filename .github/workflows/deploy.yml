@@ -13,11 +13,10 @@
 # public_html (other folders, uploads) is left alone. .htaccess is uploaded like any other file.
 name: Deploy site
 
+# Automatic runs are switched OFF (publishing is manual via FileZilla). To turn them back on, add:
+#   push: { branches: [main] }   and   schedule: [ { cron: '30 21 * * *' } ]   (03:00 IST nightly)
+# It only runs when started by hand: GitHub → Actions → "Deploy site" → Run workflow.
 on:
-  push:
-    branches: [main]
-  schedule:
-    - cron: '30 21 * * *'   # 21:30 UTC = 03:00 IST
   workflow_dispatch:
     inputs:
       dry_run:

@@ -237,3 +237,7 @@ copy the public files into `dist/`) and uploads it to `public_html` over FTPS wi
 - Needs the repository secret `FTP_PASSWORD`. Server/username default to ftp.binder.co.in / binder
   (override with repository variables FTP_SERVER, FTP_USERNAME, FTP_SERVER_DIR).
 FileZilla uploads are no longer needed; if you do upload by hand, the next run simply re-syncs.
+
+**Update (16 Nov 2026):** automatic runs switched off at the owner's request; publishing stays manual
+(FileZilla). The workflow remains and only runs when started by hand. To use it, the `FTP_PASSWORD`
+secret must hold the exact FTP password (the first attempts failed with "530 Login authentication failed").
