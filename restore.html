@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Restore admin data — Binder</title>
+<!--
+  One-time restore page, opened by https://binder.co.in/recover. It receives the data that page read
+  and ONLY ADDS what is missing here:
+    • Accounts / Projects / Day book entries → the shared database (acc_docs), skipping any entry the
+      database already has (including ones deliberately deleted since).
+    • Admin Orders list → added by order id; Customer notes → added by email. Nothing here is replaced.
+  A raw copy is kept in this browser as "binder_recovered_backup" when space allows.
+-->
+<style>
+  :root{--ink:#141414;--slate:#5C5C5A;--line:#D5D5D3;--accent:#3A9162;--cream:#F4F4F2;--warn:#B0432E}
+  *{box-sizing:border-box}
+  body{margin:0;background:#fff;color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;padding:48px 16px 64px}
+  main{max-width:720px;margin:0 auto}
+  h1{font-size:30px;font-weight:500;margin:6px 0 10px}
+  .tag{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  p{color:var(--slate);margin:0 0 14px}
+  table{width:100%;border-collapse:collapse;margin:16px 0 22px;font-size:15px}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);text-align:right;font-weight:600;padding:6px 4px}
+  th:first-child{text-align:left}
+  td{padding:9px 4px;border-bottom:1px solid var(--line)} td+td{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  button{font:inherit;font-weight:600;border:0;border-radius:999px;padding:12px 22px;cursor:pointer;background:var(--accent);color:#fff}
+  button:disabled{opacity:.45;cursor:default}
+  #msg{font-weight:600;margin:14px 0} .ok{color:var(--accent)} .bad{color:var(--warn)}
+  a{color:var(--ink)}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
+</head>
+<body>
+<main>
+  <span class="tag">Binder admin</span>
+  <h1>Restore your admin data</h1>
+  <p id="intro">Waiting for the data from binder.co.in/recover…</p>
+  <table id="plan" hidden><thead><tr><th>What</th><th>Found</th><th>Already here</th><th>Will add</th></tr></thead><tbody></tbody></table>
+  <div id="msg"></div>
+  <button id="go" hidden disabled>Add these to the admin</button>
+</main>
+<script>
+(function(){
+  const SUPABASE_URL='https://sooqtzedurtjiisjdmbz.supabase.co';
+  const SUPABASE_KEY='sb_publishable_3qDmjs8Bu9BTqyngt1m_1w_Vo6s1q1K';
+  const SOURCE=location.protocol+'//'+location.host.replace(/^www\./,'');
+  // Accounts lists: database kind → list name (same table as the Accounts app uses)
+  const LISTS={account:'accounts',cat:'cats',txn:'txns',rule:'rules',staff:'staff',imp:'imports',brule:'bankRules',party:'parties',item:'items',inv:'invoices',bill:'bills',stock:'stockMoves',jnl:'journals',proj:'projects',dbk:'daybook'};
+  const LABEL={proj:'Projects (board)',dbk:'Day book entries',txn:'Transactions',account:'Bank & cash accounts',party:'Customers & vendors',inv:'Invoices',bill:'Bills',item:'Items',rule:'Recurring rules',staff:'Staff',jnl:'Journals',stock:'Stock moves',cat:'Categories',imp:'Imports',brule:'Bank rules'};
+  // When the same entry sits in more than one saved copy, the first copy listed wins.
+  const ACC_KEYS=['binder_accounts_v2','binder_accounts_dbcache_v2','binder_cashflow_v1'];
+  const $=s=>document.querySelector(s), msg=(h,c)=>{$('#msg').innerHTML='<span class="'+(c||'')+'">'+h+'</span>'};
+  const parse=s=>{try{return JSON.parse(s)}catch(e){return null}};
+  const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+  const lsSet=(k,v)=>{try{localStorage.setItem(k,v);return true}catch(e){return false}};
+  const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  let payload=null, plan=null;
+
+  window.addEventListener('message',ev=>{
+    if(ev.origin!==SOURCE||!ev.data||ev.data.type!=='binder-restore-data'||payload)return;
+    payload=ev.data.payload; prepare().catch(e=>msg('Something went wrong: '+esc(e.message||e),'bad'));
+  });
+  if(window.opener){try{window.opener.postMessage({type:'binder-restore-ready'},SOURCE)}catch(e){}}
+  else{$('#intro').innerHTML='Open this from <a href="'+SOURCE+'/recover">'+SOURCE.replace(/^https?:\/\//,'')+'/recover</a> — it sends the data here.';}
+
+  async function prepare(){
+    const items=(payload&&payload.items)||{};
+    $('#intro').textContent='Received data saved under '+(payload.from||SOURCE)+'. Checking what is already here…';
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){msg('Sign in to the admin on this site first: open <a href="/admin" target="_blank">www.binder.co.in/admin</a>, sign in, then come back to this tab and reload the recover page.','bad');return}
+    const {data:prof}=await sb.from('profiles').select('is_admin').eq('id',session.user.id).maybeSingle();
+    if(!(prof&&prof.is_admin)){msg('You are signed in as '+esc(session.user.email)+', which is not an admin account. Sign in with the admin account and try again.','bad');return}
+
+    // What the database has (all rows, including deleted ones, so nothing deleted comes back)
+    const have=new Set(); let haveTxn=0, settingsRow=null;
+    for(let from=0;;from+=1000){
+      const {data,error}=await sb.from('acc_docs').select('kind,id,deleted,data').order('kind').order('id').range(from,from+999);
+      if(error)throw error;
+      for(const r of data){have.add(r.kind+'|'+r.id); if(r.kind==='txn'&&!r.deleted)haveTxn++; if(r.kind==='settings'&&r.id==='main')settingsRow=r}
+      if(data.length<1000)break;
+    }
+    // Union of the saved Accounts copies
+    const found={}, add={}; let oldSettings=null;
+    for(const k of ACC_KEYS){
+      const v=parse(items[k]); if(!v||typeof v!=='object')continue;
+      if(!oldSettings&&v.settings)oldSettings={settings:v.settings,drivers:v.drivers||{},skips:v.skips||[]};
+      for(const kind in LISTS){
+        for(const e of (Array.isArray(v[LISTS[kind]])?v[LISTS[kind]]:[])){
+          if(!e||!e.id)continue; const key=kind+'|'+e.id;
+          (found[kind]=found[kind]||new Set()).add(e.id);
+          if(!have.has(key)&&!(add[key]))add[key]={kind,id:String(e.id),data:e,deleted:false};
+        }
+      }
+    }
+    // Settings: follow the Accounts app's own import rule (take them only if no transactions exist yet)
+    let settingsUpsert=null;
+    if(oldSettings){
+      const cur=settingsRow&&!settingsRow.deleted?settingsRow.data||{}:null;
+      if(!cur) settingsUpsert=oldSettings;
+      else{
+        const merged={settings:haveTxn?cur.settings:{...(cur.settings||{}),...oldSettings.settings},drivers:{...oldSettings.drivers,...(cur.drivers||{})},skips:[...new Set([...(cur.skips||[]),...oldSettings.skips])]};
+        if(JSON.stringify(merged)!==JSON.stringify(cur))settingsUpsert=merged;
+      }
+    }
+    // Admin lists kept in this browser
+    const oldOrders=parse(items.binder_orders), curOrders=parse(lsGet('binder_orders'))||[];
+    const orderIds=new Set(curOrders.map(o=>o&&o.id));
+    const newOrders=Array.isArray(oldOrders)?oldOrders.filter(o=>o&&!orderIds.has(o.id)):[];
+    const oldMeta=parse(items.binder_customer_meta), curMeta=parse(lsGet('binder_customer_meta'))||{};
+    const newMeta=oldMeta&&typeof oldMeta==='object'?Object.keys(oldMeta).filter(k=>!(k in curMeta)):[];
+
+    const rows=[];
+    for(const kind of Object.keys(LABEL)){
+      const f=found[kind]?found[kind].size:0; if(!f)continue;
+      const a=Object.values(add).filter(r=>r.kind===kind).length;
+      rows.push([LABEL[kind],f,f-a,a]);
+    }
+    if(Array.isArray(oldOrders)&&oldOrders.length)rows.push(['Orders (admin list)',oldOrders.length,oldOrders.length-newOrders.length,newOrders.length]);
+    if(oldMeta&&Object.keys(oldMeta).length)rows.push(['Customer notes',Object.keys(oldMeta).length,Object.keys(oldMeta).length-newMeta.length,newMeta.length]);
+    if(settingsUpsert)rows.push(['Accounts settings','1',settingsRow?'1':'0',settingsRow?'merge':'1']);
+    $('#plan tbody').innerHTML=rows.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>').join('');
+    $('#plan').hidden=!rows.length;
+    plan={docs:Object.values(add),settingsUpsert,newOrders,curOrders,newMeta,oldMeta,curMeta};
+    const total=plan.docs.length+newOrders.length+newMeta.length+(settingsUpsert?1:0);
+    $('#intro').textContent='Signed in as '+session.user.email+'. Here is what was found and what will be added. Nothing that is already here is changed.';
+    if(!total){msg('Everything found is already in the admin — nothing to add.','ok');done('Nothing was missing.');return}
+    $('#go').hidden=false; $('#go').disabled=false;
+  }
+
+  $('#go').onclick=async function(){
+    this.disabled=true; msg('Adding…');
+    try{
+      const p=plan; let n=0;
+      for(let i=0;i<p.docs.length;i+=300){
+        const chunk=p.docs.slice(i,i+300);
+        // ignoreDuplicates: if a row appeared meanwhile, keep that one
+        const {error}=await sb.from('acc_docs').upsert(chunk,{onConflict:'kind,id',ignoreDuplicates:true});
+        if(error)throw error; n+=chunk.length;
+      }
+      if(p.settingsUpsert){const {error}=await sb.from('acc_docs').upsert({kind:'settings',id:'main',data:p.settingsUpsert,deleted:false},{onConflict:'kind,id'}); if(error)throw error}
+      if(p.newOrders.length){const merged=p.curOrders.concat(p.newOrders); // newest-first list: older recovered orders go after
+        if(!lsSet('binder_orders',JSON.stringify(merged)))throw new Error('This browser is out of storage space for the Orders list.')}
+      if(p.newMeta.length){const m={...p.curMeta}; p.newMeta.forEach(k=>m[k]=p.oldMeta[k]);
+        if(!lsSet('binder_customer_meta',JSON.stringify(m)))throw new Error('This browser is out of storage space for Customer notes.')}
+      const kept=lsSet('binder_recovered_backup',JSON.stringify(payload));
+      const summary=n+' Accounts/Projects entries, '+p.newOrders.length+' orders and '+p.newMeta.length+' customer notes added.';
+      msg(summary+' Open <a href="/admin">the admin</a> (reload it if it is already open).'+(kept?'':' (Keep the backup file you downloaded — there was no room for a second copy in this browser.)'),'ok');
+      $('#go').hidden=true; done(summary);
+    }catch(e){msg('Could not finish: '+esc(e.message||e)+'. Nothing already in the admin was changed; you can try again.','bad'); this.disabled=false}
+  };
+  function done(summary){if(window.opener){try{window.opener.postMessage({type:'binder-restore-done',summary},SOURCE)}catch(e){}}}
+})();
+</script>
+</body>
+</html>

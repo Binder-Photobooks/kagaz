@@ -25,8 +25,11 @@ RewriteBase /
 # ── 1. HTTPS + www ────────────────────────────────────────────────────────────
 # Any address other than www.binder.co.in (binder.co.in, the server IP, old store/CDN
 # addresses that pull pages from this server) is sent permanently to www.binder.co.in.
+# (Exception: /recover stays on binder.co.in — it is the one-time page that reads admin data the
+#  browser saved under the old address. Remove this line once that data has been restored.)
 RewriteCond %{HTTP_HOST} !^www\.binder\.co\.in$ [NC]
 RewriteCond %{HTTP_HOST} !^$
+RewriteCond %{THE_REQUEST} !\s/+recover[\s?] [NC]
 RewriteRule ^ https://www.binder.co.in%{REQUEST_URI} [R=301,L,NE]
 # (X-Forwarded-Proto check stops a redirect loop on hosts that terminate HTTPS in front of Apache)
 RewriteCond %{HTTPS} !=on
@@ -89,7 +92,7 @@ RewriteRule ^ index.html [L]
 
 # ── 6. Keep private screens out of search ────────────────────────────────────
 <IfModule mod_headers.c>
-  SetEnvIf Request_URI "^/(admin|dashboard|editor/|accounts)" NOINDEX=1
+  SetEnvIf Request_URI "^/(admin|dashboard|editor/|accounts|recover|restore)" NOINDEX=1
   Header always set X-Robots-Tag "noindex, nofollow" env=NOINDEX
   Header always set X-Robots-Tag "noindex, nofollow" env=REDIRECT_NOINDEX
   Header always set X-Content-Type-Options "nosniff"
