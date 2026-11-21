@@ -5556,6 +5556,38 @@ function isTestKey(){return /^rzp_test_/.test(PAYCFG.razorpayKeyId||'')}
 // email match (same trust model the rest of this app already uses client-side for admin), so
 // there's nothing to configure server-side beyond the account itself existing in Supabase Auth.
 const GOD_ACCOUNT_EMAIL='info@binder.co.in';
+// Order numbers: date + random suffix (e.g. BDR-261121-K7Q3). The old "3001 + orders in this
+// browser" scheme restarted at BDR-3001 in every new browser, so a second order with the same
+// number was refused by the database and the admin showed the older order in its place.
+function newOrderId(){
+  const d=new Date(),p=n=>String(n).padStart(2,'0'),A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let r='';for(let i=0;i<4;i++)r+=A[Math.floor(Math.random()*A.length)];
+  return 'BDR-'+String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+'-'+r;
+}
+function orderDbRow(order){
+  return {
+    id:order.id, customer_email:order.customer,
+    customer_name:(S.user&&S.user.email===order.customer)?S.user.name||null:null,
+    customer_id:(S.user&&S.user.email===order.customer)?S.user.id||null:null, title:order.title, product:order.product,
+    qty:order.qty, amount:order.amount, status:order.status,
+    pay_method:order.payMethod||null, payment_id:order.paymentId||null,
+    razorpay_order_id:order.razorpayOrderId||null, verified:order.verified||false,
+    phone:order.phone||null, snapshot:order.snapshot, pdf_files:{},
+    render_status:'pending', addons:order.addons, gift:order.gift,
+    coupon_code:order.couponCode, discount_amount:order.discountAmount
+  };
+}
+// Saves a new order to the database. If its number is already taken, it gets a fresh number
+// (here and in this browser's list) and is saved again, so an order is never silently dropped.
+async function saveNewOrderToDb(order){
+  for(let attempt=0;attempt<4;attempt++){
+    const {error}=await sb.from('orders').insert(orderDbRow(order));
+    if(!error)return true;
+    if(error.code!=='23505'){console.warn('Order DB save:',error.message);return false;}
+    order.id=newOrderId(); saveJSON('binder_orders',S.orders);
+  }
+  return false;
+}
 function isGodAccount(){return !!(S.user&&S.user.email&&S.user.email.toLowerCase()===GOD_ACCOUNT_EMAIL);}
 function primeCheckoutModal(){
   renderPayMethods();
@@ -5611,23 +5643,14 @@ function doPay(){
       :(EDS[CHECKOUT_CTX.key]?EDS[CHECKOUT_CTX.key].doc.title:(AP_SINGLE_VARIANTS[CHECKOUT_CTX.key]?AP_SINGLE[CHECKOUT_CTX.key].title:AP.title));
     const addons=(CHECKOUT_CTX.addons||[]).map(id=>CATALOG.find(p=>p.id===id)).filter(Boolean).map(p=>({id:p.id,name:p.name,price:p.price}));
     const couponCode=CHECKOUT_CTX.couponCode||null, discountAmount=(CHECKOUT_CTX.discountAmount||0)/100;
-    const order={id:'BDR-'+String(3001+S.orders.length),customer:S.user.email,
+    const order={id:newOrderId(),customer:S.user.email,
       title:orderTitle+(qty>1?' × '+qty+' copies':''),
       product,qty,amount:amt/100,date:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'}),status:'Received',pdfFiles,snapshot,paperFinish,bindingType,
       paymentId:(resp&&resp.razorpay_payment_id)||null,razorpayOrderId:(resp&&resp.razorpay_order_id)||null,verified:(resp&&resp._verified)||false,
       payMethod:god?'No payment (house account)':PAY_METHOD,phone:phone||null,addons,gift:CHECKOUT_CTX.gift||null,couponCode,discountAmount};
     S.orders.unshift(order); saveJSON('binder_orders',S.orders);
     // Persist order to Supabase
-    sb.from('orders').insert({
-      id:order.id, customer_email:order.customer, customer_name:S.user?.name||null,
-      customer_id:S.user?.id||null, title:order.title, product:order.product,
-      qty:order.qty, amount:order.amount, status:order.status,
-      pay_method:order.payMethod||null, payment_id:order.paymentId||null,
-      razorpay_order_id:order.razorpayOrderId||null, verified:order.verified||false,
-      phone:order.phone||null, snapshot:order.snapshot, pdf_files:{},
-      render_status:'pending', addons:order.addons, gift:order.gift,
-      coupon_code:order.couponCode, discount_amount:order.discountAmount
-    }).then(({error})=>{ if(error)console.warn('Order DB save:',error.message); });
+    saveNewOrderToDb(order);
     // The discount was already priced into `amt` at checkout time (see applyCoupon()/recalcCheckout())
     // — this just marks the coupon's one use as consumed, now that the order is actually placed. If
     // it fails (e.g. someone else used the last slot moments earlier), the order still goes through
@@ -6223,8 +6246,18 @@ async function renderPdfRows(){
   const bookOrders=S.orders.filter(o=>o.pdfFiles||o.product);
   if(!bookOrders.length){tb.innerHTML='<tr><td colspan="6" style="color:#86868B;padding:24px">No orders queued.</td></tr>';return;}
   const ids=bookOrders.map(o=>o.id);
-  const {data:dbOrders}=await sb.from('orders').select('id,render_status,pdf_files,render_error,pdf_version,edit_history,customer_email,snapshot').in('id',ids);
+  const {data:dbOrders}=await sb.from('orders').select('id,render_status,pdf_files,render_error,pdf_version,edit_history,customer_email,product,snapshot').in('id',ids);
   const dbMap=Object.fromEntries((dbOrders||[]).map(o=>[o.id,o]));
+  // An order in this browser whose number belongs to a different order in the database (left
+  // over from the old numbering) gets a new number and is saved, instead of showing the other one.
+  const clashes=bookOrders.filter(o=>{const d=dbMap[o.id];return d&&o.snapshot&&(
+    (d.customer_email&&o.customer&&d.customer_email.toLowerCase()!==String(o.customer).toLowerCase())||(d.product&&o.product&&d.product!==o.product));});
+  if(clashes.length&&!renderPdfRows._fixing){
+    renderPdfRows._fixing=true;
+    for(const o of clashes){const old=o.id;o.id=newOrderId();saveJSON('binder_orders',S.orders);
+      const ok=await saveNewOrderToDb(o);toast(ok?'Order '+old+' clashed with another order — renumbered '+o.id+' and saved.':'Order '+old+' could not be saved — check the console.');}
+    renderPdfRows._fixing=false; return renderPdfRows();
+  }
   tb.innerHTML=bookOrders.map(o=>{
     const db=dbMap[o.id]||{};
     const renderStatus=db.render_status||'pending';
@@ -6268,6 +6301,11 @@ async function reRenderOrder(orderId,fileKey,btn){
   btn.disabled=true;btn.textContent='Triggering…';
   const local=S.orders.find(o=>o.id===orderId);
   if(local){
+    const {data:existing}=await sb.from('orders').select('customer_email,product').eq('id',orderId).maybeSingle();
+    if(existing&&((existing.customer_email&&local.customer&&existing.customer_email.toLowerCase()!==String(local.customer).toLowerCase())||(existing.product&&local.product&&existing.product!==local.product))){
+      btn.disabled=false;btn.textContent='Render';
+      return toast('This number belongs to a different order in the database — reload the PDF Manager to renumber it first.');
+    }
     const payload={
       id:local.id,customer_email:local.customer,customer_name:S.user?.name||null,
       customer_id:S.user?.id||null,title:local.title,product:local.product,
