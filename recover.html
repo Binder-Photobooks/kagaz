@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Recover admin data — Binder</title>
+<!--
+  One-time recovery page. Open it at https://binder.co.in/recover (WITHOUT www), in the same Chrome
+  profile you used for the admin before the site moved to www.binder.co.in.
+  Browsers keep saved data per exact address, so the admin's browser-only data (Accounts / Projects
+  entries, Orders list, Customer notes) stayed under binder.co.in. This page reads it, lets you
+  download a backup, then hands it to https://www.binder.co.in/restore, which adds it back.
+  It never changes or deletes anything stored here.
+-->
+<style>
+  :root{--ink:#141414;--slate:#5C5C5A;--line:#D5D5D3;--accent:#3A9162;--cream:#F4F4F2;--warn:#B0432E}
+  *{box-sizing:border-box}
+  body{margin:0;background:#fff;color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;padding:48px max(16px,env(safe-area-inset-left)) 64px}
+  main{max-width:720px;margin:0 auto}
+  h1{font-size:30px;font-weight:500;margin:6px 0 10px}
+  .tag{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  p{color:var(--slate);margin:0 0 14px}
+  table{width:100%;border-collapse:collapse;margin:16px 0 22px;font-size:15px}
+  td{padding:9px 4px;border-bottom:1px solid var(--line)} td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  .step{border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:16px 0}
+  .step h2{font-size:18px;margin:0 0 6px}
+  button{font:inherit;font-weight:600;border:0;border-radius:999px;padding:12px 22px;cursor:pointer;background:var(--ink);color:#fff}
+  button.accent{background:var(--accent)} button:disabled{opacity:.45;cursor:default}
+  #status{margin-top:12px;font-weight:600} .ok{color:var(--accent)} .bad{color:var(--warn)}
+  code{background:var(--cream);padding:1px 6px;border-radius:5px}
+</style>
+</head>
+<body>
+<main>
+  <span class="tag">Binder admin</span>
+  <h1>Recover your admin data</h1>
+  <p id="where"></p>
+  <table id="summary"></table>
+
+  <div class="step">
+    <h2>1. Download a backup</h2>
+    <p>Saves everything this browser holds for this address to a file on your computer, before anything else happens.</p>
+    <button id="dl">Download backup file</button>
+  </div>
+  <div class="step">
+    <h2>2. Bring it back into the admin</h2>
+    <p>Opens <code>www.binder.co.in/restore</code> in a new tab, which adds your Accounts and Projects entries to the shared database and your Orders and Customers back into the admin. Nothing already there is overwritten. Sign in to the admin on www.binder.co.in first.</p>
+    <button id="go" class="accent" disabled>Restore into the admin</button>
+    <div id="status"></div>
+  </div>
+</main>
+<script>
+(function(){
+  if(location.protocol==='http:'&&/binder\.co\.in$/.test(location.hostname)){location.replace('https://'+location.host+location.pathname);return}
+  const ACC_KEYS=['binder_accounts_dbcache_v2','binder_accounts_v2','binder_cashflow_v1'];
+  const SKIP=/^(sb-|binder_cart$|binder_admin_ui$|binder_ed_theme)/; // sign-in tokens, cart and UI switches stay put
+  const read=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+  const parse=s=>{try{return JSON.parse(s)}catch(e){return null}};
+  let keys=[]; try{for(let i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));}catch(e){}
+  keys.sort();
+  const all={}; keys.forEach(k=>{all[k]=read(k)});
+  const payload={from:location.origin,at:new Date().toISOString(),items:{}};
+  keys.filter(k=>!SKIP.test(k)).forEach(k=>{payload.items[k]=all[k]});
+
+  // Summary of what matters
+  const LISTS={accounts:'Bank & cash accounts',txns:'Transactions',projects:'Projects (board)',daybook:'Day book entries',invoices:'Invoices',bills:'Bills',parties:'Customers & vendors (Accounts)',items:'Items',rules:'Recurring rules',staff:'Staff',journals:'Journals',stockMoves:'Stock moves',cats:'Categories'};
+  const acc={}; ACC_KEYS.forEach(k=>{const v=parse(all[k]); if(!v)return; Object.keys(LISTS).forEach(l=>{(v[l]||[]).forEach(e=>{if(e&&e.id){(acc[l]=acc[l]||new Map()).set(e.id,1)}})})});
+  const rows=[];
+  Object.keys(LISTS).forEach(l=>{const n=acc[l]?acc[l].size:0; if(n&&l!=='cats')rows.push([LISTS[l],n])});
+  const orders=parse(all.binder_orders); if(Array.isArray(orders)&&orders.length)rows.push(['Orders (admin list)',orders.length]);
+  const cm=parse(all.binder_customer_meta); if(cm&&typeof cm==='object'&&Object.keys(cm).length)rows.push(['Customer notes (admin)',Object.keys(cm).length]);
+  const dirty=keys.filter(k=>k.startsWith('cms_dirty_')&&all[k]&&all[k]!=='0'&&all[k]!=='false');
+  if(dirty.length)rows.push(['Unsynced CMS edits (kept in backup)',dirty.length]);
+  const kb=Math.round(keys.reduce((a,k)=>a+(all[k]||'').length,0)/1024);
+  document.getElementById('where').textContent='This page is reading the data saved under '+location.host+' in this browser ('+kb+' KB across '+keys.length+' items).';
+  document.getElementById('summary').innerHTML=rows.length
+    ? rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('')
+    : '<tr><td>No admin data found under this address in this browser. Make sure you opened this page without www, in the same Chrome profile (not a private window).</td><td></td></tr>';
+
+  document.getElementById('dl').onclick=function(){
+    const store={}; keys.filter(k=>!/^sb-/.test(k)).forEach(k=>{store[k]=all[k]}); // sign-in tokens left out of the file
+    const blob=new Blob([JSON.stringify({from:location.origin,at:payload.at,storage:store},null,1)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download='binder-admin-backup-'+location.host+'-'+payload.at.slice(0,10)+'.json'; document.body.appendChild(a); a.click(); a.remove();
+    document.getElementById('go').disabled=!rows.length;
+  };
+
+  const st=document.getElementById('status');
+  const target=location.protocol+'//www.'+location.host.replace(/^www\./,'');
+  if(location.host.startsWith('www.')){st.innerHTML='<span class="bad">Open this page without www: '+location.protocol+'//'+location.host.slice(4)+'/recover</span>';}
+  document.getElementById('go').onclick=function(){
+    const w=window.open(target+'/restore','binder_restore');
+    if(!w){st.innerHTML='<span class="bad">Your browser blocked the new tab. Allow pop-ups for this page and click again.</span>';return;}
+    st.textContent='Waiting for the restore tab…';
+    let sent=false;
+    window.addEventListener('message',function(ev){
+      if(ev.origin!==target||!ev.data)return;
+      if(ev.data.type==='binder-restore-ready'&&!sent){sent=true; w.postMessage({type:'binder-restore-data',payload},target); st.textContent='Sent — follow the restore tab.';}
+      if(ev.data.type==='binder-restore-done'){st.innerHTML='<span class="ok">Done. '+(ev.data.summary||'')+'</span>';}
+    });
+  };
+})();
+</script>
+</body>
+</html>

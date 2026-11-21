@@ -4,5 +4,7 @@ Disallow: /admin
 Disallow: /dashboard
 Disallow: /editor/
 Disallow: /accounts
+Disallow: /recover
+Disallow: /restore
 
 Sitemap: https://www.binder.co.in/sitemap.xml
