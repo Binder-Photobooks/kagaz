@@ -1,0 +1,41 @@
+# Temporary one-time backup run. The database part arrives already encrypted; images are public site images.
+# This branch is deleted after the run.
+name: backup-run
+on:
+  push:
+    branches: [backup-run]
+    paths: [.github/workflows/backup-run.yml]
+permissions:
+  contents: write
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Export (encrypted database + list of public files)
+        run: |
+          curl -sS --fail-with-body -m 600 https://sooqtzedurtjiisjdmbz.supabase.co/functions/v1/temp-full-backup -o resp.json
+          jq '.encrypted_database' resp.json > database.encrypted.json
+          jq -r '.public_files[]' resp.json > files.txt
+          wc -l files.txt; ls -la database.encrypted.json
+      - name: Download public storage files
+        run: |
+          mkdir -p storage; ok=0; fail=0
+          while IFS= read -r p; do
+            enc=$(python3 -c 'import sys,urllib.parse;print("/".join(urllib.parse.quote(x) for x in sys.argv[1].split("/")))' "$p")
+            mkdir -p "storage/$(dirname "$p")"
+            if curl -sS --fail -m 300 --retry 3 -o "storage/$p" "https://sooqtzedurtjiisjdmbz.supabase.co/storage/v1/object/public/$enc"; then ok=$((ok+1)); else fail=$((fail+1)); echo "FAILED $p"; fi
+          done < files.txt
+          echo "downloaded=$ok failed=$fail" | tee storage-result.txt; du -sh storage
+          (cd storage && find . -type f | sort | xargs -d '\n' sha256sum) > storage-SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binder-cms-images-and-files
+          path: storage
+          retention-days: 90
+          compression-level: 0
+      - name: Save encrypted database to this branch
+        run: |
+          mkdir -p backup-out && mv database.encrypted.json storage-result.txt storage-SHA256SUMS.txt files.txt backup-out/
+          git config user.name backup-bot && git config user.email backup-bot@users.noreply.github.com
+          git add backup-out && git commit -m "backup output (database encrypted)" && git push
