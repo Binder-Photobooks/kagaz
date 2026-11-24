@@ -545,6 +545,7 @@ async function uploadPhotoToStorage(photoId,blob,filename){
   if(!S.user)return; // not signed in yet — stays as a local-only blob until they sign in and save
   PENDING_UPLOADS++;
   try{
+    if(blob.size>MAX_UPLOAD_BYTES){toast('"'+filename+'" is over 50MB after conversion, so it can only be used in this session — try a smaller export of the same photo.');return;}
     const path=`${S.user.id}/${photoId}-${filename.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
     const {error}=await sb.storage.from('photos').upload(path,blob,{upsert:true,contentType:blob.type||'image/jpeg'});
     if(error)throw error;
@@ -593,16 +594,16 @@ function swapToPermanentPhotoUrl(photoId,permanentUrl){
   }
 }
 
-// Per-file upload cap for the book editors' photo tray. The Supabase "photos" storage bucket
-// must ALSO be configured to allow files this large (its own file-size limit defaults to a much
-// smaller value) — see the "100MB uploads" note in supabase-setup.sql for the exact steps.
-const MAX_UPLOAD_BYTES=100*1024*1024; // 100MB
+// Per-file upload cap for the book editors' photo tray. Matches the "photos" storage bucket's own
+// limit (50MB — the most the Supabase Free plan allows per file). On a paid plan both can go up:
+// raise this and storage.buckets.file_size_limit for 'photos' together.
+const MAX_UPLOAD_BYTES=50*1024*1024; // 50MB
 async function ingestFiles(files,minLongEdgePx){
   const out=[];
   for(const f of files){
     try{
       if(f.size>MAX_UPLOAD_BYTES){
-        toast(f.name+' is over 100MB and was skipped — try a smaller export of the same photo.');
+        toast(f.name+' is over 50MB and was skipped — try a smaller export of the same photo.');
         continue;
       }
       let blob=f; const name=f.name.toLowerCase();

@@ -158,10 +158,14 @@ alter table public.orders add column if not exists edit_history jsonb default '[
 -- script.js): only signed-in users upload, and every file is namespaced
 -- under a folder named after their own user id — so uploads are
 -- restricted to a user writing inside their own folder.
+-- (Applied 24 Nov 2026 as migration create_photos_bucket — the bucket had never been created, so
+--  every photo upload had been failing. Files are readable by exact URL because the bucket is
+--  public; listing is limited to the owner's own folder and admins.)
 drop policy if exists "photos public read" on storage.objects;
-create policy "photos public read"
+drop policy if exists "photos owner or admin read" on storage.objects;
+create policy "photos owner or admin read"
 on storage.objects for select
-using (bucket_id = 'photos');
+using (bucket_id = 'photos' and ((auth.uid() is not null and (storage.foldername(name))[1] = auth.uid()::text) or public.is_admin()));
 
 drop policy if exists "photos owner upload" on storage.objects;
 create policy "photos owner upload"
@@ -194,7 +198,7 @@ using (bucket_id = 'photos' and auth.uid() is not null and (storage.foldername(n
 --    the Free plan currently caps individual Storage uploads at 50MB
 --    regardless of this setting, so a paid plan is required for true
 --    100MB files. Check Project Settings → Billing if you hit that wall.
-update storage.buckets set file_size_limit = 104857600 -- 100MB, in bytes
+update storage.buckets set file_size_limit = 52428800 -- 50MB (Free plan maximum); 104857600 = 100MB on a paid plan
 where id = 'photos';
 -- Optional: raise the same cap on the "cms-images" bucket too, if you also
 -- want to upload hero images/videos larger than its current default there.
