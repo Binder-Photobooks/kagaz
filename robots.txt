@@ -1,4 +1,27 @@
+# Search engines and AI assistants are welcome on every public page.
+# (A named group below replaces the * group for that crawler, so the private paths are repeated.)
+
 User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /editor/
+Disallow: /accounts
+Disallow: /recover
+Disallow: /restore
+
+# ChatGPT search (OAI-SearchBot), ChatGPT browsing for a user (ChatGPT-User), OpenAI models (GPTBot),
+# Google Gemini (Google-Extended), Bing / Copilot (bingbot), Perplexity, Claude.
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: GPTBot
+User-agent: Google-Extended
+User-agent: bingbot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
 Allow: /
 Disallow: /admin
 Disallow: /dashboard

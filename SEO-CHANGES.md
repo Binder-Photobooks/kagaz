@@ -241,3 +241,16 @@ FileZilla uploads are no longer needed; if you do upload by hand, the next run s
 **Update (16 Nov 2026):** automatic runs switched off at the owner's request; publishing stays manual
 (FileZilla). The workflow remains and only runs when started by hand. To use it, the `FTP_PASSWORD`
 secret must hold the exact FTP password (the first attempts failed with "530 Login authentication failed").
+
+## AI search: ChatGPT, Gemini, Copilot, Perplexity (v26, 24 Nov 2026)
+
+- `robots.txt` names the AI crawlers explicitly (OAI-SearchBot, ChatGPT-User, GPTBot, Google-Extended,
+  bingbot, PerplexityBot, Claude) and allows every public page; private paths stay blocked for all.
+- `llms.txt` at the site root: a plain-text summary of the business, prices, turnaround, delivery and
+  the key pages, for AI assistants. Keep its prices in step with PRICING_RULES / the Pricing page.
+- LocalBusiness schema now lists the services with starting prices (`makesOffer`), map link, payment
+  methods, currency, topics (`knowsAbout`) and structured `areaServed`.
+- `sameAs` (social profiles) is now written into the HTML at build time from Admin → Content, because
+  AI crawlers do not run the site's script. Empty until those fields are filled in.
+- Build note: when Supabase can't be reached, run the build with `CMS_SNAPSHOT=<cms rows json>`;
+  otherwise the FAQ falls back to defaults and the sitemap loses the store products.

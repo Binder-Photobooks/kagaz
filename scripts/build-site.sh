@@ -12,6 +12,6 @@ for f in *.html; do
     *) cp "$f" dist/ ;;
   esac
 done
-cp .htaccess robots.txt sitemap.xml script.js styles.css dist/
+cp .htaccess robots.txt llms.txt sitemap.xml script.js styles.css dist/
 cp -r images accounts-assets store-pages dist/
 echo "dist/ ready: $(find dist -type f | wc -l) files"

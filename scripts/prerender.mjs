@@ -83,7 +83,7 @@ try {
   const sUrl = js.match(/const SUPABASE_URL='([^']+)'/)?.[1];
   const sKey = js.match(/const SUPABASE_KEY='([^']+)'/)?.[1];
   if (!sUrl || !sKey) throw new Error('SUPABASE_URL / SUPABASE_KEY not found in script.js');
-  const res = await fetch(`${sUrl}/rest/v1/cms?select=key,value,updated_at&key=in.(catalog,posts,faq)`, { headers: { apikey: sKey }, signal: AbortSignal.timeout(15000) });
+  const res = await fetch(`${sUrl}/rest/v1/cms?select=key,value,updated_at&key=in.(catalog,posts,faq,site_cfg)`, { headers: { apikey: sKey }, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error('Supabase responded ' + res.status);
   CMS = await res.json();
 } catch (e) {
@@ -203,6 +203,14 @@ const EXTRA_LD = {
 
 // ---------- build ----------
 let template = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+// Social profiles from Admin → Content go into the business schema as plain HTML too (the site's
+// script also adds them in the browser, but AI crawlers such as ChatGPT's don't run scripts).
+{
+  const cfg = cmsRow('site_cfg').value || {};
+  const same = [cfg.instagram, cfg.facebook, cfg.twitter, cfg.youtube, cfg.linkedin, cfg.googleBusiness]
+    .filter(u => typeof u === 'string' && /^https:\/\//.test(u.trim())).map(u => u.trim());
+  template = template.replace(/("sameAs": )\[[^\]]*\]/, '$1' + JSON.stringify(same));
+}
 if (!FAQ_LIST_RE.test(template)) throw new Error('prerender: #faqList not found in index.html');
 {
   const before = template;
