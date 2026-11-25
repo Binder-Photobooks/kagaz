@@ -254,3 +254,12 @@ secret must hold the exact FTP password (the first attempts failed with "530 Log
   AI crawlers do not run the site's script. Empty until those fields are filled in.
 - Build note: when Supabase can't be reached, run the build with `CMS_SNAPSHOT=<cms rows json>`;
   otherwise the FAQ falls back to defaults and the sitemap loses the store products.
+
+## PDF rendering: long books in parts, honest results (v27, 26 Nov 2026)
+
+- Interior PDFs are built in parts once a part's photo data reaches 150MB (always after an even
+  page count), so books of any length render; Chrome can't build a single file much over ~512MB.
+  PDF Manager shows one download per part with its page range. The headless server path is unchanged.
+- generatePdfForOrder now returns {ok, error, warning}. A failed render is recorded as failed with the
+  reason; a render where photos could not be loaded is recorded as "Rendered with problems" (the PDF
+  can still be downloaded). Previously both were marked done.

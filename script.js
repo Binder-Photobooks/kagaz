@@ -3166,11 +3166,9 @@ async function triggerServerRender(order){
   // Browser-based render — runs immediately on order placement
   toast('Rendering PDFs…');
   const keys = order.product==='artprints'?['artboard']:(order.product==='artprint12x18'||order.product==='artprint16x20')?['print']:['cover','interior'];
-  for(const fk of keys){
-    try{ await generatePdfForOrder(order.id, fk, null); }
-    catch(e){ console.warn('Auto-render failed for',fk,e); }
-  }
-  toast('✅ PDFs ready — open PDF Manager to download');
+  let bad=0;
+  for(const fk of keys){ const r=await generatePdfForOrder(order.id, fk, null); if(!r.ok||r.warning)bad++; }
+  toast(bad?'⚠ Some PDFs did not render cleanly — see PDF Manager':'✅ PDFs ready — open PDF Manager to download');
 }
 
 async function checkRenderStatus(orderId){
@@ -3563,6 +3561,16 @@ fi.addEventListener('change',e=>{msReadTextFile(e.target.files[0]);e.target.valu
    and vector trim marks drawn directly by jsPDF.                                        */
 const PAGE_DIMS={photobook:{w:8.5,h:8.5,ref:420},photobook12:{w:12,h:12,ref:420},tradebook:{w:5.5,h:8,ref:300},zine:{w:148/25.4,h:210/25.4,ref:340}};
 const PDF_BLOBS={};
+// Long books are saved as several PDF parts (interior-part-1, -2, …). Chrome can only hold a file
+// of about 512MB as one piece, and a long photo-heavy book can pass that, so a part is closed once
+// its photo data reaches this size (always after an even number of pages, so every part starts on
+// a right-hand page). Each part then stays far below Chrome's limit.
+const PDF_PART_LIMIT_BYTES=150*1024*1024;
+const PDF_PARTS={};  // 'orderId|fileKey' → [{url,from,to}] (page numbers 1-based)
+// Photos that could not be loaded during the current render (e.g. temporary links that only ever
+// existed in the customer's own browser tab) — counted so a render is never reported as clean
+// when it came out with blank spaces.
+let PDF_MISSING_PHOTOS=new Set();
 async function ensurePdfLibs(){
   if(!window.jspdf)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
   if(!window.html2canvas)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
@@ -3712,6 +3720,7 @@ async function pdfRenderPhotoLayer(page, dims, photoMap, dpi, monochrome, bleedI
   await Promise.all([...holder.querySelectorAll('img')].map(img =>
     img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })
   ));
+  holder.querySelectorAll('img').forEach(img=>{ if(!img.naturalWidth) PDF_MISSING_PHOTOS.add(img.src); });
   const canvas = await html2canvas(holder, {
     scale: 1,
     useCORS: true,
@@ -3872,10 +3881,12 @@ async function pdfPageHybrid(doc, page, dims, photoMap, dpi, monochrome, bleedIn
   doc.rect(ox, oy, totalW * PT, totalH * PT, 'F');
 
   // 2. Photo layer (raster, 300 DPI)
+  let approxBytes = 0; // returned so callers can split long books into parts
   const photoCanvas = await pdfRenderPhotoLayer(page, dims, photoMap, dpi, monochrome, bleedIn, hardMono);
   if(photoCanvas){
     const imgData = photoCanvas.toDataURL('image/jpeg', 0.93);
     doc.addImage(imgData, 'JPEG', ox, oy, totalW * PT, totalH * PT);
+    approxBytes = Math.round(imgData.length * 0.75);
   }
 
   // 3. Vector solid shapes (rendered over photos, under text — matches editor layer order)
@@ -3883,6 +3894,7 @@ async function pdfPageHybrid(doc, page, dims, photoMap, dpi, monochrome, bleedIn
 
   // 4. Vector text (topmost layer, always selectable)
   pdfAddVectorText(doc, page, dims, bleedIn, monochrome);
+  return approxBytes + 20000; // + text, shapes and page overhead
 }
 
 // Keep the old pdfPageCanvas for any legacy code paths still referencing it
@@ -3930,12 +3942,18 @@ function pdfTrimMarks(doc,totalWIn,totalHIn,bleedIn){
     doc.line(x, y+dy*gap, x, y+dy*(gap+len)); // vertical mark
   });
 }
-function finalizePdf(pdfDoc,order,fileKey){
-  const blob=pdfDoc.output('blob'); const url=URL.createObjectURL(blob);
-  const prevUrl=PDF_BLOBS[order.id+'|'+fileKey]; if(prevUrl)URL.revokeObjectURL(prevUrl); // re-rendering the same file (e.g. after an admin edit) would otherwise leak the old blob
-  PDF_BLOBS[order.id+'|'+fileKey]=url;
-  order.pdfFiles[fileKey]='Ready'; saveJSON('binder_orders',S.orders); renderPdfRows();
-  toast('Rendered ✦ "'+fileKey+'" is ready to download — a high-resolution proof PDF.');
+function clearPdfParts(key){
+  (PDF_PARTS[key]||[]).forEach(p=>URL.revokeObjectURL(p.url)); delete PDF_PARTS[key];
+  if(PDF_BLOBS[key]){URL.revokeObjectURL(PDF_BLOBS[key]); delete PDF_BLOBS[key];}
+}
+function pdfDocToUrl(pdfDoc){return URL.createObjectURL(pdfDoc.output('blob'));}
+function finalizePdf(pdfDoc,order,fileKey,parts){
+  // parts: [{url,from,to}] when the file was built in parts; otherwise pdfDoc is the whole file.
+  const key=order.id+'|'+fileKey;
+  if(!parts){clearPdfParts(key); parts=[{url:pdfDocToUrl(pdfDoc),from:null,to:null}];}
+  PDF_PARTS[key]=parts; PDF_BLOBS[key]=parts[0].url;
+  const live=S.orders.find(x=>x.id===order.id)||order;
+  live.pdfFiles=live.pdfFiles||{}; live.pdfFiles[fileKey]='Ready'; saveJSON('binder_orders',S.orders); renderPdfRows();
 }
 // Pure rendering core — given a full order object (snapshot + product) and which file to build
 // (a cover set or the interior pages), assembles and returns the finished jsPDF document with NO
@@ -3945,7 +3963,7 @@ function finalizePdf(pdfDoc,order,fileKey){
 // further below — driven by a real headless browser, see /render-service in the deployment
 // package) call this exact same function, so there is only ever one rendering code path to keep
 // correct, not two that can quietly drift apart.
-async function buildPdfForOrder(o,fileKey,onProgress){
+async function buildPdfForOrder(o,fileKey,onProgress,onPart){
   await ensurePdfLibs();
   const {jsPDF}=window.jspdf; const DPI=300; const PT=72;
   // Bleed per product: the zine uses 5 mm; every other product 0.2in. Trim marks sit in the bleed.
@@ -4026,18 +4044,27 @@ async function buildPdfForOrder(o,fileKey,onProgress){
   }
 
   // ── Interior pages ────────────────────────────────────────────────────────
+  // With onPart (the admin Render button), a long book is handed over in parts as it goes —
+  // see PDF_PART_LIMIT_BYTES. Without it (the headless server worker), one document as before.
   const totalW=dims.w+2*BLEED, totalH=dims.h+2*BLEED;
-  const doc=new jsPDF({orientation:totalH>totalW?'portrait':'landscape',unit:'pt',format:[totalW*PT,totalH*PT]});
+  const newDoc=()=>new jsPDF({orientation:totalH>totalW?'portrait':'landscape',unit:'pt',format:[totalW*PT,totalH*PT]});
+  let doc=newDoc(), partStart=0, partBytes=0;
   const pages=o.snapshot.doc.pages;
   for(let i=0;i<pages.length;i++){
-    if(i>0)doc.addPage([totalW*PT,totalH*PT]);
-    await pdfPageHybrid(doc,pages[i],dims,o.snapshot.photoMap,DPI,mono,BLEED,mono,0,0);
+    if(i>partStart)doc.addPage([totalW*PT,totalH*PT]);
+    partBytes+=await pdfPageHybrid(doc,pages[i],dims,o.snapshot.photoMap,DPI,mono,BLEED,mono,0,0);
     pdfTrimMarks(doc,totalW,totalH,BLEED);
-    if(onProgress&&i%5===0)onProgress(i+1,pages.length);
+    if(onProgress&&(i%5===0||i===pages.length-1))onProgress(i+1,pages.length);
+    if(onPart&&partBytes>=PDF_PART_LIMIT_BYTES&&(i-partStart+1)%2===0&&i<pages.length-1){
+      await onPart(doc,partStart+1,i+1); doc=newDoc(); partStart=i+1; partBytes=0;
+    }
   }
+  if(onPart){await onPart(doc,partStart+1,pages.length);return null;}
   return doc;
 }
 
+// Returns {ok, error, warning, parts}. Never reports success when the render failed or came out
+// with photos missing; callers use the result to set the order's render status honestly.
 async function generatePdfForOrder(orderId,fileKey,btn){
   let o=S.orders.find(x=>x.id===orderId);
   if(!o||!o.snapshot){
@@ -4049,13 +4076,31 @@ async function generatePdfForOrder(orderId,fileKey,btn){
     const {data:dbOrder}=await sb.from('orders').select('*').eq('id',orderId).single();
     if(dbOrder&&dbOrder.snapshot)o={...(o||{}),...dbOrder};
   }
-  if(!o||!o.snapshot)return toast('No design data was saved with this order — this can happen for orders placed before PDF rendering was added.');
+  if(!o||!o.snapshot){const error='No design data was saved with this order.';toast(error);return{ok:false,error};}
   if(btn){btn.disabled=true;btn.textContent='Rendering…';}
+  const key=o.id+'|'+fileKey; PDF_MISSING_PHOTOS=new Set();
+  const parts=[]; let result;
   try{
-    const doc=await buildPdfForOrder(o,fileKey,(done,total)=>{if(btn)btn.textContent=`Rendering… ${done}/${total}`;});
-    finalizePdf(doc,o,fileKey);
-  }catch(e){console.error(e);toast('Render failed: '+(e.message||e));}
+    clearPdfParts(key);
+    const doc=await buildPdfForOrder(o,fileKey,(done,total)=>{if(btn)btn.textContent=`Rendering… ${done}/${total}`;},
+      fileKey==='interior'?async(partDoc,from,to)=>{
+        if(btn)btn.textContent=`Saving pages ${from}–${to}…`;
+        parts.push({url:pdfDocToUrl(partDoc),from,to});
+      }:null);
+    finalizePdf(doc,o,fileKey,doc?null:parts);
+    const n=(PDF_PARTS[key]||[]).length, missing=PDF_MISSING_PHOTOS.size;
+    const warning=missing?`${missing} photo${missing===1?'':'s'} could not be loaded, so the PDF has blank spaces — the customer may need to re-upload them.`:null;
+    result={ok:true,parts:n,warning};
+    toast(warning?'⚠ "'+fileKey+'" rendered, but '+warning:'✅ "'+fileKey+'" is ready'+(n>1?' as '+n+' parts (to keep each file a safe size)':'')+'.');
+  }catch(e){
+    console.error(e); parts.forEach(p=>URL.revokeObjectURL(p.url)); clearPdfParts(key);
+    const msg=String(e&&e.message||e);
+    const error=/Invalid string length|Array buffer allocation|out of memory/i.test(msg)
+      ?'The file was too large for this browser to build ('+msg+').':msg;
+    toast('❌ Render failed for "'+fileKey+'": '+error); result={ok:false,error};
+  }
   if(btn){btn.disabled=false;btn.textContent='Re-render';}
+  return result;
 }
 
 // Headless entry point for the server-side render worker (see /render-service in the deployment
@@ -4087,9 +4132,10 @@ window.renderOrderHeadless=async(order,fileKey)=>{
 function downloadPdf(orderId,fileKey){
   const order=S.orders.find(o=>o.id===orderId);
   if(!order||!order.paymentId){toast('A print order must be placed before downloading the PDF.');return;}
-  const url=PDF_BLOBS[orderId+'|'+fileKey];
-  if(!url)return toast('Render it first — the file lives in this browser session only.');
-  const a=document.createElement('a'); a.href=url; a.download=orderId+' — '+fileKey+'.pdf'; a.click();
+  const parts=PDF_PARTS[orderId+'|'+fileKey];
+  if(!parts||!parts.length)return toast('Render it first — the file lives in this browser session only.');
+  parts.forEach((p,i)=>{const a=document.createElement('a'); a.href=p.url;
+    a.download=orderId+' — '+fileKey+(parts.length>1?` part ${i+1} of ${parts.length} (pages ${p.from}–${p.to})`:'')+'.pdf'; a.click();});
 }
 
 /* ================= ART PRINTS EDITOR ================= */
@@ -6231,14 +6277,15 @@ async function adminSaveAndRerender(){
   // S.orders.unshift()/.shift() to smuggle the new snapshot in — if a render ever failed partway
   // through this loop, the shift() that was supposed to clean it up never ran, permanently
   // leaving a duplicate "ghost" order sitting in the array.)
+  const problems=[];
   for(const fk of fileKeys){
-    try{
-      await generatePdfForOrder(order.id, fk, null);
-    } catch(e){ toast('Render failed for '+fk+': '+(e.message||e)); }
+    const r=await generatePdfForOrder(order.id, fk, null);
+    if(!r.ok)problems.push(fk+': '+r.error); else if(r.warning)problems.push(fk+': '+r.warning);
   }
+  await sb.from('orders').update(problems.length?{render_status:'failed',render_error:problems.join(' | ').slice(0,500)}:{render_status:'done',render_error:null}).eq('id',order.id);
 
   btn.disabled = false; btn.textContent = 'Save & Re-render →';
-  toast(`✅ v${newVersion} rendered — PDF Manager updated`);
+  toast(problems.length?`⚠ v${newVersion} saved, but rendering had problems — see PDF Manager`:`✅ v${newVersion} rendered — PDF Manager updated`);
   exitAdminEditor(true);
 }
 
@@ -6272,11 +6319,16 @@ async function renderPdfRows(){
       o.product==='photobook18'?'12″×18″ · full colour · 300dpi (or 18″×12″ landscape)':'8.5″×8.5″ · full colour · 300dpi')
       +(o.qty>1?` · ${o.qty} copies`:'');
     const statusIcon={pending:'⏳',rendering:'⚙️ Rendering…',done:'✅',failed:'❌'}[renderStatus]||'⏳';
-    const statusLabel=renderStatus==='failed'?`❌ Failed${db.render_error?' — '+db.render_error.slice(0,60):''}`:statusIcon+' '+renderStatus;
+    const withProblems=renderStatus==='failed'&&/^Rendered with problems/.test(db.render_error||'');
+    const statusLabel=renderStatus==='failed'?`<span title="${esc(db.render_error||'')}">${withProblems?'⚠ Rendered with problems':'❌ Failed'}${db.render_error?' — '+esc(db.render_error.replace(/^Rendered with problems: /,'').slice(0,110))+(db.render_error.length>110?'…':''):''}</span>`:statusIcon+' '+renderStatus;
     const keys=o.product==='artprints'?['artboard']:(o.product==='artprint12x18'||o.product==='artprint16x20')?['print']:['cover','interior'];
     return keys.map(file=>{
-      const pdfUrl=pdfFiles[file]||PDF_BLOBS[o.id+'|'+file]||null;
-      const dlBtn=pdfUrl?`<a class="btn btn-dark xs" href="${pdfUrl}" target="_blank" download="binder-${o.id}-${file}-v${db.pdf_version||1}.pdf">⬇ v${db.pdf_version||1}</a>`:'';
+      const localParts=PDF_PARTS[o.id+'|'+file]||[];
+      const pdfUrl=pdfFiles[file]||(localParts[0]&&localParts[0].url)||null;
+      const ver=db.pdf_version||1;
+      const dlBtn=localParts.length>1&&!pdfFiles[file]
+        ?localParts.map((p,i)=>`<a class="btn btn-dark xs" href="${p.url}" target="_blank" download="binder-${o.id}-${file}-v${ver}-part${i+1}of${localParts.length}-p${p.from}-${p.to}.pdf" title="Pages ${p.from}–${p.to}">⬇ part ${i+1}/${localParts.length} · p.${p.from}–${p.to}</a>`).join('')
+        :pdfUrl?`<a class="btn btn-dark xs" href="${pdfUrl}" target="_blank" download="binder-${o.id}-${file}-v${ver}.pdf">⬇ v${ver}</a>`:'';
       const hasSnapshot=!!(o.snapshot||db.snapshot); // prefer local, but the DB copy (saved at checkout, same as every order) is just as valid — this is what lets an order be rendered from any admin session, not just the one that placed it
       const renderBtn=`<button class="btn btn-ghost xs" onclick="reRenderOrder('${o.id}','${file}',this)" ${hasSnapshot?'':'disabled title="No snapshot"'}>${pdfUrl?'Re-render':'Render'}</button>`;
       // Purely additive — only appears once a render service URL is configured in Admin →
@@ -6290,7 +6342,7 @@ async function renderPdfRows(){
         <td style="font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis">${esc(o.customer_email||o.customer||'—')}</td>
         <td>${esc(o.product)}</td>
         <td>${esc(file)}</td>
-        <td style="white-space:nowrap">${statusLabel}</td>
+        <td style="max-width:280px;font-size:12px;line-height:1.35">${statusLabel}</td>
         <td style="white-space:nowrap;font-size:12px;color:var(--slate)">v${db.pdf_version||1}${(db.edit_history||[]).length>0?' ·  '+db.edit_history.length+' edit'+(db.edit_history.length>1?'s':''):''}</td>
         <td style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 6px">${editBtn}${renderBtn}${serverRenderBtn}${dlBtn}</td>
       </tr>`;
@@ -6318,15 +6370,12 @@ async function reRenderOrder(orderId,fileKey,btn){
     await sb.from('orders').upsert(payload,{onConflict:'id'}).then(({error})=>{if(error)console.warn('upsert:',error.message)});
   }
   await sb.from('orders').update({render_status:'pending',render_error:null}).eq('id',orderId);
-  try{
-    btn.textContent='Rendering…';
-    await generatePdfForOrder(orderId, fileKey, null);
-    await sb.from('orders').update({render_status:'done'}).eq('id',orderId);
-    toast('✅ PDF rendered — click Download');
-  }catch(e){
-    toast('❌ Render failed: '+(e.message||e));
-    await sb.from('orders').update({render_status:'failed',render_error:e.message||String(e)}).eq('id',orderId);
-  }
+  btn.textContent='Rendering…';
+  const r=await generatePdfForOrder(orderId, fileKey, btn);
+  // A render with missing photos is recorded as failed (with the reason) even though the PDF can
+  // still be downloaded, so it can't be mistaken for a print-ready file in the list.
+  if(r.ok&&!r.warning)await sb.from('orders').update({render_status:'done',render_error:null}).eq('id',orderId);
+  else await sb.from('orders').update({render_status:'failed',render_error:(r.ok?'Rendered with problems: '+r.warning:r.error)}).eq('id',orderId);
   btn.disabled=false;btn.textContent='Re-render';
   renderPdfRows();
 }
