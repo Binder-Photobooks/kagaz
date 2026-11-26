@@ -2250,7 +2250,7 @@ function createEditor(key,cfg){
       page.texts.forEach(t=>{
         const d=document.createElement('div');d.className='tbox'+(t.locked?' locked':'')+(ed.sel&&ed.sel.page===pageRef&&ed.sel.kind==='text'&&ed.sel.id===t.id?' sel':'');
         d.style.cssText=`left:${t.x}%;top:${t.y}%${t.w?`;width:${t.w}%`:''}`;
-        const inner=document.createElement('div');inner.className='tbox-inner';inner.contentEditable=interactive&&!t.locked;inner.innerHTML=t.html;
+        const inner=document.createElement('div');inner.className='tbox-inner';inner.contentEditable=interactive&&!t.locked;inner.innerHTML=sanitizeBoxHtml(t.html);
         const col=cfg.monochrome?`rgba(0,0,0,${(t.blackPct??100)/100})`:t.color;
         inner.style.cssText=`font-size:${t.size}${t.unit||'px'};color:${col};font-family:'${t.font}',serif;text-align:${t.align};
           font-weight:${t.bold?700:(t.weight||400)};font-style:${t.italic?'italic':'normal'};text-decoration:${t.underline?'underline':'none'};
@@ -3655,7 +3655,7 @@ function pdfBuildPage(page,dims,photoMap,dpi,monochrome,textOnly,imagesOnly){
       const d=document.createElement('div');
       d.style.cssText=`position:absolute;left:${t.x}%;top:${t.y}%${t.w?`;width:${t.w}%`:''}`;
       const col=monochrome?`rgba(0,0,0,${(t.blackPct??100)/100})`:(t.color||'#1D1D1F');
-      const inner=document.createElement('div'); inner.className='tbox-inner'; inner.innerHTML=t.html||'';
+      const inner=document.createElement('div'); inner.className='tbox-inner'; inner.innerHTML=sanitizeBoxHtml(t.html||'');
       // Real typographic points (manuscript text) convert physically via the true print DPI (1pt = dpi/72 px).
       // Legacy freeform px sizes (photobook/trade cover text) use the on-screen-to-print calibration factor k.
       const fontPx=(t.unit==='pt')?(t.size||8)*(dpi/72):(t.size||16)*k;
@@ -6635,6 +6635,30 @@ function sanitizeRteStyle(el){
   allowed.forEach(prop=>{ const v=el.style.getPropertyValue(prop); if(v)kept.push(`${prop}:${v}`); });
   if(kept.length)el.setAttribute('style',kept.join(';'));
   else el.removeAttribute('style');
+}
+// Text boxes in the book editors keep their own formatting (divs, fonts, sizes, colours), so they
+// can't go through the stricter journal whitelist below. This removes only what could run code:
+// script-like elements, every on…= event attribute, and javascript:/vbscript:/data: links (data:
+// images are kept). A customer's text can then never run in the admin's browser when an order is
+// opened in Edit Design or rendered to PDF.
+const BOX_BLOCKED_TAGS=new Set(['SCRIPT','STYLE','IFRAME','FRAME','FRAMESET','OBJECT','EMBED','APPLET','LINK','META','BASE','FORM','INPUT','BUTTON','TEXTAREA','SELECT','OPTION','SVG','MATH','TEMPLATE','NOSCRIPT','AUDIO','VIDEO','SOURCE','TRACK','PORTAL']);
+function sanitizeBoxHtml(html){
+  if(!html)return '';
+  if(!/[<&]/.test(html))return html; // plain text — nothing to clean
+  const tpl=document.createElement('template'); tpl.innerHTML=String(html); // template content is inert: nothing loads or runs
+  (function walk(node){
+    [...node.children].forEach(el=>{
+      if(BOX_BLOCKED_TAGS.has(el.tagName.toUpperCase())){el.remove();return;}
+      [...el.attributes].forEach(a=>{
+        const n=a.name.toLowerCase(), v=(a.value||'').replace(/[\s\u0000-\u001f]+/g,'').toLowerCase();
+        if(n.startsWith('on')||n==='srcdoc'||n==='formaction'||n==='xlink:href'){el.removeAttribute(a.name);return;}
+        if(['href','src','action','background','poster','data','srcset'].includes(n)&&/^(javascript|vbscript|data):/.test(v)&&!(n==='src'&&el.tagName==='IMG'&&/^data:image\/(png|jpe?g|gif|webp);/.test(v))){el.removeAttribute(a.name);return;}
+        if(n==='style'&&/expression\(|javascript:|url\(/i.test(a.value))el.removeAttribute(a.name);
+      });
+      walk(el);
+    });
+  })(tpl.content);
+  return tpl.innerHTML;
 }
 function sanitizeRteHtml(html){
   const tpl=document.createElement('template'); tpl.innerHTML=html;

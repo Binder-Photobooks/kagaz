@@ -263,3 +263,18 @@ secret must hold the exact FTP password (the first attempts failed with "530 Log
 - generatePdfForOrder now returns {ok, error, warning}. A failed render is recorded as failed with the
   reason; a render where photos could not be loaded is recorded as "Rendered with problems" (the PDF
   can still be downloaded). Previously both were marked done.
+
+## Security lockdown (v28, 27 Nov 2026)
+
+Database (applied live; SQL in supabase/security-2026-11-27.sql):
+- Only an existing admin can grant admin rights (trigger profiles_guard_admin). Before, any new
+  account could make itself admin.
+- Orders: anonymous visitors see nothing; signed-in customers place orders under their own email and
+  read their own; admins manage all. Before, anyone could read, change or delete every order.
+- Payments: verify-razorpay-payment records the payment Razorpay confirms (amount included) in
+  payment_verifications; the orders_guard_insert trigger sets `verified` only when a recorded
+  payment covers the order amount and hasn't been used before. House (no-payment) orders: admins only.
+- Site images (cms-images): admin-only writes. Coupons: signed-in customers only.
+- ai-proxy and render-pdf server functions switched off (unused).
+Site: customer text boxes are cleaned before display/render (sanitizeBoxHtml), HSTS and
+anti-framing headers in .htaccess.

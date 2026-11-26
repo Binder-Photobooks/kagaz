@@ -96,6 +96,11 @@ RewriteRule ^ index.html [L]
   Header always set X-Robots-Tag "noindex, nofollow" env=NOINDEX
   Header always set X-Robots-Tag "noindex, nofollow" env=REDIRECT_NOINDEX
   Header always set X-Content-Type-Options "nosniff"
+  # Browsers always use https for this site (after their first visit), and no other website can
+  # show these pages inside a frame (protects the admin from click-jacking).
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Content-Security-Policy "frame-ancestors 'self'"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
